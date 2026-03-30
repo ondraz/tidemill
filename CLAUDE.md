@@ -34,21 +34,47 @@ Services when running via Docker:
 
 ### Backend Development
 
+The backend is a modern Python project using `uv` for dependency management and a proper `src/` layout.
+
 ```bash
 cd backend
 
-# Install dependencies
-pip install -r requirements.txt
+# Quick setup
+make install-dev
 
-# Run development server (with auto-reload)
-python -m uvicorn main:app --reload
+# Or use the setup script (installs uv if needed)
+./dev-setup.sh
 
-# Run tests
+# Run development server
+make run
+
+# Run all checks (linting, type checking, tests)
+make check
+
+# Individual commands
+make format      # Format code with black
+make lint        # Run ruff linter
+make typecheck   # Run mypy type checker
+make test        # Run pytest tests
+make clean       # Clean build artifacts
+
+# See all available targets
+make help
+```
+
+Manual commands (without Makefile):
+```bash
+# Install dependencies with uv
+uv pip install -e ".[dev]"
+
+# Run development server
+uvicorn subscriptions.main:app --reload
+
+# Code quality
+black src/
+ruff check src/
+mypy src/
 pytest
-
-# Code formatting
-black .
-ruff check .
 ```
 
 ### Frontend Development
@@ -104,32 +130,51 @@ Stripe API → FastAPI Backend → Clickhouse Database → React Frontend
 
 ### Backend Architecture (`backend/`)
 
+The backend is a **modern Python project** with proper packaging:
+
+**Project Structure:**
+```
+backend/
+├── pyproject.toml          # Project config, dependencies (uses uv)
+├── .python-version         # Python version (3.11)
+├── src/
+│   └── subscriptions/      # Main package
+│       ├── __init__.py
+│       ├── main.py         # FastAPI app entry point
+│       ├── models.py       # Pydantic models
+│       ├── database.py     # Clickhouse client
+│       ├── analytics.py    # Metrics computation
+│       └── stripe_sync.py  # Stripe data sync
+├── Dockerfile
+└── README.md
+```
+
 The backend uses a **layered architecture**:
 
-1. **main.py** - FastAPI application entry point
+1. **subscriptions/main.py** - FastAPI application entry point
    - Defines REST API endpoints
    - Configures CORS for React frontend
    - Handles HTTP request/response lifecycle
 
-2. **models.py** - Pydantic data models
+2. **subscriptions/models.py** - Pydantic data models
    - `MetricType` enum: Defines available metrics (MRR, ARR, LTV, etc.)
    - `MetricData`: Time-series data structure (date + value)
    - Request/response validation
 
-3. **database.py** - `ClickhouseClient` class
+3. **subscriptions/database.py** - `ClickhouseClient` class
    - Abstracts Clickhouse database operations
    - Provides query methods: `get_customers()`, `get_subscriptions()`, `get_invoices()`
    - Currently uses mock implementation (returns empty arrays)
    - Production: Should implement actual clickhouse-driver queries
 
-4. **analytics.py** - `AnalyticsEngine` class
+4. **subscriptions/analytics.py** - `AnalyticsEngine` class
    - **Core metrics computation logic**
    - Each metric has its own computation method (e.g., `compute_mrr()`, `compute_ltv()`)
    - Handles time-series aggregation by interval (day/week/month/year)
    - **Fallback behavior**: When no real data exists, generates sample data for demonstration
    - Period generation via `_generate_periods()` helper
 
-5. **stripe_sync.py** - `StripeSync` class
+5. **subscriptions/stripe_sync.py** - `StripeSync` class
    - Syncs data from Stripe API to Clickhouse
    - Methods: `sync_customers()`, `sync_subscriptions()`, `sync_invoices()`
    - Currently uses mock implementation
@@ -203,14 +248,14 @@ Copy `.env.example` to `.env` and configure:
 
 The application currently uses **mock/sample data** for demonstration:
 
-- `database.py` returns empty arrays from query methods
-- `stripe_sync.py` doesn't actually call Stripe API
-- `analytics.py` detects empty data and generates sample time series
+- `subscriptions/database.py` returns empty arrays from query methods
+- `subscriptions/stripe_sync.py` doesn't actually call Stripe API
+- `subscriptions/analytics.py` detects empty data and generates sample time series
 
 When implementing real functionality:
-1. Implement actual Clickhouse queries in `database.py` using `clickhouse-driver`
-2. Implement Stripe API calls in `stripe_sync.py` using `stripe` SDK
-3. Remove or update sample data generators in `analytics.py`
+1. Implement actual Clickhouse queries in `subscriptions/database.py` using `clickhouse-driver`
+2. Implement Stripe API calls in `subscriptions/stripe_sync.py` using `stripe` SDK
+3. Remove or update sample data generators in `subscriptions/analytics.py`
 
 ### Date Handling
 
@@ -231,16 +276,16 @@ Update `main.py:24` when deploying to production domains.
 
 ### Adding a New Metric
 
-1. Add enum value to `MetricType` in `models.py`
-2. Implement `compute_<metric>()` method in `AnalyticsEngine` class
+1. Add enum value to `MetricType` in `src/subscriptions/models.py`
+2. Implement `compute_<metric>()` method in `AnalyticsEngine` class (`src/subscriptions/analytics.py`)
 3. Add case in `get_metric()` dispatcher method
 4. Update frontend to display the new metric
 
 ### Modifying Database Schema
 
 1. Update `init-db.sql`
-2. Update corresponding query methods in `database.py`
-3. Update Stripe sync methods in `stripe_sync.py` if needed
+2. Update corresponding query methods in `src/subscriptions/database.py`
+3. Update Stripe sync methods in `src/subscriptions/stripe_sync.py` if needed
 4. Rebuild Docker containers or re-run init script
 
 ### Testing API Changes

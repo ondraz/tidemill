@@ -221,5 +221,5 @@ build/
 .env.local
 
 # IDE
-.vscode/
 .idea/
+subscriptions.code-workspace
