@@ -277,3 +277,25 @@ curl "localhost:8000/api/metrics/churn?start=2025-12-01&end=2026-01-01"
 # Check all metrics
 curl localhost:8000/api/metrics/summary
 ```
+
+## Lago Testing (Same-Database Mode)
+
+For same-database mode, test data lives in Lago's PostgreSQL. No Kafka or webhooks are involved.
+
+### Approach
+
+1. **Use Lago's own test environment** — create customers, subscriptions, and invoices through Lago's API or UI
+2. **Point the analytics engine at Lago's database** — set `CONNECTOR=lago` and `DATABASE_URL` to Lago's PostgreSQL
+3. **Query metrics directly** — the analytics engine reads Lago's tables at request time
+
+```bash
+# After populating Lago with test data:
+export SUBSCRIPTIONS_DATABASE_URL=postgresql://lago:password@localhost/lago
+export SUBSCRIPTIONS_CONNECTOR=lago
+
+subscriptions mrr
+subscriptions churn --start 2025-12-01 --end 2026-01-01
+subscriptions summary
+```
+
+No seed script is provided for Lago — use Lago's own API to create test data. The analytics engine is read-only against Lago's tables.

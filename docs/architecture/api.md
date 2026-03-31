@@ -1,15 +1,114 @@
-# API
+# API & CLI
 
-> FastAPI facade over the metrics engine.
+> FastAPI and CLI facades over the metrics engine.
 > Last updated: March 2026
 
 ## Design
 
-FastAPI is a thin HTTP layer. Every endpoint delegates to `MetricsEngine`. No business logic lives in the API layer.
+Both the HTTP API and CLI are thin facades. Every command/endpoint delegates to `MetricsEngine`. No business logic lives in the API or CLI layer.
+
+## CLI (P0)
+
+The CLI provides programmatic access to all metrics. It uses the same `MetricsEngine` as the HTTP API.
+
+### Installation
+
+```bash
+pip install subscriptions
+# or
+uv pip install subscriptions
+```
+
+### Commands
+
+```bash
+# Current MRR
+subscriptions mrr
+# $12,450.00
+
+# MRR as of a specific date
+subscriptions mrr --at 2026-01-01
+
+# MRR time series
+subscriptions mrr --start 2025-01-01 --end 2026-01-01 --interval month
+
+# ARR
+subscriptions arr
+
+# Net new MRR breakdown
+subscriptions mrr breakdown --start 2026-01-01 --end 2026-03-01
+
+# Churn rate (default: logo churn)
+subscriptions churn --start 2026-01-01 --end 2026-03-01
+
+# Revenue churn
+subscriptions churn --type revenue --start 2026-01-01 --end 2026-03-01
+
+# Retention cohorts
+subscriptions retention --start 2025-01-01 --end 2026-01-01
+
+# All metrics summary
+subscriptions summary
+
+# Output as JSON (for piping to other tools)
+subscriptions mrr --format json
+
+# Output as CSV
+subscriptions mrr --start 2025-01-01 --end 2026-01-01 --interval month --format csv
+```
+
+### Configuration
+
+The CLI reads configuration from environment variables or a config file:
+
+```bash
+# Environment variables
+export SUBSCRIPTIONS_DATABASE_URL=postgresql://localhost/lago
+export SUBSCRIPTIONS_CONNECTOR=lago
+
+# Or config file (~/.subscriptions.toml or .subscriptions.toml)
+[database]
+url = "postgresql://localhost/lago"
+
+[connector]
+type = "lago"
+```
+
+### Programmatic Usage (Python)
 
 ```python
-from fastapi import FastAPI, Depends
-from subscriptions import MetricsEngine
+import asyncio
+from subscriptions import MetricsEngine, SegmentFilter
+
+# Ingestion mode (Stripe) — engine queries materialized metric_* tables
+engine = MetricsEngine(db=async_session)
+
+# Same-database mode (Lago) — engine also queries billing tables via connector
+# from subscriptions.connectors import get_connector
+# connector = get_connector("lago", engine=async_db_engine)
+# engine = MetricsEngine(db=async_session, connector=connector)
+
+# Dynamic query dispatch — all metric queries are async
+mrr = await engine.query("mrr", {"query_type": "current"})
+churn = await engine.query("churn", {"start": date(2026, 1, 1), "end": date(2026, 3, 1), "type": "logo"})
+cohorts = await engine.query("retention", {"start": date(2025, 1, 1), "end": date(2026, 1, 1)})
+
+# With segmentation
+segment = SegmentFilter(plan_intervals=["yearly"], customer_country=["US"])
+enterprise_mrr = await engine.query("mrr", {"query_type": "current"}, segment=segment)
+
+# Synchronous — no I/O
+print(engine.available_metrics())
+# ['churn', 'ltv', 'mrr', 'quick_ratio', 'retention', 'trials']
+```
+
+## HTTP API
+
+FastAPI is a thin HTTP layer. Every endpoint delegates to `engine.query()`. No business logic lives in the API layer.
+
+```python
+from fastapi import FastAPI, Depends, Query
+from subscriptions import MetricsEngine, SegmentFilter
 from subscriptions.database import get_db
 
 app = FastAPI(title="Subscriptions API")
@@ -17,17 +116,39 @@ app = FastAPI(title="Subscriptions API")
 def get_engine() -> MetricsEngine:
     return MetricsEngine(get_db())
 
+def parse_segment(
+    source_ids: list[str] = Query(default=[]),
+    customer_ids: list[str] = Query(default=[]),
+    customer_tags: list[str] = Query(default=[]),
+    customer_country: list[str] = Query(default=[]),
+    plan_ids: list[str] = Query(default=[]),
+    plan_intervals: list[str] = Query(default=[]),
+    currencies: list[str] = Query(default=[]),
+    group_by: list[str] = Query(default=[]),
+) -> SegmentFilter | None:
+    seg = SegmentFilter(
+        source_ids=source_ids, customer_ids=customer_ids,
+        customer_tags=customer_tags, customer_country=customer_country,
+        plan_ids=plan_ids, plan_intervals=plan_intervals, currencies=currencies,
+        group_by=group_by,
+    )
+    # Return None if nothing set (metrics skip SQL overhead entirely)
+    return seg if any([source_ids, customer_ids, customer_tags, customer_country,
+                       plan_ids, plan_intervals, currencies, group_by]) else None
+
 @app.get("/api/metrics/mrr")
-def get_mrr(
+async def get_mrr(
     at: date | None = None,
     start: date | None = None,
     end: date | None = None,
     interval: str = "month",
+    segment: SegmentFilter | None = Depends(parse_segment),
     engine: MetricsEngine = Depends(get_engine),
 ):
     if start and end:
-        return engine.mrr_series(start, end, interval)
-    return engine.mrr(at)
+        return await engine.query("mrr", {"query_type": "series", "start": start,
+                                          "end": end, "interval": interval}, segment)
+    return await engine.query("mrr", {"query_type": "current", "at": at}, segment)
 ```
 
 ## Endpoints
@@ -56,8 +177,19 @@ def get_mrr(
 | `start` | `date` | Series start date |
 | `end` | `date` | Series end date |
 | `interval` | `string` | `day`, `week`, `month`, `year` |
-| `source_id` | `uuid` | Filter to one billing source |
-| `plan_id` | `uuid` | Filter by plan |
+
+**Segment parameters (apply to all metric endpoints):**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `source_ids` | `string[]` | Filter to specific billing sources |
+| `customer_ids` | `string[]` | Filter to specific customers |
+| `customer_tags` | `string[]` | Filter by customer tags |
+| `customer_country` | `string[]` | ISO 3166-1 alpha-2 country codes |
+| `plan_ids` | `string[]` | Filter to specific plans |
+| `plan_intervals` | `string[]` | `monthly`, `yearly`, `quarterly`, etc. |
+| `currencies` | `string[]` | ISO 4217 — shows original-currency amounts; omit for USD aggregate |
+| `group_by` | `string[]` | Dimensional cut: `plan_id`, `plan_interval`, `customer_country`, `source_id`, `currency` |
 
 When `start` and `end` are provided, the endpoint returns a time series. Otherwise it returns a single value.
 

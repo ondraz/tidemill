@@ -5,9 +5,12 @@
 
 ## Overview
 
-Every change in a billing system is translated by a [connector](connectors.md) into an internal event, published to Kafka, and consumed by the core state manager and [metric plugins](metrics.md).
+Every change in a billing system is translated by a [connector](connectors.md) into an internal event, published to Kafka, and consumed by the core state manager and [metrics](metrics.md).
 
-Internal events are the single source of truth. They are immutable, ordered, and replayable.
+Internal events are the single source of truth for the ingestion architecture (Stripe). They are immutable, ordered, and replayable.
+
+!!! note "Same-database mode (Lago, Kill Bill)"
+    When using same-database connectors, metrics query the billing engine's PostgreSQL directly and do not consume Kafka events. The event schema below applies to ingestion-mode connectors (Stripe and any future webhook-based connector). See [Connectors](connectors.md) for details.
 
 ## Event Envelope
 
@@ -55,7 +58,7 @@ The most important events for metric computation.
 | `subscription.paused` | Subscription paused | `{external_id, mrr_cents}` |
 | `subscription.resumed` | Subscription resumed from pause | `{external_id, mrr_cents}` |
 
-**MRR classification:** The difference between `prev_mrr_cents` and `new_mrr_cents` in `subscription.changed` determines whether it's expansion (new > prev) or contraction (new < prev). Metric plugins use this to compute net new MRR breakdown.
+**MRR classification:** The difference between `prev_mrr_cents` and `new_mrr_cents` in `subscription.changed` determines whether it's expansion (new > prev) or contraction (new < prev). The MRR metric uses this to compute net new MRR breakdown.
 
 ### Invoice Events
 
@@ -96,17 +99,17 @@ For high-volume deployments, events can be split into separate topics per entity
 | Group | Consumes | Purpose |
 |-------|----------|---------|
 | `subscriptions.state` | All events | Updates core PostgreSQL tables (current state) |
-| `subscriptions.metric.mrr` | `subscription.*` | MRR metric plugin |
-| `subscriptions.metric.churn` | `subscription.*`, `customer.*` | Churn metric plugin |
-| `subscriptions.metric.retention` | `subscription.*`, `customer.*` | Retention metric plugin |
-| `subscriptions.metric.ltv` | `subscription.*`, `invoice.*`, `payment.*` | LTV metric plugin |
-| `subscriptions.metric.trials` | `subscription.trial_*`, `subscription.activated` | Trials metric plugin |
+| `subscriptions.metric.mrr` | `subscription.*` | MRR metric |
+| `subscriptions.metric.churn` | `subscription.*`, `customer.*` | Churn metric |
+| `subscriptions.metric.retention` | `subscription.*`, `customer.*` | Retention metric |
+| `subscriptions.metric.ltv` | `subscription.*`, `invoice.*`, `payment.*` | LTV metric |
+| `subscriptions.metric.trials` | `subscription.trial_*`, `subscription.activated` | Trials metric |
 
-Each metric plugin runs in its own consumer group, so it maintains its own offset. This means:
+Each metric runs in its own consumer group, so it maintains its own offset. This means:
 
-- Plugins process events independently (a slow plugin doesn't block others)
-- A new plugin can be added and replayed from offset 0 to backfill
-- A plugin can be reset (seek to beginning) to recompute from scratch
+- Metrics process events independently (a slow metric doesn't block others)
+- A new metric can be added and replayed from offset 0 to backfill
+- A metric can be reset (seek to beginning) to recompute from scratch
 
 ## Idempotency
 

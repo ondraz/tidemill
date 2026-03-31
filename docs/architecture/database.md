@@ -22,7 +22,7 @@ ClickHouse excels at columnar analytics over billions of rows. But subscription 
 The database has two categories of tables:
 
 1. **Core tables** — managed by the framework. Store current state of billing entities and the event log. Defined below.
-2. **Metric plugin tables** — each [metric plugin](metrics.md) owns its own tables (prefixed `metric_`). Created by the plugin's `register_tables()` method. See individual plugin docs in [Metrics](metrics.md).
+2. **Metric tables** — each [metric](metrics.md) owns its own tables (prefixed `metric_`). Created by the metric's `register_tables()` method. See individual metric docs in [Metrics](metrics.md).
 
 This separation means adding a new metric never touches core schema.
 
@@ -122,7 +122,9 @@ erDiagram
         uuid customer_id FK
         uuid plan_id FK
         text status "active | canceled | past_due | trialing | paused"
-        bigint mrr_cents "current MRR contribution"
+        bigint mrr_cents "current MRR in original currency"
+        bigint mrr_usd_cents "current MRR in USD (at rate on started_at)"
+        text currency "ISO 4217"
         int quantity
         timestamptz started_at
         timestamptz trial_start
@@ -142,10 +144,13 @@ erDiagram
         uuid customer_id FK
         uuid subscription_id FK
         text status "draft | finalized | paid | void | uncollectible"
-        text currency
+        text currency "ISO 4217"
         bigint subtotal_cents
+        bigint subtotal_usd_cents
         bigint tax_cents
+        bigint tax_usd_cents
         bigint total_cents
+        bigint total_usd_cents
         timestamptz period_start
         timestamptz period_end
         timestamptz issued_at
@@ -161,6 +166,8 @@ erDiagram
         text type "subscription | usage | addon | proration | tax | credit | adjustment"
         text description
         bigint amount_cents
+        bigint amount_usd_cents
+        text currency
         decimal quantity
         timestamptz period_start
         timestamptz period_end
@@ -174,7 +181,8 @@ erDiagram
         uuid customer_id FK
         text status "pending | succeeded | failed | refunded"
         bigint amount_cents
-        text currency
+        bigint amount_usd_cents
+        text currency "ISO 4217"
         text payment_method_type "card | bank_transfer | wallet"
         text failure_reason
         int attempt_count
@@ -185,11 +193,15 @@ erDiagram
     }
 ```
 
-## Metric Plugin Tables
+## FX Rates
 
-Each metric plugin creates its own tables, prefixed with `metric_`. These are documented in [Metrics](metrics.md). Summary:
+The `fx_rate` table stores official daily exchange rates used to populate `*_usd_cents` columns at ingest time. See [Money Handling](#money-handling) below.
 
-| Plugin | Tables | Purpose |
+## Metric Tables
+
+Each metric creates its own tables, prefixed with `metric_`. Monetary columns in metric tables follow the same dual-column convention (`*_cents` + `*_usd_cents`). These are documented in [Metrics](metrics.md). Summary:
+
+| Metric | Tables | Purpose |
 |--------|--------|---------|
 | MRR | `metric_mrr_snapshot`, `metric_mrr_movement` | Current MRR per subscription, MRR change log |
 | Churn | `metric_churn_customer_state`, `metric_churn_event` | Customer activity tracking, churn events |
@@ -230,10 +242,140 @@ CREATE INDEX ix_payment_status ON payment(status, created_at);
 CREATE INDEX ix_customer_created ON customer(created_at);
 ```
 
+## Deployment Topologies
+
+The database architecture depends on which [connector mode](connectors.md) is used.
+
+### Separate Database (Stripe) — Primary
+
+```
+┌─────────────────┐     ┌─────────────────┐
+│  Kafka/Redpanda │     │   PostgreSQL     │
+│  (event bus)    │────►│  (analytics)     │
+│                 │     │                  │
+└─────────────────┘     │  core tables     │
+                        │  metric_* tables │
+                        └─────────────────┘
+```
+
+For Stripe (and any webhook-based connector), the analytics engine owns its own PostgreSQL and Kafka/Redpanda. Webhooks are ingested through Kafka, processed into core tables and metric tables. This is the primary deployment topology.
+
+### Same-Database (Lago/Kill Bill) — Alternative
+
+```
+┌─────────────────────────────────────────────┐
+│              PostgreSQL                      │
+│                                             │
+│  ┌─────────────────┐  ┌──────────────────┐  │
+│  │ Lago/Kill Bill   │  │ Analytics        │  │
+│  │ tables           │  │ metric_* tables  │  │
+│  │ (billing-owned)  │  │ (analytics-owned)│  │
+│  └─────────────────┘  └──────────────────┘  │
+│                                             │
+│  Billing engine and analytics share the     │
+│  same PostgreSQL instance. Analytics        │
+│  reads billing tables, writes metric_*.     │
+└─────────────────────────────────────────────┘
+```
+
+For open-source billing engines (Lago, Kill Bill) that expose their PostgreSQL, the analytics engine can create its `metric_*` tables in a separate schema within the same database. No Kafka, no data copying, no sync lag.
+
+**Alternative:** analytics connects to Lago's PostgreSQL as read-only and maintains its own PostgreSQL for `metric_*` tables. More isolation, slightly more operational complexity.
+
+### Lago Schema References
+
+When using same-database mode with Lago, the analytics engine queries these Lago-owned tables (read-only):
+
+| Lago Table | Key Columns | Analytics Use |
+|-----------|-------------|---------------|
+| `subscriptions` | `id`, `customer_id`, `plan_id`, `status`, `started_at`, `terminated_at` | Active subscription state |
+| `fees` | `subscription_id`, `amount_cents`, `fee_type`, `created_at` | MRR source of truth (fee-type separation) |
+| `invoices` | `id`, `customer_id`, `status`, `total_amount_cents` | Revenue tracking |
+| `customers` | `id`, `external_id`, `name`, `email` | Customer records |
+| `plans` | `id`, `name`, `interval`, `amount_cents` | Plan definitions |
+| `charges` | `id`, `plan_id`, `charge_model`, `properties` | Usage-based pricing |
+
+The analytics engine never writes to Lago tables.
+
 ## Money Handling
 
-All monetary values are stored as **cents (bigint)**. This avoids floating-point precision issues. The metrics package converts to decimal at the query boundary.
+### Dual-Column Convention
 
-- `mrr_cents = 4999` means $49.99/month
-- Annual plan at $599/year: `mrr_cents = 59900 / 12 = 4991` (integer division, round down)
-- Multi-currency: each record stores its `currency`. Cross-currency aggregation is the consumer's responsibility.
+Every monetary column is stored twice:
+
+1. **Original currency** (`*_cents BIGINT`, `currency TEXT`) — exact value from the billing system, no rounding
+2. **USD equivalent** (`*_usd_cents BIGINT`) — converted at the official daily FX rate on the date the amount was recorded
+
+```sql
+-- Example: invoice totals
+total_cents       BIGINT NOT NULL,   -- e.g. 4999 (EUR)
+currency          TEXT NOT NULL,     -- 'EUR'
+total_usd_cents   BIGINT NOT NULL,   -- e.g. 5399 (USD at that day's rate)
+```
+
+This allows:
+- **Exact per-customer records** in original currency (for invoices, statements)
+- **Fast cross-currency aggregations** in USD without joining the FX rate table at query time
+
+If the currency is already USD, both columns hold the same value.
+
+### FX Rates Table
+
+```sql
+CREATE TABLE fx_rate (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    date         DATE NOT NULL,
+    from_currency TEXT NOT NULL,   -- ISO 4217, e.g. 'EUR'
+    to_currency   TEXT NOT NULL,   -- always 'USD' for now
+    rate          NUMERIC(18, 8) NOT NULL,  -- 1 EUR = 1.0798 USD
+    source        TEXT NOT NULL,   -- 'ecb' | 'openexchangerates' | 'manual'
+    UNIQUE(date, from_currency, to_currency)
+);
+
+CREATE INDEX ix_fx_rate_lookup ON fx_rate(from_currency, to_currency, date DESC);
+```
+
+Rates are fetched once daily (e.g., from ECB or Open Exchange Rates) and stored here. The analytics engine uses `fx_rate` to populate `*_usd_cents` when ingesting events or polling Lago.
+
+### USD Conversion at Ingest Time
+
+Database access is always async via SQLAlchemy's `AsyncSession` / `AsyncEngine`. The FX lookup follows the same pattern:
+
+```python
+async def to_usd_cents(amount_cents: int, currency: str, on_date: date,
+                        db: AsyncSession) -> int:
+    if currency == "USD":
+        return amount_cents
+    result = await db.execute(
+        text("SELECT rate FROM fx_rate WHERE from_currency = :c AND to_currency = 'USD'"
+             " AND date <= :d ORDER BY date DESC LIMIT 1"),
+        {"c": currency, "d": on_date}
+    )
+    rate = result.scalar()
+    if rate is None:
+        raise ValueError(f"No FX rate for {currency}/USD on or before {on_date}")
+    return int(amount_cents * rate)
+```
+
+### Aggregation Pattern
+
+Use `*_usd_cents` for totals (MRR, ARR, revenue) and `currency` + `*_cents` for per-customer display:
+
+```sql
+-- Fast: no runtime FX join needed
+SELECT SUM(mrr_usd_cents) / 100.0 AS mrr_usd
+FROM metric_mrr_snapshot
+WHERE mrr_usd_cents > 0;
+
+-- Per-customer breakdown in original currency
+SELECT customer_id, currency, SUM(mrr_cents) / 100.0 AS mrr
+FROM metric_mrr_snapshot
+WHERE mrr_cents > 0
+GROUP BY customer_id, currency;
+```
+
+### Notes
+
+- `mrr_cents = 4999` in EUR, `mrr_usd_cents = 5399` means $53.99/month at that day's rate
+- Annual plan at $599/year: `mrr_cents = 59900 / 12 = 4991` (integer division, rounds down)
+- Historical USD values are frozen at the rate on the date of the event — they do not retroactively update when FX rates change

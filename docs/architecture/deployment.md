@@ -33,6 +33,67 @@ deploy/
         └── terraform.tfvars.example
 ```
 
+## Deployment Modes
+
+The deployment depends on which [connector type](connectors.md) is used:
+
+### Full Deployment (Stripe / Ingestion Mode) — Primary
+
+For Stripe (and any webhook-based connector), the full stack is required: PostgreSQL + Kafka/Redpanda + API + Worker. See Option A (single server) or Option B (Kubernetes) below.
+
+---
+
+### Lago Companion Mode (Same-Database)
+
+For Lago or Kill Bill users, the analytics engine can run alongside the billing engine with **no additional infrastructure**:
+
+```
+┌────────────────────────────────────┐
+│  Existing Lago deployment          │
+│  ┌──────────┐  ┌────────────────┐  │
+│  │  Lago    │  │  PostgreSQL    │  │
+│  │  (API)   │  │  (shared)      │  │
+│  └──────────┘  └───────┬────────┘  │
+│                        │           │
+│  ┌─────────────────────┴────────┐  │
+│  │  subscriptions               │  │
+│  │  (analytics CLI / API)       │  │
+│  │  No Kafka. No worker.        │  │
+│  └──────────────────────────────┘  │
+└────────────────────────────────────┘
+```
+
+**Services:** Just the `subscriptions` container (or `pip install subscriptions` directly). Connects to the billing engine's PostgreSQL.
+
+**No Kafka, no worker process, no event bus.** The analytics engine queries billing tables directly at request time.
+
+```yaml
+# docker-compose.yml addition for existing Lago deployment
+services:
+  analytics:
+    image: ghcr.io/ondraz/subscriptions:latest
+    environment:
+      DATABASE_URL: postgresql://lago:password@postgres/lago
+      CONNECTOR: lago
+    ports:
+      - "8000:8000"
+```
+
+Or simply install and use the CLI:
+
+```bash
+pip install subscriptions
+export SUBSCRIPTIONS_DATABASE_URL=postgresql://lago:password@postgres/lago
+export SUBSCRIPTIONS_CONNECTOR=lago
+
+subscriptions mrr
+# $12,450.00
+```
+
+This mode is lower priority but a strong differentiator for open-source billing engine users.
+
+---
+
 ## Option A: Single Server
 
 A single Hetzner CX22 (2 vCPU, 4 GB RAM, ~€4/mo) running Docker Compose. Good for getting started, small-to-medium workloads, or development.
@@ -52,7 +113,7 @@ A single Hetzner CX22 (2 vCPU, 4 GB RAM, ~€4/mo) running Docker Compose. Good 
 |-----------|------|-----|
 | **Caddy** | Reverse proxy, auto-HTTPS via Let's Encrypt | ~20 MB |
 | **API** | FastAPI — metrics, webhooks | ~100 MB |
-| **Worker** | Kafka consumers — core state + metric plugins | ~150 MB |
+| **Worker** | Kafka consumers — core state + metrics | ~150 MB |
 | **Redpanda** | Kafka-compatible bus (no JVM, no ZooKeeper) | ~256 MB |
 | **PostgreSQL** | Primary database | ~256 MB |
 
