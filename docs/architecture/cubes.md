@@ -1,6 +1,6 @@
-# Semantic Models & Query Algebra
+# Cubes & Query Algebra
 
-> Declarative query building: semantic models define what's queryable, algebraic fragments compose queries.
+> Declarative query building: cubes define what's queryable, algebraic fragments compose queries.
 > Last updated: March 2026
 
 ## Overview
@@ -9,24 +9,24 @@ Metric queries need to aggregate fact tables (e.g., `metric_mrr_snapshot`) while
 
 This module solves the problem with a hybrid of two patterns:
 
-1. **Semantic Model** — a class that declares all available joins, measures, and dimensions for a fact table. Defines *what's queryable* in one place.
+1. **Cube** — a class that declares all available joins, measures, and dimensions for a fact table. Defines *what's queryable* in one place.
 2. **Algebraic Fragment Composition** — queries are built by combining immutable `QueryFragment` objects with `+`. Each fragment carries column expressions, filters, and required joins. Fragments compose freely — order doesn't matter.
 
-The semantic model owns the *contract* (available dimensions, join paths, measure definitions). Fragments provide *composability* (metrics build queries by combining pieces conditionally). The compiler turns a composed fragment into a SQLAlchemy `Select`.
+The cube owns the *contract* (available dimensions, join paths, measure definitions). Fragments provide *composability* (metrics build queries by combining pieces conditionally). The compiler turns a composed fragment into a SQLAlchemy `Select`.
 
 ## Design Rationale
 
-1. **Semantic model solves join resolution once.** Pre-defined dimensions mean no ambiguity. The model is the single source of truth for what's queryable per fact table.
+1. **Cube solves join resolution once.** Pre-defined dimensions mean no ambiguity. The model is the single source of truth for what's queryable per fact table.
 2. **Fragment composition replaces procedural building.** Metrics declare *what* they need, not *how* to join. Conditional logic is clean: `q = base + (extra if condition else Fragment())`.
 3. **SQL transparency comes free.** `compile()` produces both the SQLAlchemy `Select` and a formatted SQL string. Every metric result can carry its SQL for auditability — the project's core differentiator.
 4. **Serializable query specs.** The API receives `{"dimensions": [...], "filters": {...}}` and the model validates + compiles it. No custom parsing.
-5. **Each metric owns its models.** MRR defines `MRRSnapshotModel` and `MRRMovementModel`. Churn defines `ChurnEventModel`. No shared global registry — each model is self-contained.
+5. **Each metric owns its cubes.** MRR defines `MRRSnapshotCube` and `MRRMovementCube`. Churn defines `ChurnEventCube`. No shared global registry — each cube is self-contained.
 
 ## Core Concepts
 
-### SemanticModel
+### Cube
 
-A `SemanticModel` is a class that declares everything needed to query a fact table with dimensional slicing. It contains four nested declarations:
+A `Cube` is a class that declares everything needed to query a fact table with dimensional slicing. It contains four nested declarations:
 
 - **Joins** — how to reach dimension tables from the fact table, with dependency ordering
 - **Measures** — named aggregation expressions (`Sum`, `CountDistinct`, `Avg`, `Count`)
@@ -34,8 +34,8 @@ A `SemanticModel` is a class that declares everything needed to query a fact tab
 - **TimeDimensions** — time columns that support granularity truncation (`DATE_TRUNC`)
 
 ```python
-class MRRSnapshotModel(SemanticModel):
-    """Semantic model for the MRR snapshot fact table."""
+class MRRSnapshotCube(Cube):
+    """Cube for the MRR snapshot fact table."""
     __source__ = "metric_mrr_snapshot"
     __alias__ = "s"
 
@@ -77,13 +77,13 @@ Key properties:
 - **Introspection** — the model can list its available dimensions and measures at runtime, enabling API validation and documentation generation.
 
 ```python
-MRRSnapshotModel.available_dimensions()
+MRRSnapshotCube.available_dimensions()
 # ['source_id', 'currency', 'plan_id', 'plan_interval', 'customer_country']
 
-MRRSnapshotModel.available_measures()
+MRRSnapshotCube.available_measures()
 # ['mrr', 'mrr_original', 'count']
 
-MRRSnapshotModel.available_time_dimensions()
+MRRSnapshotCube.available_time_dimensions()
 # ['snapshot_at']
 ```
 
@@ -139,7 +139,7 @@ This makes fragments a **commutative monoid**, which means:
 
 ### Fragment Constructors
 
-The semantic model provides factory methods that return fragments. Each method encapsulates the column expression *and* the joins required to resolve it:
+The cube provides factory methods that return fragments. Each method encapsulates the column expression *and* the joins required to resolve it:
 
 ```python
 # Measure fragments — carry the aggregation expression
@@ -187,7 +187,7 @@ model.where("s.mrr_usd_cents", ">", 0)
 7. **Add ORDER BY** — if specified
 
 ```python
-def compile(self, model: type[SemanticModel]) -> tuple[Select, dict[str, Any]]:
+def compile(self, model: type[Cube]) -> tuple[Select, dict[str, Any]]:
     """Resolve the fragment against its model and emit SQLAlchemy Select + params."""
     source_table = table(self.source).alias(self.alias)
     stmt = select().select_from(source_table)
@@ -225,14 +225,14 @@ def compile(self, model: type[SemanticModel]) -> tuple[Select, dict[str, Any]]:
     return stmt, params
 ```
 
-## Concrete Models
+## Concrete Cubes
 
-These are the semantic models for the project's [metric tables](database.md#metric-tables). Each maps a fact table to its available joins, measures, and dimensions.
+These are the cubes for the project's [metric tables](database.md#metric-tables). Each maps a fact table to its available joins, measures, and dimensions.
 
-### MRR Snapshot Model
+### MRR Snapshot Cube
 
 ```python
-class MRRSnapshotModel(SemanticModel):
+class MRRSnapshotCube(Cube):
     """Current MRR per subscription. Updated on every subscription event."""
     __source__ = "metric_mrr_snapshot"
     __alias__ = "s"
@@ -268,10 +268,10 @@ class MRRSnapshotModel(SemanticModel):
         snapshot_at = TimeDim("s.snapshot_at")
 ```
 
-### MRR Movement Model
+### MRR Movement Cube
 
 ```python
-class MRRMovementModel(SemanticModel):
+class MRRMovementCube(Cube):
     """Append-only log of MRR changes. Used for breakdown and time-series queries."""
     __source__ = "metric_mrr_movement"
     __alias__ = "m"
@@ -308,10 +308,10 @@ class MRRMovementModel(SemanticModel):
         occurred_at = TimeDim("m.occurred_at")
 ```
 
-### Churn Event Model
+### Churn Event Cube
 
 ```python
-class ChurnEventModel(SemanticModel):
+class ChurnEventCube(Cube):
     """Churn events for rate calculation. No subscription_id — joins via customer only."""
     __source__ = "metric_churn_event"
     __alias__ = "ce"
@@ -335,10 +335,10 @@ class ChurnEventModel(SemanticModel):
         occurred_at = TimeDim("ce.occurred_at")
 ```
 
-### Retention Cohort Model
+### Retention Cohort Cube
 
 ```python
-class RetentionCohortModel(SemanticModel):
+class RetentionCohortCube(Cube):
     """Cohort membership and monthly activity for retention analysis."""
     __source__ = "metric_retention_cohort"
     __alias__ = "rc"
@@ -369,13 +369,13 @@ class RetentionCohortModel(SemanticModel):
 
 ## Usage in Metrics
 
-Metrics declare which semantic model they use. The `query()` method composes fragments from the model based on the incoming `QuerySpec`:
+Metrics declare which cube they use. The `query()` method composes fragments from the model based on the incoming `QuerySpec`:
 
 ```python
 @register
 class MrrMetric(Metric):
-    model = MRRSnapshotModel
-    movement_model = MRRMovementModel
+    model = MRRSnapshotCube
+    movement_model = MRRMovementCube
 
     async def query(self, params: dict, spec: QuerySpec | None = None) -> Any:
         match params.get("query_type"):
@@ -435,13 +435,13 @@ Common filter combinations can be stored as named fragments and reused across me
 
 ```python
 # Shared fragment: active subscriptions only
-ACTIVE_ONLY = MRRSnapshotModel.where("s.mrr_usd_cents", ">", 0)
+ACTIVE_ONLY = MRRSnapshotCube.where("s.mrr_usd_cents", ">", 0)
 
 # Shared fragment: monthly plans
-MONTHLY_PLANS = MRRSnapshotModel.filter("plan_interval", "=", "monthly")
+MONTHLY_PLANS = MRRSnapshotCube.filter("plan_interval", "=", "monthly")
 
 # Compose freely
-q = MRRSnapshotModel.measures.mrr + ACTIVE_ONLY + MONTHLY_PLANS
+q = MRRSnapshotCube.measures.mrr + ACTIVE_ONLY + MONTHLY_PLANS
 ```
 
 ### QuickRatio Example
@@ -451,7 +451,7 @@ The QuickRatio metric composes fragments from the MRR movement model:
 ```python
 @register
 class QuickRatioMetric(Metric):
-    model = MRRMovementModel
+    model = MRRMovementCube
     dependencies = ["mrr"]
 
     async def query(self, params: dict, spec: QuerySpec | None = None) -> Any:
@@ -477,12 +477,12 @@ class QuickRatioMetric(Metric):
 
 ## QuerySpec
 
-`QuerySpec` is the external API contract — what FastAPI/CLI users pass in. It references dimension and filter names from the metric's semantic model:
+`QuerySpec` is the external API contract — what FastAPI/CLI users pass in. It references dimension and filter names from the metric's cube:
 
 ```python
 @dataclass
 class QuerySpec:
-    """Declarative query specification. Validated against the metric's SemanticModel."""
+    """Declarative query specification. Validated against the metric's Cube."""
 
     # Dimensions to group by (names from model.Dimensions)
     dimensions: list[str] = field(default_factory=list)
@@ -494,7 +494,7 @@ class QuerySpec:
     granularity: str | None = None        # day | week | month | quarter | year
     time_range: tuple[str, str] | None = None
 
-    def validate_against(self, model: type[SemanticModel]) -> None:
+    def validate_against(self, model: type[Cube]) -> None:
         """Validate that all referenced dimensions exist in the model. Raises ValueError."""
         available = model.available_dimensions()
         for d in self.dimensions:
@@ -648,7 +648,7 @@ GROUP BY DATE_TRUNC('month', s.snapshot_at), sub.plan_id
 ### MRR breakdown by movement type + plan
 
 ```python
-mm = MRRMovementModel
+mm = MRRMovementCube
 q = (mm.measures.amount + mm.dimension("movement_type") + mm.dimension("plan_id")
      + mm.filter("occurred_at", "between", (start, end)))
 ```
@@ -668,19 +668,19 @@ GROUP BY m.movement_type, sub.plan_id
 
 ### File Location
 
-The semantic model machinery lives in `subscriptions/metrics/query.py` — the same file that metrics import from. The concrete models are defined alongside their metrics (e.g., `MRRSnapshotModel` in `subscriptions/metrics/mrr.py`).
+The cube machinery lives in `subscriptions/metrics/query.py` — the same file that metrics import from. The concrete cubes are defined alongside their metrics (e.g., `MRRSnapshotCube` in `subscriptions/metrics/mrr/cubes.py`).
 
 ### Package Structure
 
 ```
 subscriptions/metrics/
 ├── __init__.py          # Metric base class + registry + QuerySpec
-├── query.py             # SemanticModel, QueryFragment, compilation
-├── mrr.py               # MRRSnapshotModel, MRRMovementModel, MrrMetric
-├── churn.py             # ChurnEventModel, ChurnMetric
-├── retention.py         # RetentionCohortModel, RetentionMetric
-├── ltv.py               # LTV models + metric
-└── trials.py            # Trial models + metric
+├── query.py             # Cube, QueryFragment, compilation
+├── mrr/                 # MRRSnapshotCube, MRRMovementCube, MrrMetric
+├── churn/               # ChurnEventCube, ChurnMetric
+├── retention/           # RetentionCohortCube, RetentionMetric
+├── ltv.py               # LTV cubes + metric
+└── trials.py            # Trial cubes + metric
 ```
 
 ### SQLAlchemy Integration

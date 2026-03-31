@@ -183,5 +183,5 @@ For development and single-node deployments, [Redpanda](https://redpanda.com/) i
 - [Database](database.md) — core tables, ER diagram, deployment topologies
 - [Connectors](connectors.md) — webhook translators (Stripe) and database connectors (Lago, Kill Bill)
 - [Metrics](metrics.md) — metric base class, built-in metrics (dual-mode)
-- [Semantic Models & Query Algebra](cubes.md) — declarative query building with semantic models and composable fragments
+- [Cubes & Query Algebra](cubes.md) — declarative query building with cubes and composable fragments
 - [API](api.md) — FastAPI endpoints and CLI interface

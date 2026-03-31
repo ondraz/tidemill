@@ -48,11 +48,11 @@ from sqlalchemy import MetaData
 
 @dataclass
 class QuerySpec:
-    """Declarative query specification resolved against a metric's SemanticModel.
+    """Declarative query specification resolved against a metric's Cube.
 
     Dimensions and filters reference names defined in the model (e.g., "plan_interval",
     "customer_country"). The model validates them and compiles to SQL via fragment
-    composition. See [Semantic Models & Query Algebra](cubes.md) for details.
+    composition. See [Cubes & Query Algebra](cubes.md) for details.
 
     When dimensions is set, query() returns a list of dicts:
         [{"plan_interval": "monthly", "mrr": 4200.00}, ...]
@@ -123,7 +123,7 @@ class Metric(ABC):
 
         params: query-type-specific parameters (at, start, end, interval, ...)
         spec:   optional QuerySpec with dimensions and filters. Names reference
-                the metric's SemanticModel. All built-in metrics support this.
+                the metric's Cube. All built-in metrics support this.
 
         Async — issues SQL via AsyncSession or awaits DatabaseConnector methods.
         """
@@ -321,15 +321,15 @@ async def query(self, params: dict, spec=None) -> Any:
             return await self.query({**params, "query_type": "current"}, spec) * 12
 ```
 
-**Query building with semantic models and fragment composition:**
+**Query building with cubes and fragment composition:**
 
-Each MRR query method composes `QueryFragment` objects from `MRRSnapshotModel` or `MRRMovementModel`. The model declares available joins, measures, and dimensions; fragments carry the required joins automatically. See [Semantic Models & Query Algebra](cubes.md) for the full approach.
+Each MRR query method composes `QueryFragment` objects from `MRRSnapshotCube` or `MRRMovementCube`. The model declares available joins, measures, and dimensions; fragments carry the required joins automatically. See [Cubes & Query Algebra](cubes.md) for the full approach.
 
 ```python
 async def _current_mrr(self, at: date | None, spec: QuerySpec | None):
     # Use original-currency measure when caller groups by currency
     use_original = spec and "currency" in (spec.dimensions or [])
-    m = self.model  # MRRSnapshotModel
+    m = self.model  # MRRSnapshotCube
     measure = m.measures.mrr_original if use_original else m.measures.mrr
 
     # Base: always-present fragments
@@ -401,7 +401,7 @@ GROUP BY sub.plan_id
 
 ```python
 async def _mrr_breakdown(self, start: date, end: date, spec: QuerySpec | None):
-    mm = self.movement_model  # MRRMovementModel
+    mm = self.movement_model  # MRRMovementCube
 
     q = (
         mm.measures.amount
@@ -635,7 +635,7 @@ class MetricsEngine:
         """Route a query to the named metric. Works for any registered metric —
         built-in or custom — without engine changes.
 
-        spec is validated against the metric's SemanticModel before execution.
+        spec is validated against the metric's Cube before execution.
         Invalid dimension/filter names raise ValueError with available options.
         """
         if metric not in self._metrics:
@@ -685,11 +685,11 @@ The same `engine.query()` call is used from FastAPI, CLI, and Jupyter. The HTTP 
 1. **Filters** — restrict which rows are included (`filters` dict → WHERE clauses)
 2. **Dimensional cuts** — split the result by named dimensions (`dimensions` list → GROUP BY)
 
-Both reference dimension names defined in the metric's [SemanticModel](cubes.md). The model validates names at query time and resolves joins automatically.
+Both reference dimension names defined in the metric's [Cube](cubes.md). The model validates names at query time and resolves joins automatically.
 
 ### Available Dimensions
 
-Each metric's semantic model declares which dimensions are available. Common dimensions across metric models:
+Each metric's cube declares which dimensions are available. Common dimensions across metric models:
 
 | Dimension | Column | Join required | Example |
 |-----------|--------|---------------|---------|
@@ -726,11 +726,11 @@ Multiple dimensions can be combined: `dimensions=["plan_interval", "customer_cou
 
 **Without dimensions:** scalar or time-series as usual.
 
-### Semantic Models & Query Algebra
+### Cubes & Query Algebra
 
-All metrics build their SQL through semantic models and composable query fragments (`subscriptions/metrics/query.py`). Each metric declares a `SemanticModel` that defines the available joins, measures, and dimensions for its fact table. Query methods compose immutable `QueryFragment` objects — each fragment carries column expressions, filters, and required joins. The compiler resolves joins in dependency order and emits a SQLAlchemy `Select`.
+All metrics build their SQL through cubes and composable query fragments (`subscriptions/metrics/query.py`). Each metric declares a `Cube` that defines the available joins, measures, and dimensions for its fact table. Query methods compose immutable `QueryFragment` objects — each fragment carries column expressions, filters, and required joins. The compiler resolves joins in dependency order and emits a SQLAlchemy `Select`.
 
-See **[Semantic Models & Query Algebra](cubes.md)** for the full approach: model definitions, fragment algebra, compilation pipeline, and concrete models for all metric tables.
+See **[Cubes & Query Algebra](cubes.md)** for the full approach: model definitions, fragment algebra, compilation pipeline, and concrete models for all metric tables.
 
 ## Dependencies
 
@@ -754,7 +754,7 @@ class RetentionMetric(Metric):
 @register
 class QuickRatioMetric(Metric):
     name = "quick_ratio"
-    model = MRRMovementModel
+    model = MRRMovementCube
     dependencies = ["mrr"]
 
     def _init(self, db, connector, deps):
@@ -762,7 +762,7 @@ class QuickRatioMetric(Metric):
         self.mrr = deps["mrr"]
 
     async def query(self, params, spec=None):
-        m = self.model  # MRRMovementModel
+        m = self.model  # MRRMovementCube
 
         q = (
             m.measures.amount
