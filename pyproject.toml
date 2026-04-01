@@ -2,6 +2,7 @@
 name = "subscriptions"
 version = "0.1.0"
 description = "Open-source subscription analytics engine"
+license = "MIT"
 requires-python = ">=3.13"
 
 
