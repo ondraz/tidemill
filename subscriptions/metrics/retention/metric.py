@@ -94,7 +94,7 @@ class RetentionMetric(Metric):
         )
         stmt, params = mq.compile(mm)
         result = await self.db.execute(stmt, params)
-        by_type = {r["movement_type"]: r["amount_usd"] for r in result.mappings().all()}
+        by_type = {r["movement_type"]: r["amount_base"] for r in result.mappings().all()}
 
         contraction = abs(by_type.get("contraction", 0))
         churn = abs(by_type.get("churn", 0))

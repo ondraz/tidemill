@@ -98,7 +98,7 @@ class ChurnMetric(Metric):
         if spec and spec.dimensions:
             return [dict(r) for r in rows]
 
-        churn_amount = abs(rows[0]["amount_usd"]) if rows and rows[0]["amount_usd"] else 0
+        churn_amount = abs(rows[0]["amount_base"]) if rows and rows[0]["amount_base"] else 0
 
         # Denominator: MRR at period start
         sm = MRRSnapshotCube

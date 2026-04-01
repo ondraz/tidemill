@@ -49,6 +49,7 @@ nav:
       - Events: architecture/events.md
       - Database: architecture/database.md
       - Connectors: architecture/connectors.md
+      - Cubes & Query Algebra: architecture/cubes.md
       - Metrics: architecture/metrics.md
       - API: architecture/api.md
       - Deployment: architecture/deployment.md

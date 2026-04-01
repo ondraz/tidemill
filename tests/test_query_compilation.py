@@ -140,14 +140,14 @@ class TestMRRSnapshotCompilation:
     def test_plain_aggregate(self):
         """No spec — just a measure + raw WHERE."""
         m = MRRSnapshotCube
-        q = m.measures.mrr + m.where("s.mrr_usd_cents", ">", 0)
+        q = m.measures.mrr + m.where("s.mrr_base_cents", ">", 0)
         stmt, params = q.compile(m)
         sql = _normalize(_sql(stmt))
 
-        assert "sum(s.mrr_usd_cents)" in sql.lower()
+        assert "sum(s.mrr_base_cents)" in sql.lower()
         assert "metric_mrr_snapshot" in sql
         assert "JOIN" not in sql
-        assert params["s_mrr_usd_cents_gt"] == 0
+        assert params["s_mrr_base_cents_gt"] == 0
 
     def test_filter_without_dimension_adds_joins(self):
         """Filtering on plan_interval should add subscription + plan joins."""
@@ -296,7 +296,7 @@ class TestMRRMovementCompilation:
         stmt, params = q.compile(mm)
         sql = _normalize(_sql(stmt))
 
-        assert "sum(m.amount_usd_cents)" in sql.lower()
+        assert "sum(m.amount_base_cents)" in sql.lower()
         assert "m.movement_type" in sql
         assert "GROUP BY" in sql
         assert "BETWEEN" in sql
@@ -472,18 +472,18 @@ class TestQuerySpec:
         )
         m = MRRSnapshotCube
 
-        q = m.measures.mrr + m.where("s.mrr_usd_cents", ">", 0) + m.apply_spec(spec)
+        q = m.measures.mrr + m.where("s.mrr_base_cents", ">", 0) + m.apply_spec(spec)
         stmt, params = q.compile(m)
         sql = _normalize(_sql(stmt))
 
         assert "date_trunc" in sql.lower()
         assert "p.interval" in sql
         assert "c.country" in sql
-        assert "s.mrr_usd_cents" in sql
+        assert "s.mrr_base_cents" in sql
         assert "JOIN plan" in sql
         assert "JOIN customer" in sql
         assert params["customer_country"] == "DE"
-        assert params["s_mrr_usd_cents_gt"] == 0
+        assert params["s_mrr_base_cents_gt"] == 0
 
     def test_apply_spec_validates_dimensions(self):
         spec = QuerySpec(dimensions=["nonexistent"])
@@ -512,7 +512,7 @@ class TestQuerySpec:
 class TestToSql:
     def test_to_sql_returns_string(self):
         m = MRRSnapshotCube
-        q = m.measures.mrr + m.where("s.mrr_usd_cents", ">", 0)
+        q = m.measures.mrr + m.where("s.mrr_base_cents", ">", 0)
         sql = q.to_sql(m)
 
         assert isinstance(sql, str)
@@ -570,7 +570,7 @@ class TestEdgeCases:
         q = m.measures.mrr  # no joins needed
         stmt, params = q.compile()  # model=None is OK
         sql = _normalize(_sql(stmt))
-        assert "sum(s.mrr_usd_cents)" in sql.lower()
+        assert "sum(s.mrr_base_cents)" in sql.lower()
 
     def test_compile_without_model_with_joins_raises(self):
         m = MRRSnapshotCube
@@ -588,6 +588,6 @@ class TestEdgeCases:
         stmt, params = q.compile(m)
         sql = _normalize(_sql(stmt))
 
-        assert "sum(s.mrr_usd_cents)" in sql.lower()
+        assert "sum(s.mrr_base_cents)" in sql.lower()
         assert "count(distinct" in sql.lower()
         assert "s.subscription_id" in sql.lower()

@@ -185,7 +185,7 @@ Copy `.env.example` to `.env` and configure:
 
 ## Key Design Conventions
 
-- **Money:** stored as cents (bigint), never float. Dual-column: `*_cents` (original currency) + `*_usd_cents` (USD at daily FX rate). Convert to Decimal at query boundary.
+- **Money:** stored as cents (bigint), never float. Dual-column: `*_cents` (original currency) + `*_base_cents` (base currency at daily FX rate, configured via `BASE_CURRENCY`, default USD). Convert to Decimal at query boundary.
 - **Dates:** TIMESTAMPTZ in PostgreSQL, `YYYY-MM-DD` in API, `datetime` in Python.
 - **Async:** all database access via SQLAlchemy `AsyncSession`/`AsyncEngine`. All metric queries, connector methods, and API endpoints are `async`.
 - **Metric transparency:** every metric must document its formula, SQL, assumptions, edge cases.

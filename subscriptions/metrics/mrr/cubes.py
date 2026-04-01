@@ -41,7 +41,7 @@ class MRRSnapshotCube(Cube):
         )
 
     class Measures:
-        mrr = Sum("s.mrr_usd_cents", label="mrr")
+        mrr = Sum("s.mrr_base_cents", label="mrr")
         mrr_original = Sum("s.mrr_cents", label="mrr_original")
         count = CountDistinct("s.subscription_id", label="subscription_count")
 
@@ -81,7 +81,7 @@ class MRRMovementCube(Cube):
         )
 
     class Measures:
-        amount = Sum("m.amount_usd_cents", label="amount_usd")
+        amount = Sum("m.amount_base_cents", label="amount_base")
         amount_original = Sum("m.amount_cents", label="amount_original")
         count = CountDistinct("m.event_id", label="event_count")
 

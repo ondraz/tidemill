@@ -63,7 +63,7 @@ class QuerySpec:
     #   "plan_interval"    — one row per billing interval (monthly/yearly/...)
     #   "customer_country" — one row per country
     #   "source_id"        — one row per billing source
-    #   "currency"         — one row per currency (uses *_cents, not USD aggregate)
+    #   "currency"         — one row per currency (uses *_cents, not base-currency aggregate)
     #   "cohort_month"     — retention-specific: one row per cohort
     dimensions: list[str] = field(default_factory=list)
 
@@ -240,7 +240,7 @@ CREATE TABLE metric_mrr_snapshot (
     customer_id     TEXT NOT NULL,
     subscription_id TEXT NOT NULL,
     mrr_cents       BIGINT NOT NULL,         -- current MRR in original currency
-    mrr_usd_cents   BIGINT NOT NULL,         -- current MRR in USD (at rate on snapshot_at)
+    mrr_base_cents   BIGINT NOT NULL,         -- MRR in base currency (at rate on snapshot_at)
     currency        TEXT NOT NULL,           -- ISO 4217
     snapshot_at     TIMESTAMPTZ NOT NULL,    -- when this state took effect
     UNIQUE(source_id, subscription_id)
@@ -255,7 +255,7 @@ CREATE TABLE metric_mrr_movement (
     subscription_id TEXT NOT NULL,
     movement_type   TEXT NOT NULL,           -- new | expansion | contraction | churn | reactivation
     amount_cents    BIGINT NOT NULL,         -- signed, original currency
-    amount_usd_cents BIGINT NOT NULL,        -- signed, USD at rate on occurred_at
+    amount_base_cents BIGINT NOT NULL,        -- signed, base currency at rate on occurred_at
     currency        TEXT NOT NULL,
     occurred_at     TIMESTAMPTZ NOT NULL
 );
@@ -268,37 +268,37 @@ async def handle_event(self, event: Event) -> None:
     match event.type:
         case "subscription.created" | "subscription.activated":
             await self._upsert_snapshot(event, event.payload["mrr_cents"],
-                                        event.payload["mrr_usd_cents"])
+                                        event.payload["mrr_base_cents"])
             await self._append_movement(event, "new", event.payload["mrr_cents"],
-                                        event.payload["mrr_usd_cents"])
+                                        event.payload["mrr_base_cents"])
 
         case "subscription.changed":
-            prev, prev_usd = event.payload["prev_mrr_cents"], event.payload["prev_mrr_usd_cents"]
-            new,  new_usd  = event.payload["new_mrr_cents"],  event.payload["new_mrr_usd_cents"]
+            prev, prev_usd = event.payload["prev_mrr_cents"], event.payload["prev_mrr_base_cents"]
+            new,  new_usd  = event.payload["new_mrr_cents"],  event.payload["new_mrr_base_cents"]
             await self._upsert_snapshot(event, new, new_usd)
             delta, delta_usd = new - prev, new_usd - prev_usd
             kind = "expansion" if delta > 0 else "contraction"
             await self._append_movement(event, kind, delta, delta_usd)
 
         case "subscription.churned":
-            prev, prev_usd = event.payload["prev_mrr_cents"], event.payload["prev_mrr_usd_cents"]
+            prev, prev_usd = event.payload["prev_mrr_cents"], event.payload["prev_mrr_base_cents"]
             await self._upsert_snapshot(event, 0, 0)
             await self._append_movement(event, "churn", -prev, -prev_usd)
 
         case "subscription.reactivated":
-            mrr, mrr_usd = event.payload["mrr_cents"], event.payload["mrr_usd_cents"]
-            await self._upsert_snapshot(event, mrr, mrr_usd)
-            await self._append_movement(event, "reactivation", mrr, mrr_usd)
+            mrr, mrr_base = event.payload["mrr_cents"], event.payload["mrr_base_cents"]
+            await self._upsert_snapshot(event, mrr, mrr_base)
+            await self._append_movement(event, "reactivation", mrr, mrr_base)
 
         case "subscription.paused":
-            mrr, mrr_usd = event.payload["mrr_cents"], event.payload["mrr_usd_cents"]
+            mrr, mrr_base = event.payload["mrr_cents"], event.payload["mrr_base_cents"]
             await self._upsert_snapshot(event, 0, 0)
-            await self._append_movement(event, "churn", -mrr, -mrr_usd)
+            await self._append_movement(event, "churn", -mrr, -mrr_base)
 
         case "subscription.resumed":
-            mrr, mrr_usd = event.payload["mrr_cents"], event.payload["mrr_usd_cents"]
-            await self._upsert_snapshot(event, mrr, mrr_usd)
-            await self._append_movement(event, "reactivation", mrr, mrr_usd)
+            mrr, mrr_base = event.payload["mrr_cents"], event.payload["mrr_base_cents"]
+            await self._upsert_snapshot(event, mrr, mrr_base)
+            await self._append_movement(event, "reactivation", mrr, mrr_base)
 ```
 
 **Queries (dual-mode):**
@@ -309,7 +309,7 @@ async def query(self, params: dict, spec=None) -> Any:
         case "current":
             if self.connector:
                 # Same-database mode: query billing tables directly
-                return await self.connector.get_mrr_usd_cents(params.get("at"))
+                return await self.connector.get_mrr_base_cents(params.get("at"))
             # Ingestion mode (primary): query materialized metric_mrr_snapshot
             return await self._current_mrr(params.get("at"), spec)
         case "series":
@@ -333,7 +333,7 @@ async def _current_mrr(self, at: date | None, spec: QuerySpec | None):
     measure = m.measures.mrr_original if use_original else m.measures.mrr
 
     # Base: always-present fragments
-    q = measure + m.where("s.mrr_usd_cents", ">", 0)
+    q = measure + m.where("s.mrr_base_cents", ">", 0)
 
     # Time filter
     if at:
@@ -357,18 +357,18 @@ async def _current_mrr(self, at: date | None, spec: QuerySpec | None):
 
 No spec — plain aggregate:
 ```sql
-SELECT SUM(s.mrr_usd_cents) / 100.0 AS mrr
+SELECT SUM(s.mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot s
-WHERE s.mrr_usd_cents > 0
+WHERE s.mrr_base_cents > 0
 ```
 
 `QuerySpec(filters={"plan_interval": {"in": ["yearly"]}})` — filter only, no dimensions:
 ```sql
-SELECT SUM(s.mrr_usd_cents) / 100.0 AS mrr
+SELECT SUM(s.mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot s
   JOIN subscription sub ON sub.source_id = s.source_id AND sub.external_id = s.subscription_id
   JOIN plan p ON p.id = sub.plan_id
-WHERE s.mrr_usd_cents > 0
+WHERE s.mrr_base_cents > 0
   AND p.interval = ANY(:plan_interval)
 ```
 
@@ -376,23 +376,23 @@ WHERE s.mrr_usd_cents > 0
 ```sql
 SELECT p.interval AS plan_interval,
        c.country AS customer_country,
-       SUM(s.mrr_usd_cents) / 100.0 AS mrr
+       SUM(s.mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot s
   JOIN subscription sub ON sub.source_id = s.source_id AND sub.external_id = s.subscription_id
   JOIN plan p ON p.id = sub.plan_id
   JOIN customer c ON c.source_id = s.source_id AND c.external_id = s.customer_id
-WHERE s.mrr_usd_cents > 0
+WHERE s.mrr_base_cents > 0
 GROUP BY p.interval, c.country
 ```
 
 `QuerySpec(filters={"customer_country": {"in": ["US", "DE"]}}, dimensions=["plan_id"])` — filter + dimension:
 ```sql
 SELECT sub.plan_id,
-       SUM(s.mrr_usd_cents) / 100.0 AS mrr
+       SUM(s.mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot s
   JOIN subscription sub ON sub.source_id = s.source_id AND sub.external_id = s.subscription_id
   JOIN customer c ON c.source_id = s.source_id AND c.external_id = s.customer_id
-WHERE s.mrr_usd_cents > 0
+WHERE s.mrr_base_cents > 0
   AND c.country = ANY(:customer_country)
 GROUP BY sub.plan_id
 ```
@@ -421,7 +421,7 @@ async def _mrr_breakdown(self, start: date, end: date, spec: QuerySpec | None):
 ```sql
 SELECT m.movement_type,
        sub.plan_id,
-       SUM(m.amount_usd_cents) / 100.0 AS amount_usd
+       SUM(m.amount_base_cents) / 100.0 AS amount_base
 FROM metric_mrr_movement m
   JOIN subscription sub ON sub.source_id = m.source_id AND sub.external_id = m.subscription_id
 WHERE m.occurred_at BETWEEN :start AND :end
@@ -477,13 +477,13 @@ SELECT
     AS logo_churn_rate
 ```
 
-Revenue churn rate (computed in USD for cross-currency correctness):
+Revenue churn rate (computed in base currency for cross-currency correctness):
 
 ```sql
 SELECT
-    ABS(SUM(CASE WHEN m.movement_type = 'churn' THEN m.amount_usd_cents ELSE 0 END))::float
+    ABS(SUM(CASE WHEN m.movement_type = 'churn' THEN m.amount_base_cents ELSE 0 END))::float
     /
-    NULLIF((SELECT SUM(mrr_usd_cents) FROM metric_mrr_snapshot WHERE snapshot_at < :start), 0)
+    NULLIF((SELECT SUM(mrr_base_cents) FROM metric_mrr_snapshot WHERE snapshot_at < :start), 0)
     AS revenue_churn_rate
 FROM metric_mrr_movement m
 WHERE m.occurred_at BETWEEN :start AND :end
@@ -554,7 +554,7 @@ CREATE TABLE metric_ltv_customer_revenue (
     source_id        UUID NOT NULL,
     customer_id      TEXT NOT NULL,
     total_cents      BIGINT NOT NULL DEFAULT 0,      -- original currency sum
-    total_usd_cents  BIGINT NOT NULL DEFAULT 0,      -- USD equivalent sum
+    total_base_cents  BIGINT NOT NULL DEFAULT 0,      -- base-currency equivalent sum
     currency         TEXT NOT NULL,                  -- ISO 4217
     invoice_count    INT NOT NULL DEFAULT 0,
     first_invoice_at TIMESTAMPTZ,
@@ -567,9 +567,9 @@ CREATE TABLE metric_ltv_customer_revenue (
 
 Simple LTV: `ARPU / logo_churn_rate`
 
-Cohort LTV: average `total_usd_cents` per customer grouped by cohort month (USD for cross-currency comparison); also available in original currency per `currency`.
+Cohort LTV: average `total_base_cents` per customer grouped by cohort month (base currency for cross-currency comparison); also available in original currency per `currency`.
 
-ARPU: `SUM(mrr_usd_cents) / COUNT(DISTINCT active customers)` — queries MRR metric's snapshot table.
+ARPU: `SUM(mrr_base_cents) / COUNT(DISTINCT active customers)` — queries MRR metric's snapshot table.
 
 ### Trials (P1)
 
@@ -776,7 +776,7 @@ class QuickRatioMetric(Metric):
         stmt, bind = q.compile(m)
         rows = (await self.db.execute(stmt, bind)).mappings().all()
 
-        by_type = {r["movement_type"]: r["amount_usd"] for r in rows}
+        by_type = {r["movement_type"]: r["amount_base"] for r in rows}
         growth = sum(by_type.get(t, 0) for t in ("new", "expansion", "reactivation"))
         loss   = abs(sum(by_type.get(t, 0) for t in ("churn", "contraction")))
         return growth / loss if loss else None

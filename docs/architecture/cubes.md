@@ -55,7 +55,7 @@ class MRRSnapshotCube(Cube):
         )
 
     class Measures:
-        mrr = Sum("s.mrr_usd_cents")
+        mrr = Sum("s.mrr_base_cents")
         mrr_original = Sum("s.mrr_cents")       # in original currency
         count = CountDistinct("s.subscription_id")
 
@@ -145,7 +145,7 @@ The cube provides factory methods that return fragments. Each method encapsulate
 # Measure fragments — carry the aggregation expression
 model.measures.mrr
 # → QueryFragment(source="metric_mrr_snapshot", alias="s",
-#                  measures=(MeasureExpr("SUM", "s.mrr_usd_cents", label="mrr"),))
+#                  measures=(MeasureExpr("SUM", "s.mrr_base_cents", label="mrr"),))
 
 # Dimension fragments — carry column expression + required joins
 model.dimension("plan_interval")
@@ -170,8 +170,8 @@ model.time_grain("snapshot_at", "month")
 # → QueryFragment(time_grain=TimeGrainExpr("s.snapshot_at", "month"))
 
 # Raw filter on the source table (no join needed)
-model.where("s.mrr_usd_cents", ">", 0)
-# → QueryFragment(filters=(FilterExpr("s.mrr_usd_cents", ">", 0),))
+model.where("s.mrr_base_cents", ">", 0)
+# → QueryFragment(filters=(FilterExpr("s.mrr_base_cents", ">", 0),))
 ```
 
 ### Compilation
@@ -253,7 +253,7 @@ class MRRSnapshotCube(Cube):
         )
 
     class Measures:
-        mrr = Sum("s.mrr_usd_cents", label="mrr")
+        mrr = Sum("s.mrr_base_cents", label="mrr")
         mrr_original = Sum("s.mrr_cents", label="mrr_original")
         count = CountDistinct("s.subscription_id", label="subscription_count")
 
@@ -292,7 +292,7 @@ class MRRMovementCube(Cube):
         )
 
     class Measures:
-        amount = Sum("m.amount_usd_cents", label="amount_usd")
+        amount = Sum("m.amount_base_cents", label="amount_base")
         amount_original = Sum("m.amount_cents", label="amount_original")
         count = CountDistinct("m.event_id", label="event_count")
 
@@ -394,7 +394,7 @@ class MrrMetric(Metric):
         measure = m.measures.mrr_original if use_original else m.measures.mrr
 
         # Base: always-present fragments
-        q = measure + m.where("s.mrr_usd_cents", ">", 0)
+        q = measure + m.where("s.mrr_base_cents", ">", 0)
 
         # Time filter
         if at:
@@ -435,7 +435,7 @@ Common filter combinations can be stored as named fragments and reused across me
 
 ```python
 # Shared fragment: active subscriptions only
-ACTIVE_ONLY = MRRSnapshotCube.where("s.mrr_usd_cents", ">", 0)
+ACTIVE_ONLY = MRRSnapshotCube.where("s.mrr_base_cents", ">", 0)
 
 # Shared fragment: monthly plans
 MONTHLY_PLANS = MRRSnapshotCube.filter("plan_interval", "=", "monthly")
@@ -469,7 +469,7 @@ class QuickRatioMetric(Metric):
         stmt, bind = q.compile(m)
         rows = (await self.db.execute(stmt, bind)).mappings().all()
 
-        by_type = {r["movement_type"]: r["amount_usd"] for r in rows}
+        by_type = {r["movement_type"]: r["amount_base"] for r in rows}
         growth = sum(by_type.get(t, 0) for t in ("new", "expansion", "reactivation"))
         loss = abs(sum(by_type.get(t, 0) for t in ("churn", "contraction")))
         return growth / loss if loss else None
@@ -576,56 +576,56 @@ ValueError: Unknown dimension 'plan_name'. Available: ['currency', 'customer_cou
 ### No spec — plain aggregate
 
 ```python
-q = model.measures.mrr + model.where("s.mrr_usd_cents", ">", 0)
+q = model.measures.mrr + model.where("s.mrr_base_cents", ">", 0)
 ```
 
 ```sql
-SELECT SUM(s.mrr_usd_cents) / 100.0 AS mrr
+SELECT SUM(s.mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot s
-WHERE s.mrr_usd_cents > 0
+WHERE s.mrr_base_cents > 0
 ```
 
 ### Filter only (no dimensions)
 
 ```python
-q = model.measures.mrr + model.where("s.mrr_usd_cents", ">", 0) + model.filter("plan_interval", "=", "yearly")
+q = model.measures.mrr + model.where("s.mrr_base_cents", ">", 0) + model.filter("plan_interval", "=", "yearly")
 ```
 
 ```sql
-SELECT SUM(s.mrr_usd_cents) / 100.0 AS mrr
+SELECT SUM(s.mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot s
   JOIN subscription sub ON sub.source_id = s.source_id
                        AND sub.external_id = s.subscription_id
   JOIN plan p ON p.id = sub.plan_id
-WHERE s.mrr_usd_cents > 0
+WHERE s.mrr_base_cents > 0
   AND p.interval = :plan_interval
 ```
 
 ### Dimensional cut
 
 ```python
-q = (model.measures.mrr + model.where("s.mrr_usd_cents", ">", 0)
+q = (model.measures.mrr + model.where("s.mrr_base_cents", ">", 0)
      + model.dimension("plan_interval") + model.dimension("customer_country"))
 ```
 
 ```sql
 SELECT p.interval AS plan_interval,
        c.country AS customer_country,
-       SUM(s.mrr_usd_cents) / 100.0 AS mrr
+       SUM(s.mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot s
   JOIN subscription sub ON sub.source_id = s.source_id
                        AND sub.external_id = s.subscription_id
   JOIN plan p ON p.id = sub.plan_id
   JOIN customer c ON c.source_id = s.source_id
                  AND c.external_id = s.customer_id
-WHERE s.mrr_usd_cents > 0
+WHERE s.mrr_base_cents > 0
 GROUP BY p.interval, c.country
 ```
 
 ### Filter + dimension + time grain
 
 ```python
-q = (model.measures.mrr + model.where("s.mrr_usd_cents", ">", 0)
+q = (model.measures.mrr + model.where("s.mrr_base_cents", ">", 0)
      + model.filter("customer_country", "in", ["US", "DE"])
      + model.dimension("plan_id")
      + model.time_grain("snapshot_at", "month"))
@@ -634,13 +634,13 @@ q = (model.measures.mrr + model.where("s.mrr_usd_cents", ">", 0)
 ```sql
 SELECT DATE_TRUNC('month', s.snapshot_at) AS period,
        sub.plan_id,
-       SUM(s.mrr_usd_cents) / 100.0 AS mrr
+       SUM(s.mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot s
   JOIN subscription sub ON sub.source_id = s.source_id
                        AND sub.external_id = s.subscription_id
   JOIN customer c ON c.source_id = s.source_id
                  AND c.external_id = s.customer_id
-WHERE s.mrr_usd_cents > 0
+WHERE s.mrr_base_cents > 0
   AND c.country = ANY(:customer_country)
 GROUP BY DATE_TRUNC('month', s.snapshot_at), sub.plan_id
 ```
@@ -656,7 +656,7 @@ q = (mm.measures.amount + mm.dimension("movement_type") + mm.dimension("plan_id"
 ```sql
 SELECT m.movement_type,
        sub.plan_id,
-       SUM(m.amount_usd_cents) / 100.0 AS amount_usd
+       SUM(m.amount_base_cents) / 100.0 AS amount_base
 FROM metric_mrr_movement m
   JOIN subscription sub ON sub.source_id = m.source_id
                        AND sub.external_id = m.subscription_id

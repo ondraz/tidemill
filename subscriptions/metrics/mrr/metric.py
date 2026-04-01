@@ -48,7 +48,7 @@ class MrrMetric(Metric):
         use_original = spec and "currency" in (spec.dimensions or [])
         measure = m.measures.mrr_original if use_original else m.measures.mrr
 
-        q = measure + m.where("s.mrr_usd_cents", ">", 0)
+        q = measure + m.where("s.mrr_base_cents", ">", 0)
         if at:
             q = q + m.filter("snapshot_at", "<=", at)
         if spec:

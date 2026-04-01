@@ -3,7 +3,7 @@
 Core tables represent billing entities synced from connectors (Stripe, Lago,
 Kill Bill).  Metric tables are owned by individual metrics and prefixed with
 ``metric_``.  All monetary values use the dual-column convention:
-``*_cents`` (original currency) + ``*_usd_cents`` (USD at daily FX rate).
+``*_cents`` (original currency) + ``*_base_cents`` (base currency at daily FX rate).
 """
 
 from __future__ import annotations
@@ -80,7 +80,7 @@ subscription = Table(
     Column("plan_id", Text, ForeignKey("plan.id"), nullable=False),
     Column("status", Text, nullable=False),
     Column("mrr_cents", BigInteger, nullable=False, default=0),
-    Column("mrr_usd_cents", BigInteger, nullable=False, default=0),
+    Column("mrr_base_cents", BigInteger, nullable=False, default=0),
     Column("currency", Text),
     Column("quantity", Integer, default=1),
     Column("started_at", DateTime(timezone=True)),
@@ -105,7 +105,7 @@ metric_mrr_snapshot = Table(
     Column("customer_id", Text, nullable=False),
     Column("subscription_id", Text, nullable=False),
     Column("mrr_cents", BigInteger, nullable=False),
-    Column("mrr_usd_cents", BigInteger, nullable=False),
+    Column("mrr_base_cents", BigInteger, nullable=False),
     Column("currency", Text, nullable=False),
     Column("snapshot_at", DateTime(timezone=True), nullable=False),
     UniqueConstraint("source_id", "subscription_id", name="uq_mrr_snapshot_sub"),
@@ -121,7 +121,7 @@ metric_mrr_movement = Table(
     Column("subscription_id", Text, nullable=False),
     Column("movement_type", Text, nullable=False),
     Column("amount_cents", BigInteger, nullable=False),
-    Column("amount_usd_cents", BigInteger, nullable=False),
+    Column("amount_base_cents", BigInteger, nullable=False),
     Column("currency", Text, nullable=False),
     Column("occurred_at", DateTime(timezone=True), nullable=False),
 )

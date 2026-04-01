@@ -123,7 +123,7 @@ erDiagram
         uuid plan_id FK
         text status "active | canceled | past_due | trialing | paused"
         bigint mrr_cents "current MRR in original currency"
-        bigint mrr_usd_cents "current MRR in USD (at rate on started_at)"
+        bigint mrr_base_cents "MRR in base currency (at rate on started_at)"
         text currency "ISO 4217"
         int quantity
         timestamptz started_at
@@ -146,11 +146,11 @@ erDiagram
         text status "draft | finalized | paid | void | uncollectible"
         text currency "ISO 4217"
         bigint subtotal_cents
-        bigint subtotal_usd_cents
+        bigint subtotal_base_cents
         bigint tax_cents
-        bigint tax_usd_cents
+        bigint tax_base_cents
         bigint total_cents
-        bigint total_usd_cents
+        bigint total_base_cents
         timestamptz period_start
         timestamptz period_end
         timestamptz issued_at
@@ -166,7 +166,7 @@ erDiagram
         text type "subscription | usage | addon | proration | tax | credit | adjustment"
         text description
         bigint amount_cents
-        bigint amount_usd_cents
+        bigint amount_base_cents
         text currency
         decimal quantity
         timestamptz period_start
@@ -181,7 +181,7 @@ erDiagram
         uuid customer_id FK
         text status "pending | succeeded | failed | refunded"
         bigint amount_cents
-        bigint amount_usd_cents
+        bigint amount_base_cents
         text currency "ISO 4217"
         text payment_method_type "card | bank_transfer | wallet"
         text failure_reason
@@ -195,11 +195,11 @@ erDiagram
 
 ## FX Rates
 
-The `fx_rate` table stores official daily exchange rates used to populate `*_usd_cents` columns at ingest time. See [Money Handling](#money-handling) below.
+The `fx_rate` table stores official daily exchange rates used to populate `*_base_cents` columns at ingest time. See [Money Handling](#money-handling) below.
 
 ## Metric Tables
 
-Each metric creates its own tables, prefixed with `metric_`. Monetary columns in metric tables follow the same dual-column convention (`*_cents` + `*_usd_cents`). These are documented in [Metrics](metrics.md). Summary:
+Each metric creates its own tables, prefixed with `metric_`. Monetary columns in metric tables follow the same dual-column convention (`*_cents` + `*_base_cents`). These are documented in [Metrics](metrics.md). Summary:
 
 | Metric | Tables | Purpose |
 |--------|--------|---------|
@@ -304,20 +304,20 @@ The analytics engine never writes to Lago tables.
 Every monetary column is stored twice:
 
 1. **Original currency** (`*_cents BIGINT`, `currency TEXT`) — exact value from the billing system, no rounding
-2. **USD equivalent** (`*_usd_cents BIGINT`) — converted at the official daily FX rate on the date the amount was recorded
+2. **Base-currency equivalent** (`*_base_cents BIGINT`) — converted at the official daily FX rate on the date the amount was recorded
 
 ```sql
 -- Example: invoice totals
 total_cents       BIGINT NOT NULL,   -- e.g. 4999 (EUR)
 currency          TEXT NOT NULL,     -- 'EUR'
-total_usd_cents   BIGINT NOT NULL,   -- e.g. 5399 (USD at that day's rate)
+total_base_cents   BIGINT NOT NULL,   -- e.g. 5399 (base currency at that day's rate)
 ```
 
 This allows:
 - **Exact per-customer records** in original currency (for invoices, statements)
-- **Fast cross-currency aggregations** in USD without joining the FX rate table at query time
+- **Fast cross-currency aggregations** in base currency without joining the FX rate table at query time
 
-If the currency is already USD, both columns hold the same value.
+If the transaction currency matches the configured base currency, both columns hold the same value.
 
 ### FX Rates Table
 
@@ -326,8 +326,8 @@ CREATE TABLE fx_rate (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     date         DATE NOT NULL,
     from_currency TEXT NOT NULL,   -- ISO 4217, e.g. 'EUR'
-    to_currency   TEXT NOT NULL,   -- always 'USD' for now
-    rate          NUMERIC(18, 8) NOT NULL,  -- 1 EUR = 1.0798 USD
+    to_currency   TEXT NOT NULL,   -- matches BASE_CURRENCY (e.g. 'USD', 'EUR')
+    rate          NUMERIC(18, 8) NOT NULL,  -- e.g. 1 EUR = 1.0798 USD
     source        TEXT NOT NULL,   -- 'ecb' | 'openexchangerates' | 'manual'
     UNIQUE(date, from_currency, to_currency)
 );
@@ -335,37 +335,39 @@ CREATE TABLE fx_rate (
 CREATE INDEX ix_fx_rate_lookup ON fx_rate(from_currency, to_currency, date DESC);
 ```
 
-Rates are fetched once daily (e.g., from ECB or Open Exchange Rates) and stored here. The analytics engine uses `fx_rate` to populate `*_usd_cents` when ingesting events or polling Lago.
+Rates are fetched once daily (e.g., from ECB or Open Exchange Rates) and stored here. The analytics engine uses `fx_rate` to populate `*_base_cents` when ingesting events or polling Lago.
 
-### USD Conversion at Ingest Time
+### Base-Currency Conversion at Ingest Time
+
+The base currency is set once at deployment via the `BASE_CURRENCY` environment variable (default: `USD`). All `*_base_cents` columns are converted to this currency at ingest time.
 
 Database access is always async via SQLAlchemy's `AsyncSession` / `AsyncEngine`. The FX lookup follows the same pattern:
 
 ```python
-async def to_usd_cents(amount_cents: int, currency: str, on_date: date,
-                        db: AsyncSession) -> int:
-    if currency == "USD":
+async def to_base_cents(amount_cents: int, currency: str, on_date: date,
+                        db: AsyncSession, base_currency: str = "USD") -> int:
+    if currency == base_currency:
         return amount_cents
     result = await db.execute(
-        text("SELECT rate FROM fx_rate WHERE from_currency = :c AND to_currency = 'USD'"
+        text("SELECT rate FROM fx_rate WHERE from_currency = :c AND to_currency = :base"
              " AND date <= :d ORDER BY date DESC LIMIT 1"),
-        {"c": currency, "d": on_date}
+        {"c": currency, "base": base_currency, "d": on_date}
     )
     rate = result.scalar()
     if rate is None:
-        raise ValueError(f"No FX rate for {currency}/USD on or before {on_date}")
+        raise ValueError(f"No FX rate for {currency}/{base_currency} on or before {on_date}")
     return int(amount_cents * rate)
 ```
 
 ### Aggregation Pattern
 
-Use `*_usd_cents` for totals (MRR, ARR, revenue) and `currency` + `*_cents` for per-customer display:
+Use `*_base_cents` for totals (MRR, ARR, revenue) and `currency` + `*_cents` for per-customer display:
 
 ```sql
 -- Fast: no runtime FX join needed
-SELECT SUM(mrr_usd_cents) / 100.0 AS mrr_usd
+SELECT SUM(mrr_base_cents) / 100.0 AS mrr
 FROM metric_mrr_snapshot
-WHERE mrr_usd_cents > 0;
+WHERE mrr_base_cents > 0;
 
 -- Per-customer breakdown in original currency
 SELECT customer_id, currency, SUM(mrr_cents) / 100.0 AS mrr
@@ -376,6 +378,7 @@ GROUP BY customer_id, currency;
 
 ### Notes
 
-- `mrr_cents = 4999` in EUR, `mrr_usd_cents = 5399` means $53.99/month at that day's rate
-- Annual plan at $599/year: `mrr_cents = 59900 / 12 = 4991` (integer division, rounds down)
-- Historical USD values are frozen at the rate on the date of the event — they do not retroactively update when FX rates change
+- `mrr_cents = 4999` in EUR, `mrr_base_cents = 5399` means 53.99/month in base currency at that day's rate
+- Annual plan at 599/year: `mrr_cents = 59900 / 12 = 4991` (integer division, rounds down)
+- Historical base-currency values are frozen at the rate on the date of the event — they do not retroactively update when FX rates change
+- The base currency is set once at deployment time via `BASE_CURRENCY` and should not be changed after data has been ingested

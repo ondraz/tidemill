@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "template_version": 0,
-    "description": "Quick Stripe seed: 3 plans, 1 customer, 1 subscription. For richer data use stripe_seed.py."
+    "template_version": 1,
+    "description": "Quick Stripe seed: 3 plans (PAYG + base+metered + flat), 1 customer on Starter. For richer data use stripe_seed.py."
   },
   "fixtures": [
     {
@@ -9,20 +9,23 @@
       "path": "/v1/products",
       "method": "post",
       "params": {
-        "name": "Starter"
+        "name": "Starter",
+        "metadata": {"tier": "starter"}
       }
     },
     {
-      "name": "starter_monthly",
+      "name": "starter_metered",
       "path": "/v1/prices",
       "method": "post",
       "params": {
         "product": "${starter_product:id}",
-        "unit_amount": 2900,
         "currency": "usd",
+        "unit_amount": 2,
         "recurring": {
-          "interval": "month"
-        }
+          "interval": "month",
+          "usage_type": "metered"
+        },
+        "nickname": "Starter — $0.02/query"
       }
     },
     {
@@ -30,11 +33,12 @@
       "path": "/v1/products",
       "method": "post",
       "params": {
-        "name": "Professional"
+        "name": "Professional",
+        "metadata": {"tier": "professional"}
       }
     },
     {
-      "name": "pro_monthly",
+      "name": "pro_base_monthly",
       "path": "/v1/prices",
       "method": "post",
       "params": {
@@ -43,7 +47,28 @@
         "currency": "usd",
         "recurring": {
           "interval": "month"
-        }
+        },
+        "nickname": "Professional — $79/mo base"
+      }
+    },
+    {
+      "name": "pro_metered_monthly",
+      "path": "/v1/prices",
+      "method": "post",
+      "params": {
+        "product": "${pro_product:id}",
+        "currency": "usd",
+        "recurring": {
+          "interval": "month",
+          "usage_type": "metered"
+        },
+        "billing_scheme": "tiered",
+        "tiers_mode": "graduated",
+        "tiers": [
+          {"up_to": 10000, "unit_amount": 0},
+          {"up_to": "inf", "unit_amount": 1}
+        ],
+        "nickname": "Professional — queries (10k free, then $0.01)"
       }
     },
     {
@@ -51,7 +76,8 @@
       "path": "/v1/products",
       "method": "post",
       "params": {
-        "name": "Enterprise"
+        "name": "Enterprise",
+        "metadata": {"tier": "enterprise"}
       }
     },
     {
@@ -64,7 +90,8 @@
         "currency": "usd",
         "recurring": {
           "interval": "month"
-        }
+        },
+        "nickname": "Enterprise — $249/mo"
       }
     },
     {
@@ -87,9 +114,7 @@
       "params": {
         "customer": "${customer:id}",
         "items": [
-          {
-            "price": "${pro_monthly:id}"
-          }
+          {"price": "${starter_metered:id}"}
         ]
       }
     }
