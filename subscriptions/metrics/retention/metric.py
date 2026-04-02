@@ -1,8 +1,11 @@
-"""RetentionMetric — query methods: cohort_matrix, nrr, grr."""
+"""RetentionMetric — query methods and event handler."""
 
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING, Any
+
+from sqlalchemy import text
 
 from subscriptions.metrics.base import Metric, QuerySpec
 from subscriptions.metrics.registry import register
@@ -10,6 +13,8 @@ from subscriptions.metrics.retention.cubes import RetentionCohortCube
 
 if TYPE_CHECKING:
     from datetime import date
+
+    from subscriptions.events import Event
 
 
 @register
@@ -20,6 +25,53 @@ class RetentionMetric(Metric):
     @property
     def dependencies(self) -> list[str]:
         return ["mrr"]
+
+    @property
+    def event_types(self) -> list[str]:
+        return [
+            "subscription.created",
+            "subscription.activated",
+            "subscription.reactivated",
+        ]
+
+    async def handle_event(self, event: Event) -> None:
+        cohort_month = event.occurred_at.date().replace(day=1)
+        active_month = cohort_month  # same month
+
+        match event.type:
+            case "subscription.created" | "subscription.activated":
+                # Assign cohort — ON CONFLICT DO NOTHING keeps the first month
+                await self.db.execute(
+                    text(
+                        "INSERT INTO metric_retention_cohort"
+                        " (id, source_id, customer_id, cohort_month)"
+                        " VALUES (:id, :src, :cid, :cm)"
+                        " ON CONFLICT ON CONSTRAINT uq_retention_cohort_customer"
+                        " DO NOTHING"
+                    ),
+                    {
+                        "id": str(uuid.uuid4()),
+                        "src": event.source_id,
+                        "cid": event.customer_id,
+                        "cm": cohort_month,
+                    },
+                )
+
+        # Record activity for the month (all event types)
+        await self.db.execute(
+            text(
+                "INSERT INTO metric_retention_activity"
+                " (id, source_id, customer_id, active_month)"
+                " VALUES (:id, :src, :cid, :am)"
+                " ON CONFLICT ON CONSTRAINT uq_retention_activity DO NOTHING"
+            ),
+            {
+                "id": str(uuid.uuid4()),
+                "src": event.source_id,
+                "cid": event.customer_id,
+                "am": active_month,
+            },
+        )
 
     async def query(self, params: dict[str, Any], spec: QuerySpec | None = None) -> Any:
         match params.get("query_type", "cohort_matrix"):

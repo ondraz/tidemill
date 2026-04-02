@@ -1,4 +1,4 @@
-.PHONY: docs check lint test typecheck install install-dev install-pre-commit
+.PHONY: docs check check-integration lint test typecheck install install-dev install-pre-commit
 
 install:
 	uv sync --frozen
@@ -23,6 +23,33 @@ test:
 
 typecheck:
 	uv run mypy
+
+
+PG_CONTAINER := subscriptions-test-pg
+PG_PORT      := 5433
+PG_USER      := subscriptions
+PG_PASSWORD  := password
+PG_DB        := subscriptions_test
+TEST_DATABASE_URL := postgresql+asyncpg://$(PG_USER):$(PG_PASSWORD)@localhost:$(PG_PORT)/$(PG_DB)
+
+check-integration:
+	@echo "Starting PostgreSQL container…"
+	@docker rm -f $(PG_CONTAINER) 2>/dev/null || true
+	@docker run -d --name $(PG_CONTAINER) \
+		-e POSTGRES_USER=$(PG_USER) \
+		-e POSTGRES_PASSWORD=$(PG_PASSWORD) \
+		-e POSTGRES_DB=$(PG_DB) \
+		-p $(PG_PORT):5432 \
+		postgres:16-alpine >/dev/null
+	@echo "Waiting for PostgreSQL to be ready…"
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		docker exec $(PG_CONTAINER) pg_isready -U $(PG_USER) -d $(PG_DB) >/dev/null 2>&1 && break; \
+		sleep 1; \
+	done
+	TEST_DATABASE_URL=$(TEST_DATABASE_URL) uv run pytest tests/ -m integration -v; \
+		rc=$$?; \
+		docker rm -f $(PG_CONTAINER) >/dev/null 2>&1; \
+		exit $$rc
 
 
 docs:

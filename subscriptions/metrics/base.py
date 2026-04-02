@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     from sqlalchemy import MetaData
     from sqlalchemy.ext.asyncio import AsyncSession
 
+    from subscriptions.events import Event
+
 
 @dataclass
 class QuerySpec:
@@ -53,6 +55,15 @@ class Metric(ABC):
         """Inject runtime dependencies.  Called by the engine after construction."""
         self.db = db
         self.deps = deps or {}
+
+    @property
+    def event_types(self) -> list[str]:
+        """Event types this metric subscribes to."""
+        return []
+
+    async def handle_event(self, event: Event) -> None:
+        """Process a single event.  Must be idempotent."""
+        raise NotImplementedError
 
     @abstractmethod
     async def query(self, params: dict[str, Any], spec: QuerySpec | None = None) -> Any:

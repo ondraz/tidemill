@@ -17,6 +17,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     MetaData,
+    Numeric,
     Table,
     Text,
     UniqueConstraint,
@@ -87,6 +88,116 @@ plan = Table(
     Column("active", Boolean, default=True),
     Column("created_at", DateTime(timezone=True), nullable=False),
     UniqueConstraint("source_id", "external_id", name="uq_plan_source"),
+)
+
+event_log = Table(
+    "event_log",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("type", Text, nullable=False),
+    Column("customer_id", Text, nullable=False),
+    Column("occurred_at", DateTime(timezone=True), nullable=False),
+    Column("published_at", DateTime(timezone=True), nullable=False),
+    Column("payload", Text, nullable=False),
+)
+
+fx_rate = Table(
+    "fx_rate",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("date", Date, nullable=False),
+    Column("from_currency", Text, nullable=False),
+    Column("to_currency", Text, nullable=False),
+    Column("rate", Numeric(18, 8), nullable=False),
+    Column("source", Text, nullable=False),
+    UniqueConstraint("date", "from_currency", "to_currency", name="uq_fx_rate"),
+)
+
+invoice = Table(
+    "invoice",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("customer_id", Text, ForeignKey("customer.id")),
+    Column("subscription_id", Text, ForeignKey("subscription.id")),
+    Column("status", Text),
+    Column("currency", Text),
+    Column("subtotal_cents", BigInteger),
+    Column("subtotal_base_cents", BigInteger),
+    Column("tax_cents", BigInteger),
+    Column("tax_base_cents", BigInteger),
+    Column("total_cents", BigInteger),
+    Column("total_base_cents", BigInteger),
+    Column("period_start", DateTime(timezone=True)),
+    Column("period_end", DateTime(timezone=True)),
+    Column("issued_at", DateTime(timezone=True)),
+    Column("paid_at", DateTime(timezone=True)),
+    Column("voided_at", DateTime(timezone=True)),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint("source_id", "external_id", name="uq_invoice_source"),
+)
+
+invoice_line_item = Table(
+    "invoice_line_item",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("invoice_id", Text, ForeignKey("invoice.id"), nullable=False),
+    Column("subscription_id", Text, ForeignKey("subscription.id")),
+    Column("type", Text),
+    Column("description", Text),
+    Column("amount_cents", BigInteger),
+    Column("amount_base_cents", BigInteger),
+    Column("currency", Text),
+    Column("quantity", Numeric),
+    Column("period_start", DateTime(timezone=True)),
+    Column("period_end", DateTime(timezone=True)),
+)
+
+payment = Table(
+    "payment",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("invoice_id", Text, ForeignKey("invoice.id")),
+    Column("customer_id", Text, ForeignKey("customer.id")),
+    Column("status", Text),
+    Column("amount_cents", BigInteger),
+    Column("amount_base_cents", BigInteger),
+    Column("currency", Text),
+    Column("payment_method_type", Text),
+    Column("failure_reason", Text),
+    Column("attempt_count", Integer),
+    Column("succeeded_at", DateTime(timezone=True)),
+    Column("failed_at", DateTime(timezone=True)),
+    Column("refunded_at", DateTime(timezone=True)),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint("source_id", "external_id", name="uq_payment_source"),
+)
+
+billable_metric = Table(
+    "billable_metric",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("code", Text, nullable=False),
+    Column("name", Text),
+    Column("aggregation_type", Text),
+    Column("field_name", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
+plan_charge = Table(
+    "plan_charge",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("plan_id", Text, ForeignKey("plan.id"), nullable=False),
+    Column("billable_metric_id", Text, ForeignKey("billable_metric.id")),
+    Column("charge_model", Text),
+    Column("properties", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
 )
 
 subscription = Table(

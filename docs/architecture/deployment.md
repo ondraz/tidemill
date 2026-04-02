@@ -136,7 +136,7 @@ terraform plan     # review what will be created
 terraform apply    # provision server, firewall, DNS
 
 # 4. Verify (wait ~2 min for cloud-init to finish)
-curl https://analytics.example.com/healthz
+curl https://tidemill.dev/healthz
 
 # 5. SSH if needed
 ssh root@$(terraform output -raw server_ipv4)
@@ -214,7 +214,7 @@ export KUBECONFIG=$(terraform output -raw kubeconfig_path)
 kubectl get pods -n subscriptions
 
 # 4. Verify
-curl https://analytics.example.com/healthz
+curl https://tidemill.dev/healthz
 ```
 
 ### Scaling

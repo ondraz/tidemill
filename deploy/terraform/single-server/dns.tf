@@ -1,18 +1,19 @@
 # ---------------------------------------------------------------------------
-# DNS — create an A record pointing the domain to the server
+# DNS — register domain zone and create records pointing to the server
 # ---------------------------------------------------------------------------
 
-data "hcloud_zone" "main" {
+resource "hcloud_zone" "main" {
   name = var.domain_zone
+  ttl  = 86400
 }
 
-# Extract the subdomain part: "analytics.example.com" with zone "example.com" → "analytics"
+# Extract the subdomain part: "app.tidemill.dev" with zone "tidemill.dev" → "app"
 locals {
   subdomain = trimsuffix(trimsuffix(var.domain, var.domain_zone), ".")
 }
 
 resource "hcloud_zone_rrset" "server_a" {
-  zone_id = data.hcloud_zone.main.id
+  zone_id = hcloud_zone.main.id
   name    = local.subdomain
   type    = "A"
   ttl     = 300
@@ -20,7 +21,7 @@ resource "hcloud_zone_rrset" "server_a" {
 }
 
 resource "hcloud_zone_rrset" "server_aaaa" {
-  zone_id = data.hcloud_zone.main.id
+  zone_id = hcloud_zone.main.id
   name    = local.subdomain
   type    = "AAAA"
   ttl     = 300

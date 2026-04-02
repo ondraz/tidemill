@@ -1,25 +1,9 @@
 # ---------------------------------------------------------------------------
-# Firewall — only allow SSH, HTTP, HTTPS inbound
+# Firewall — allow HTTPS inbound only (SSH via Tailscale, not public)
 # ---------------------------------------------------------------------------
 
 resource "hcloud_firewall" "subscriptions" {
   name = "${var.server_name}-fw"
-
-  # SSH
-  rule {
-    direction  = "in"
-    protocol   = "tcp"
-    port       = "22"
-    source_ips = var.ssh_allowed_ips
-  }
-
-  # HTTP (Caddy redirects to HTTPS)
-  rule {
-    direction  = "in"
-    protocol   = "tcp"
-    port       = "80"
-    source_ips = ["0.0.0.0/0", "::/0"]
-  }
 
   # HTTPS
   rule {
@@ -33,6 +17,14 @@ resource "hcloud_firewall" "subscriptions" {
   rule {
     direction  = "in"
     protocol   = "icmp"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  # Tailscale UDP (WireGuard tunnel)
+  rule {
+    direction  = "in"
+    protocol   = "udp"
+    port       = "41641"
     source_ips = ["0.0.0.0/0", "::/0"]
   }
 

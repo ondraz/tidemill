@@ -1,8 +1,11 @@
-"""ChurnMetric — query methods: logo, revenue."""
+"""ChurnMetric — query methods and event handler."""
 
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING, Any
+
+from sqlalchemy import text
 
 from subscriptions.metrics.base import Metric, QuerySpec
 from subscriptions.metrics.churn.cubes import ChurnCustomerStateCube, ChurnEventCube
@@ -11,12 +14,138 @@ from subscriptions.metrics.registry import register
 if TYPE_CHECKING:
     from datetime import date
 
+    from subscriptions.events import Event
+
 
 @register
 class ChurnMetric(Metric):
     name = "churn"
     event_model = ChurnEventCube
     state_model = ChurnCustomerStateCube
+
+    @property
+    def event_types(self) -> list[str]:
+        return [
+            "subscription.created",
+            "subscription.activated",
+            "subscription.reactivated",
+            "subscription.churned",
+            "subscription.canceled",
+        ]
+
+    async def handle_event(self, event: Event) -> None:
+        p = event.payload
+
+        match event.type:
+            case "subscription.created" | "subscription.activated" | "subscription.reactivated":
+                await self.db.execute(
+                    text(
+                        "INSERT INTO metric_churn_customer_state"
+                        " (id, source_id, customer_id, active_subscriptions,"
+                        "  first_active_at)"
+                        " VALUES (:id, :src, :cid, 1, :now)"
+                        " ON CONFLICT ON CONSTRAINT uq_churn_state_customer"
+                        " DO UPDATE SET"
+                        "  active_subscriptions ="
+                        "    metric_churn_customer_state.active_subscriptions + 1,"
+                        "  first_active_at = COALESCE("
+                        "    metric_churn_customer_state.first_active_at,"
+                        "    EXCLUDED.first_active_at),"
+                        "  churned_at = NULL"
+                    ),
+                    {
+                        "id": str(uuid.uuid4()),
+                        "src": event.source_id,
+                        "cid": event.customer_id,
+                        "now": event.occurred_at,
+                    },
+                )
+
+            case "subscription.churned":
+                # Decrement active count
+                await self.db.execute(
+                    text(
+                        "UPDATE metric_churn_customer_state SET"
+                        "  active_subscriptions ="
+                        "    GREATEST(active_subscriptions - 1, 0)"
+                        " WHERE source_id = :src AND customer_id = :cid"
+                    ),
+                    {"src": event.source_id, "cid": event.customer_id},
+                )
+                # Check if fully churned (0 active) → set churned_at + logo event
+                result = await self.db.execute(
+                    text(
+                        "UPDATE metric_churn_customer_state"
+                        " SET churned_at = :now"
+                        " WHERE source_id = :src AND customer_id = :cid"
+                        "   AND active_subscriptions = 0"
+                        " RETURNING id"
+                    ),
+                    {
+                        "src": event.source_id,
+                        "cid": event.customer_id,
+                        "now": event.occurred_at,
+                    },
+                )
+                if result.fetchone() is not None:
+                    await self.db.execute(
+                        text(
+                            "INSERT INTO metric_churn_event"
+                            " (id, event_id, source_id, customer_id,"
+                            "  churn_type, mrr_cents, occurred_at)"
+                            " VALUES (:id, :eid, :src, :cid,"
+                            "  'logo', :mrr, :now)"
+                            " ON CONFLICT (event_id) DO NOTHING"
+                        ),
+                        {
+                            "id": str(uuid.uuid4()),
+                            "eid": event.id + ":logo",
+                            "src": event.source_id,
+                            "cid": event.customer_id,
+                            "mrr": p.get("prev_mrr_cents", 0),
+                            "now": event.occurred_at,
+                        },
+                    )
+                # Always record revenue churn event
+                await self.db.execute(
+                    text(
+                        "INSERT INTO metric_churn_event"
+                        " (id, event_id, source_id, customer_id,"
+                        "  churn_type, mrr_cents, occurred_at)"
+                        " VALUES (:id, :eid, :src, :cid,"
+                        "  'revenue', :mrr, :now)"
+                        " ON CONFLICT (event_id) DO NOTHING"
+                    ),
+                    {
+                        "id": str(uuid.uuid4()),
+                        "eid": event.id + ":revenue",
+                        "src": event.source_id,
+                        "cid": event.customer_id,
+                        "mrr": p.get("prev_mrr_cents", 0),
+                        "now": event.occurred_at,
+                    },
+                )
+
+            case "subscription.canceled":
+                await self.db.execute(
+                    text(
+                        "INSERT INTO metric_churn_event"
+                        " (id, event_id, source_id, customer_id,"
+                        "  churn_type, cancel_reason, mrr_cents, occurred_at)"
+                        " VALUES (:id, :eid, :src, :cid,"
+                        "  'canceled', :reason, :mrr, :now)"
+                        " ON CONFLICT (event_id) DO NOTHING"
+                    ),
+                    {
+                        "id": str(uuid.uuid4()),
+                        "eid": event.id,
+                        "src": event.source_id,
+                        "cid": event.customer_id,
+                        "reason": p.get("cancel_reason"),
+                        "mrr": p.get("mrr_cents", 0),
+                        "now": event.occurred_at,
+                    },
+                )
 
     async def query(self, params: dict[str, Any], spec: QuerySpec | None = None) -> Any:
         churn_type = params.get("type", "logo")

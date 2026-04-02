@@ -1,5 +1,11 @@
 variable "hcloud_token" {
-  description = "Hetzner Cloud API token (from https://console.hetzner.cloud → Security → API Tokens)"
+  description = "Hetzner Cloud API token (from https://console.hetzner.cloud -> Security -> API Tokens)"
+  type        = string
+  sensitive   = true
+}
+
+variable "tailscale_auth_key" {
+  description = "Tailscale auth key (from https://login.tailscale.com/admin/settings/keys)"
   type        = string
   sensitive   = true
 }
@@ -11,7 +17,7 @@ variable "server_name" {
 }
 
 variable "server_type" {
-  description = "Hetzner server type (cx22 = 2 vCPU, 4 GB RAM, €3.79/mo)"
+  description = "Hetzner server type (cx22 = 2 vCPU, 4 GB RAM, ~EUR3.79/mo)"
   type        = string
   default     = "cx22"
 }
@@ -35,17 +41,11 @@ variable "ssh_public_key_path" {
 }
 
 variable "domain" {
-  description = "Domain name for the analytics server (e.g. analytics.example.com)"
+  description = "Domain name for the analytics server (e.g. tidemill.dev)"
   type        = string
 }
 
 variable "domain_zone" {
   description = "Parent DNS zone managed in Hetzner (e.g. example.com)"
   type        = string
-}
-
-variable "ssh_allowed_ips" {
-  description = "CIDR blocks allowed to SSH (default: everywhere, restrict in production)"
-  type        = list(string)
-  default     = ["0.0.0.0/0", "::/0"]
 }

@@ -20,7 +20,8 @@ resource "hcloud_server" "subscriptions" {
   firewall_ids = [hcloud_firewall.subscriptions.id]
 
   user_data = templatefile("${path.module}/cloud-init.yml", {
-    domain = var.domain
+    domain             = var.domain
+    tailscale_auth_key = var.tailscale_auth_key
   })
 
   labels = {

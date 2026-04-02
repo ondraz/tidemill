@@ -1,9 +1,10 @@
 # ---------------------------------------------------------------------------
-# DNS — point the domain to the load balancer
+# DNS — register domain zone and create records pointing to the load balancer
 # ---------------------------------------------------------------------------
 
-data "hcloud_zone" "main" {
+resource "hcloud_zone" "main" {
   name = var.domain_zone
+  ttl  = 86400
 }
 
 locals {
@@ -11,7 +12,7 @@ locals {
 }
 
 resource "hcloud_zone_rrset" "lb_a" {
-  zone_id = data.hcloud_zone.main.id
+  zone_id = hcloud_zone.main.id
   name    = local.subdomain
   type    = "A"
   ttl     = 300
@@ -19,7 +20,7 @@ resource "hcloud_zone_rrset" "lb_a" {
 }
 
 resource "hcloud_zone_rrset" "lb_aaaa" {
-  zone_id = data.hcloud_zone.main.id
+  zone_id = hcloud_zone.main.id
   name    = local.subdomain
   type    = "AAAA"
   ttl     = 300

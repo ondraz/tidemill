@@ -37,10 +37,14 @@ subscriptions/
 │   │   ├── Dockerfile
 │   │   ├── Caddyfile
 │   │   └── .env.example
+│   ├── domain/                         # Domain registration (Namecheap API)
+│   │   ├── domain.sh                   # check / register / set-ns / get-ns
+│   │   └── .env.example
 │   ├── seed/                           # Stripe test data generation
 │   │   ├── stripe_seed.py
 │   │   └── stripe_fixtures.json
 │   └── terraform/
+│       ├── domain/                     # Namecheap → Hetzner nameserver delegation
 │       ├── single-server/              # Hetzner single server (~€4/mo)
 │       └── kubernetes/                 # k3s HA cluster (~€33/mo)
 └── subscriptions/                      # Python package (TO BE IMPLEMENTED)

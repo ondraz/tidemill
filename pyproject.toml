@@ -9,6 +9,11 @@ requires-python = ">=3.13"
 dependencies = [
     "sqlalchemy>=2.0,<3",
     "stripe>=14.4.1",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "aiokafka>=0.12",
+    "typer>=0.15",
+    "pydantic>=2.10",
 ]
 
 [project.optional-dependencies]
@@ -16,6 +21,8 @@ pg = ["asyncpg>=0.29"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
+    "aiosqlite>=0.20",
+    "greenlet>=3.0",
     "mypy>=1.13",
     "ruff>=0.8",
     "pre-commit>=4.0",
@@ -28,6 +35,9 @@ exclude-newer = "14 days"
 name = "pypi"
 url = "https://pypi.org/simple"
 
+
+[project.scripts]
+subs = "subscriptions.cli.main:cli"
 
 [build-system]
 requires = ["hatchling"]
@@ -43,6 +53,10 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "integration: requires PostgreSQL (deselect with '-m not integration')",
+]
+addopts = "-m 'not integration'"
 
 [tool.ruff]
 target-version = "py313"
@@ -50,6 +64,10 @@ line-length = 99
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "TCH"]
+
+[tool.ruff.lint.per-file-ignores]
+"subscriptions/api/routers/*.py" = ["B008"]
+"subscriptions/cli/*.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.13"
@@ -61,3 +79,7 @@ packages = ["subscriptions"]
 [[tool.mypy.overrides]]
 module = ["subscriptions.metrics.mrr", "subscriptions.metrics.churn", "subscriptions.metrics.retention"]
 disable_error_code = ["override"]
+
+[[tool.mypy.overrides]]
+module = ["aiokafka", "aiokafka.*"]
+ignore_missing_imports = true

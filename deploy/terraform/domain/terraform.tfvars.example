@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars and fill in values.
+# Do NOT commit terraform.tfvars — it may contain secrets.
+
+namecheap_user      = ""                # Namecheap username
+namecheap_api_key   = ""                # API key (enable at Namecheap → Profile → Tools → API Access)
+namecheap_client_ip = ""                # Your public IP (whitelist it in Namecheap API settings)
+
+domain_zone = "tidemill.dev"
+
+# Get these from your infra deployment:
+#   cd ../single-server && terraform output -json nameservers
+nameservers = [
+  "hydrogen.ns.hetzner.com",
+  "oxygen.ns.hetzner.com",
+  "helium.ns.hetzner.de",
+]

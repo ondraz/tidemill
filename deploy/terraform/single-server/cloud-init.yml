@@ -9,10 +9,26 @@ packages:
   - git
   - unattended-upgrades
 
-# Install Docker via official script
+# Install Docker and Tailscale, lock down SSH to Tailscale only
 runcmd:
   # Install Docker
   - curl -fsSL https://get.docker.com | sh
+
+  # Install Tailscale
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - tailscale up --authkey=${tailscale_auth_key} --ssh
+
+  # Bind sshd to Tailscale interface only (blocks public SSH)
+  - |
+    mkdir -p /etc/ssh/sshd_config.d
+    cat > /etc/ssh/sshd_config.d/10-tailscale-only.conf <<'SSHEOF'
+    ListenAddress 100.64.0.0/10
+    SSHEOF
+  - |
+    TAILSCALE_IP=$(tailscale ip -4)
+    sed -i "s|ListenAddress 100.64.0.0/10|ListenAddress $TAILSCALE_IP|" \
+      /etc/ssh/sshd_config.d/10-tailscale-only.conf
+    systemctl restart sshd
 
   # Clone repo and start services
   - git clone https://github.com/ondraz/subscriptions.git /opt/subscriptions

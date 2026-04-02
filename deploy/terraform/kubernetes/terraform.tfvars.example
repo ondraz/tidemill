@@ -2,8 +2,8 @@
 # Do NOT commit terraform.tfvars — it may contain secrets.
 
 hcloud_token = ""                   # Hetzner API token
-domain       = "analytics.example.com"
-domain_zone  = "example.com"
+domain       = "tidemill.dev"
+domain_zone  = "tidemill.dev"
 
 # Cluster sizing
 # control_plane_type = "cx22"       # 2 vCPU, 4 GB RAM per control plane node (3 nodes)
