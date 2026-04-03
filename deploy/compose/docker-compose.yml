@@ -75,11 +75,15 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
     depends_on:
-      - api
+      api:
+        condition: service_started
+        required: false
 
 volumes:
   postgres_data:

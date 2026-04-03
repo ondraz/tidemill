@@ -10,7 +10,7 @@ output "load_balancer_ipv4" {
 
 output "nameservers" {
   description = "Set these nameservers at your domain registrar"
-  value       = hcloud_zone.main.ns
+  value       = hcloud_zone.main.authoritative_nameservers
 }
 
 output "url" {

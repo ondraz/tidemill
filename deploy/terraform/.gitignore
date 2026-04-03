@@ -4,8 +4,7 @@
 .terraform/
 .terraform.lock.hcl
 
-# Variable files with secrets
-terraform.tfvars
+# Secret overrides (secrets live in .env, loaded as TF_VAR_*)
 *.auto.tfvars
 
 # Crash logs

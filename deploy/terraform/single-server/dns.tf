@@ -4,26 +4,28 @@
 
 resource "hcloud_zone" "main" {
   name = var.domain_zone
+  mode = "primary"
   ttl  = 86400
 }
 
-# Extract the subdomain part: "app.tidemill.dev" with zone "tidemill.dev" → "app"
+# Extract the subdomain part: "app.tidemill.xyz" with zone "tidemill.xyz" → "app"
 locals {
-  subdomain = trimsuffix(trimsuffix(var.domain, var.domain_zone), ".")
+  raw_subdomain = trimsuffix(trimsuffix(var.domain, var.domain_zone), ".")
+  subdomain     = local.raw_subdomain != "" ? local.raw_subdomain : "@"
 }
 
 resource "hcloud_zone_rrset" "server_a" {
-  zone_id = hcloud_zone.main.id
-  name    = local.subdomain
-  type    = "A"
-  ttl     = 300
-  records = [hcloud_server.subscriptions.ipv4_address]
+  zone = hcloud_zone.main.id
+  name = local.subdomain
+  type = "A"
+  ttl  = 300
+  records = [{ value = hcloud_server.subscriptions.ipv4_address }]
 }
 
 resource "hcloud_zone_rrset" "server_aaaa" {
-  zone_id = hcloud_zone.main.id
-  name    = local.subdomain
-  type    = "AAAA"
-  ttl     = 300
-  records = [hcloud_server.subscriptions.ipv6_address]
+  zone = hcloud_zone.main.id
+  name = local.subdomain
+  type = "AAAA"
+  ttl  = 300
+  records = [{ value = hcloud_server.subscriptions.ipv6_address }]
 }

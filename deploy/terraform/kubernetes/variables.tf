@@ -31,13 +31,13 @@ variable "ssh_private_key_path" {
 variable "control_plane_type" {
   description = "Server type for control plane nodes"
   type        = string
-  default     = "cx22" # 2 vCPU, 4 GB RAM
+  default     = "cx23" # 2 vCPU, 4 GB RAM
 }
 
 variable "worker_type" {
   description = "Server type for worker nodes"
   type        = string
-  default     = "cx32" # 4 vCPU, 8 GB RAM
+  default     = "cx33" # 4 vCPU, 8 GB RAM
 }
 
 variable "worker_count" {

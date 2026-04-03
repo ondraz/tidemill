@@ -4,25 +4,27 @@
 
 resource "hcloud_zone" "main" {
   name = var.domain_zone
+  mode = "primary"
   ttl  = 86400
 }
 
 locals {
-  subdomain = trimsuffix(trimsuffix(var.domain, var.domain_zone), ".")
+  raw_subdomain = trimsuffix(trimsuffix(var.domain, var.domain_zone), ".")
+  subdomain     = local.raw_subdomain != "" ? local.raw_subdomain : "@"
 }
 
 resource "hcloud_zone_rrset" "lb_a" {
-  zone_id = hcloud_zone.main.id
-  name    = local.subdomain
-  type    = "A"
-  ttl     = 300
-  records = [module.kube_hetzner.load_balancer_public_ipv4]
+  zone = hcloud_zone.main.id
+  name = local.subdomain
+  type = "A"
+  ttl  = 300
+  records = [{ value = module.kube_hetzner.load_balancer_public_ipv4 }]
 }
 
 resource "hcloud_zone_rrset" "lb_aaaa" {
-  zone_id = hcloud_zone.main.id
-  name    = local.subdomain
-  type    = "AAAA"
-  ttl     = 300
-  records = [module.kube_hetzner.load_balancer_public_ipv6]
+  zone = hcloud_zone.main.id
+  name = local.subdomain
+  type = "AAAA"
+  ttl  = 300
+  records = [{ value = module.kube_hetzner.load_balancer_public_ipv6 }]
 }

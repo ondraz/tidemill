@@ -4,7 +4,7 @@
 
 resource "hcloud_ssh_key" "default" {
   name       = "${var.server_name}-key"
-  public_key = file(var.ssh_public_key_path)
+  public_key = file(pathexpand(var.ssh_public_key_path))
 }
 
 # ---------------------------------------------------------------------------

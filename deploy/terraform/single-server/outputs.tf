@@ -20,7 +20,7 @@ output "domain" {
 
 output "nameservers" {
   description = "Set these nameservers at your domain registrar"
-  value       = hcloud_zone.main.ns
+  value       = hcloud_zone.main.authoritative_nameservers
 }
 
 output "url" {

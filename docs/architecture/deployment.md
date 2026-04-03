@@ -125,20 +125,25 @@ Total: **~800 MB**. Fits on CX22 with headroom.
 # 1. Prerequisites
 brew install terraform   # or apt install terraform
 
-# 2. Configure
+# 2. Configure secrets
 cd deploy/terraform/single-server
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars: set hcloud_token, domain, domain_zone
+cp .env.example .env
+# Edit .env: set TF_VAR_hcloud_token, TF_VAR_tailscale_auth_key
 
 # 3. Deploy
+set -a && source .env && set +a
 terraform init
 terraform plan     # review what will be created
-terraform apply    # provision server, firewall, DNS
+terraform apply    # provision server, firewall, DNS zone
 
-# 4. Verify (wait ~2 min for cloud-init to finish)
-curl https://tidemill.dev/healthz
+# 4. Set nameservers at your domain registrar
+terraform output nameservers
+# → Set these as custom nameservers for tidemill.xyz at your registrar
 
-# 5. SSH if needed
+# 5. Verify (wait ~2 min for cloud-init + DNS propagation)
+curl https://tidemill.xyz/healthz
+
+# 6. SSH if needed
 ssh root@$(terraform output -raw server_ipv4)
 ```
 
@@ -214,7 +219,7 @@ export KUBECONFIG=$(terraform output -raw kubeconfig_path)
 kubectl get pods -n subscriptions
 
 # 4. Verify
-curl https://tidemill.dev/healthz
+curl https://tidemill.xyz/healthz
 ```
 
 ### Scaling

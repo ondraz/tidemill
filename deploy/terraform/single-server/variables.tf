@@ -17,9 +17,9 @@ variable "server_name" {
 }
 
 variable "server_type" {
-  description = "Hetzner server type (cx22 = 2 vCPU, 4 GB RAM, ~EUR3.79/mo)"
+  description = "Hetzner server type (cx23 = 2 vCPU, 4 GB RAM, ~EUR4.83/mo)"
   type        = string
-  default     = "cx22"
+  default     = "cx23"
 }
 
 variable "location" {
@@ -41,7 +41,7 @@ variable "ssh_public_key_path" {
 }
 
 variable "domain" {
-  description = "Domain name for the analytics server (e.g. tidemill.dev)"
+  description = "Domain name for the analytics server (e.g. tidemill.xyz)"
   type        = string
 }
 

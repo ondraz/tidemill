@@ -5,6 +5,14 @@
 resource "hcloud_firewall" "subscriptions" {
   name = "${var.server_name}-fw"
 
+  # HTTP (Caddy ACME challenge + redirect to HTTPS)
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "80"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
   # HTTPS
   rule {
     direction  = "in"
