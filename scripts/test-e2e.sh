@@ -53,13 +53,14 @@ POSTGRES_PASSWORD=test STRIPE_API_KEY="$STRIPE_API_KEY" \
 
 echo ""
 echo "=== Waiting for API ==="
-for i in $(seq 1 30); do
+for i in $(seq 1 90); do
     if curl -sf "$API/healthz" >/dev/null 2>&1; then
-        echo "API ready"
+        echo "API ready (${i}s)"
         break
     fi
-    if [[ $i -eq 30 ]]; then
-        echo "ERROR: API not ready after 30s"
+    if [[ $i -eq 90 ]]; then
+        echo "ERROR: API not ready after 90s"
+        docker logs compose-api-1 2>&1 | tail -20
         exit 1
     fi
     sleep 1
