@@ -22,30 +22,37 @@ API="http://localhost:8000"
 SEED_CUSTOMERS="${SEED_CUSTOMERS:-15}"
 SEED_MONTHS="${SEED_MONTHS:-6}"
 
-cleanup() {
+full_cleanup() {
     echo ""
-    echo "=== Cleanup ==="
+    echo "=== Full cleanup ==="
     # Stop stripe listen
     if [[ -n "${STRIPE_PID:-}" ]]; then
         kill "$STRIPE_PID" 2>/dev/null || true
         wait "$STRIPE_PID" 2>/dev/null || true
-        echo "Stopped stripe listen (PID $STRIPE_PID)"
     fi
-    # Stop compose
+    # Stop compose and delete volumes
     POSTGRES_PASSWORD=test $COMPOSE down -v --remove-orphans 2>/dev/null || true
-    echo "Stopped Docker Compose"
+    echo "Stopped Docker Compose (volumes removed)"
     # Cleanup Stripe test clocks
     echo "Cleaning up Stripe test clocks..."
     STRIPE_API_KEY="$STRIPE_API_KEY" uv run python "$ROOT/deploy/seed/stripe_seed.py" --cleanup 2>/dev/null || true
     echo "Done."
 }
 
+stop_stripe_listen() {
+    if [[ -n "${STRIPE_PID:-}" ]]; then
+        kill "$STRIPE_PID" 2>/dev/null || true
+        wait "$STRIPE_PID" 2>/dev/null || true
+        echo "Stopped stripe listen"
+    fi
+}
+
 if [[ "${1:-}" == "--cleanup-only" ]]; then
-    cleanup
+    full_cleanup
     exit 0
 fi
 
-trap cleanup EXIT
+trap stop_stripe_listen EXIT
 
 echo "=== Starting local stack ==="
 POSTGRES_PASSWORD=test STRIPE_API_KEY="$STRIPE_API_KEY" \
@@ -152,6 +159,10 @@ fi
 echo ""
 if [[ $errors -eq 0 ]]; then
     echo "All checks passed!"
+    echo ""
+    echo "Data is preserved. To continue developing:"
+    echo "  make dev          # restart infra (postgres + redpanda)"
+    echo "  # then run API from VS Code (F5) or terminal"
 else
     echo "$errors check(s) failed."
     exit 1
