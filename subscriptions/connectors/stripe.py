@@ -126,7 +126,10 @@ class StripeConnector(WebhookConnector):
 
     def _event_occurred(self, wh: dict[str, Any]) -> datetime:
         """When the webhook *event* was created (not the nested object)."""
-        return datetime.fromtimestamp(wh["created"], tz=UTC)
+        ts = wh.get("created") or wh.get("data", {}).get("object", {}).get("created")
+        if ts:
+            return datetime.fromtimestamp(ts, tz=UTC)
+        return datetime.now(UTC)
 
     @staticmethod
     def _sub_occurred(sub: dict[str, Any], wh: dict[str, Any]) -> datetime:
