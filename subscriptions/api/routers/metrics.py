@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, Query
 
 from subscriptions.metrics.base import QuerySpec
-
-if TYPE_CHECKING:
-    from datetime import date
 
 router = APIRouter(tags=["metrics"])
 
