@@ -138,8 +138,17 @@ class StripeConnector(WebhookConnector):
         Stripe test clocks set ``wh["created"]`` to real wall-clock time, but
         the subscription's billing fields use the simulated clock.  Prefer
         object-level timestamps that reflect the simulated timeline.
+
+        ``current_period_start`` was removed in Stripe API 2024+; we fall
+        back to ``billing_cycle_anchor`` which tracks the billing period
+        boundary in simulated time.
         """
-        for field in ("ended_at", "canceled_at", "current_period_start"):
+        for field in (
+            "ended_at",
+            "canceled_at",
+            "current_period_start",
+            "billing_cycle_anchor",
+        ):
             ts = sub.get(field)
             if ts:
                 return datetime.fromtimestamp(ts, tz=UTC)
