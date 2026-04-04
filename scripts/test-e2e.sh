@@ -72,8 +72,8 @@ stripe listen --forward-to "$API/api/webhooks/stripe" --latest > /tmp/stripe-lis
 STRIPE_PID=$!
 
 # Wait for stripe listen to output the webhook signing secret
-for i in $(seq 1 15); do
-    WHSEC=$(grep -oP 'whsec_\S+' /tmp/stripe-listen.log 2>/dev/null | head -1) || true
+for i in $(seq 1 30); do
+    WHSEC=$(grep -o 'whsec_[a-zA-Z0-9_]*' /tmp/stripe-listen.log 2>/dev/null | head -1) || true
     if [[ -n "${WHSEC:-}" ]]; then break; fi
     sleep 1
 done
