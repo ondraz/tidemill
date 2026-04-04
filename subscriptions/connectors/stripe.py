@@ -128,6 +128,20 @@ class StripeConnector(WebhookConnector):
         """When the webhook *event* was created (not the nested object)."""
         return datetime.fromtimestamp(wh["created"], tz=UTC)
 
+    @staticmethod
+    def _sub_occurred(sub: dict[str, Any], wh: dict[str, Any]) -> datetime:
+        """Best timestamp for a subscription status-change event.
+
+        Stripe test clocks set ``wh["created"]`` to real wall-clock time, but
+        the subscription's billing fields use the simulated clock.  Prefer
+        object-level timestamps that reflect the simulated timeline.
+        """
+        for field in ("ended_at", "canceled_at", "current_period_start"):
+            ts = sub.get(field)
+            if ts:
+                return datetime.fromtimestamp(ts, tz=UTC)
+        return datetime.fromtimestamp(wh["created"], tz=UTC)
+
     # ── customer handlers ────────────────────────────────────────────────
 
     def _translate_customer_created(self, wh: dict[str, Any]) -> list[Event]:
@@ -229,7 +243,7 @@ class StripeConnector(WebhookConnector):
         cust_id = sub["customer"]
         events: list[Event] = []
         mrr = self._compute_mrr(sub)
-        occurred = self._event_occurred(wh)
+        occurred = self._sub_occurred(sub, wh)
 
         # Status transitions
         if "status" in prev:
@@ -363,7 +377,7 @@ class StripeConnector(WebhookConnector):
                 "subscription.churned",
                 customer_id=sub["customer"],
                 external_id=sub["id"],
-                occurred_at=self._event_occurred(wh),
+                occurred_at=self._sub_occurred(sub, wh),
                 payload={
                     "external_id": sub["id"],
                     "prev_mrr_cents": self._compute_mrr(sub),
