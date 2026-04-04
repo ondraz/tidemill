@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -7,10 +7,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Install dependencies first (layer caching)
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-editable
+RUN uv sync --frozen --no-dev --no-install-project --extra pg
 
 # Copy application code
-COPY src/ src/
+COPY subscriptions/ subscriptions/
+RUN uv sync --frozen --no-dev --no-editable --extra pg
 
 # Default: API server (overridden per service in docker-compose.yml)
 CMD ["uv", "run", "uvicorn", "subscriptions.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
