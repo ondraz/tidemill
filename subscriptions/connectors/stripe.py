@@ -118,11 +118,15 @@ class StripeConnector(WebhookConnector):
         )
 
     def _occurred(self, obj: dict[str, Any]) -> datetime:
-        """Best-effort occurred_at from a Stripe object."""
+        """Best-effort occurred_at from a Stripe object's ``created`` field."""
         ts = obj.get("created")
         if ts:
             return datetime.fromtimestamp(ts, tz=UTC)
         return datetime.now(UTC)
+
+    def _event_occurred(self, wh: dict[str, Any]) -> datetime:
+        """When the webhook *event* was created (not the nested object)."""
+        return datetime.fromtimestamp(wh["created"], tz=UTC)
 
     # ── customer handlers ────────────────────────────────────────────────
 
@@ -225,6 +229,7 @@ class StripeConnector(WebhookConnector):
         cust_id = sub["customer"]
         events: list[Event] = []
         mrr = self._compute_mrr(sub)
+        occurred = self._event_occurred(wh)
 
         # Status transitions
         if "status" in prev:
@@ -237,7 +242,7 @@ class StripeConnector(WebhookConnector):
                         "subscription.trial_converted",
                         customer_id=cust_id,
                         external_id=sub["id"],
-                        occurred_at=self._occurred(sub),
+                        occurred_at=occurred,
                         payload={"external_id": sub["id"], "mrr_cents": mrr},
                     )
                 )
@@ -246,7 +251,7 @@ class StripeConnector(WebhookConnector):
                         "subscription.activated",
                         customer_id=cust_id,
                         external_id=sub["id"],
-                        occurred_at=self._occurred(sub),
+                        occurred_at=occurred,
                         payload={"external_id": sub["id"], "mrr_cents": mrr},
                     )
                 )
@@ -256,7 +261,7 @@ class StripeConnector(WebhookConnector):
                         "subscription.trial_expired",
                         customer_id=cust_id,
                         external_id=sub["id"],
-                        occurred_at=self._occurred(sub),
+                        occurred_at=occurred,
                         payload={"external_id": sub["id"]},
                     )
                 )
@@ -266,7 +271,7 @@ class StripeConnector(WebhookConnector):
                         "subscription.activated",
                         customer_id=cust_id,
                         external_id=sub["id"],
-                        occurred_at=self._occurred(sub),
+                        occurred_at=occurred,
                         payload={"external_id": sub["id"], "mrr_cents": mrr},
                     )
                 )
@@ -276,7 +281,7 @@ class StripeConnector(WebhookConnector):
                         "subscription.canceled",
                         customer_id=cust_id,
                         external_id=sub["id"],
-                        occurred_at=self._occurred(sub),
+                        occurred_at=occurred,
                         payload={
                             "external_id": sub["id"],
                             "mrr_cents": mrr,
@@ -291,7 +296,7 @@ class StripeConnector(WebhookConnector):
                         "subscription.paused",
                         customer_id=cust_id,
                         external_id=sub["id"],
-                        occurred_at=self._occurred(sub),
+                        occurred_at=occurred,
                         payload={"external_id": sub["id"], "mrr_cents": mrr},
                     )
                 )
@@ -303,7 +308,7 @@ class StripeConnector(WebhookConnector):
                     "subscription.resumed",
                     customer_id=cust_id,
                     external_id=sub["id"],
-                    occurred_at=self._occurred(sub),
+                    occurred_at=occurred,
                     payload={"external_id": sub["id"], "mrr_cents": mrr},
                 )
             )
@@ -315,7 +320,7 @@ class StripeConnector(WebhookConnector):
                     "subscription.canceled",
                     customer_id=cust_id,
                     external_id=sub["id"],
-                    occurred_at=self._occurred(sub),
+                    occurred_at=occurred,
                     payload={
                         "external_id": sub["id"],
                         "mrr_cents": mrr,
@@ -336,7 +341,7 @@ class StripeConnector(WebhookConnector):
                         "subscription.changed",
                         customer_id=cust_id,
                         external_id=sub["id"],
-                        occurred_at=self._occurred(sub),
+                        occurred_at=occurred,
                         payload={
                             "external_id": sub["id"],
                             "prev_plan_external_id": self._plan_id(prev_sub),
@@ -358,7 +363,7 @@ class StripeConnector(WebhookConnector):
                 "subscription.churned",
                 customer_id=sub["customer"],
                 external_id=sub["id"],
-                occurred_at=self._occurred(sub),
+                occurred_at=self._event_occurred(wh),
                 payload={
                     "external_id": sub["id"],
                     "prev_mrr_cents": self._compute_mrr(sub),
@@ -409,7 +414,7 @@ class StripeConnector(WebhookConnector):
                 "invoice.paid",
                 customer_id=inv.get("customer", ""),
                 external_id=inv["id"],
-                occurred_at=self._occurred(inv),
+                occurred_at=self._event_occurred(wh),
                 payload={
                     "external_id": inv["id"],
                     "paid_at": _ts(inv.get("status_transitions", {}).get("paid_at")),
@@ -425,7 +430,7 @@ class StripeConnector(WebhookConnector):
                 "invoice.voided",
                 customer_id=inv.get("customer", ""),
                 external_id=inv["id"],
-                occurred_at=self._occurred(inv),
+                occurred_at=self._event_occurred(wh),
                 payload={
                     "external_id": inv["id"],
                     "voided_at": _ts(inv.get("status_transitions", {}).get("voided_at")),
@@ -440,7 +445,7 @@ class StripeConnector(WebhookConnector):
                 "invoice.uncollectible",
                 customer_id=inv.get("customer", ""),
                 external_id=inv["id"],
-                occurred_at=self._occurred(inv),
+                occurred_at=self._event_occurred(wh),
                 payload={"external_id": inv["id"]},
             )
         ]
@@ -454,7 +459,7 @@ class StripeConnector(WebhookConnector):
                 "payment.succeeded",
                 customer_id=pi.get("customer", ""),
                 external_id=pi["id"],
-                occurred_at=self._occurred(pi),
+                occurred_at=self._event_occurred(wh),
                 payload={
                     "external_id": pi["id"],
                     "invoice_external_id": pi.get("invoice"),
@@ -474,7 +479,7 @@ class StripeConnector(WebhookConnector):
                 "payment.failed",
                 customer_id=pi.get("customer", ""),
                 external_id=pi["id"],
-                occurred_at=self._occurred(pi),
+                occurred_at=self._event_occurred(wh),
                 payload={
                     "external_id": pi["id"],
                     "invoice_external_id": pi.get("invoice"),
@@ -493,7 +498,7 @@ class StripeConnector(WebhookConnector):
                 "payment.refunded",
                 customer_id=charge.get("customer", ""),
                 external_id=charge["id"],
-                occurred_at=self._occurred(charge),
+                occurred_at=self._event_occurred(wh),
                 payload={
                     "external_id": charge["id"],
                     "amount_cents": charge.get("amount_refunded", 0),
