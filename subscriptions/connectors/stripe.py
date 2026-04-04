@@ -510,78 +510,90 @@ class StripeConnector(WebhookConnector):
         stripe.api_key = api_key
         created_filter: dict[str, int] | None = {"gte": int(since.timestamp())} if since else None
 
+        # Collect test clock IDs — test clock entities are invisible
+        # to normal list calls and need an explicit test_clock filter.
+        clock_ids: list[str | None] = [None]  # None = non-test-clock entities
+        for clock in stripe.test_helpers.TestClock.list(limit=100).auto_paging_iter():
+            clock_ids.append(clock.id)
+
         # 1. Customers
-        params: dict[str, Any] = {"limit": 100}
-        if created_filter:
-            params["created"] = created_filter
-        for cust in stripe.Customer.list(**params).auto_paging_iter():
-            yield self._make_event(
-                "customer.created",
-                customer_id=str(cust.id),
-                external_id=str(cust.id),
-                occurred_at=datetime.fromtimestamp(cust.created, tz=UTC),
-                payload={
-                    "external_id": cust.id,
-                    "name": cust.name,
-                    "email": cust.email,
-                    "currency": cust.currency,
-                    "metadata": dict(cust.metadata or {}),
-                },
-            )
+        for clock_id in clock_ids:
+            params: dict[str, Any] = {"limit": 100}
+            if created_filter:
+                params["created"] = created_filter
+            if clock_id:
+                params["test_clock"] = clock_id
+            for cust in stripe.Customer.list(**params).auto_paging_iter():
+                yield self._make_event(
+                    "customer.created",
+                    customer_id=str(cust.id),
+                    external_id=str(cust.id),
+                    occurred_at=datetime.fromtimestamp(cust.created, tz=UTC),
+                    payload={
+                        "external_id": cust.id,
+                        "name": cust.name,
+                        "email": cust.email,
+                        "currency": cust.currency,
+                        "metadata": dict(cust.metadata or {}),
+                    },
+                )
 
         # 2. Subscriptions
-        params = {"limit": 100, "status": "all"}
-        if created_filter:
-            params["created"] = created_filter
-        for sub in stripe.Subscription.list(**params).auto_paging_iter():
-            sub_dict: dict[str, Any] = dict(sub)
-            mrr = self._compute_mrr(sub_dict)
-            occurred = datetime.fromtimestamp(sub.created, tz=UTC)
-            plan_id = ""
-            if sub.items and sub.items.data:
-                plan_id = str(sub.items.data[0].price.id)
-            customer_id = str(sub.customer or "")
+        for clock_id in clock_ids:
+            params = {"limit": 100, "status": "all"}
+            if created_filter:
+                params["created"] = created_filter
+            if clock_id:
+                params["test_clock"] = clock_id
+            for sub in stripe.Subscription.list(**params).auto_paging_iter():
+                sub_dict: dict[str, Any] = dict(sub)
+                mrr = self._compute_mrr(sub_dict)
+                occurred = datetime.fromtimestamp(sub.created, tz=UTC)
+                plan_id = ""
+                if sub.items and sub.items.data:
+                    plan_id = str(sub.items.data[0].price.id)
+                customer_id = str(sub.customer or "")
 
-            yield self._make_event(
-                "subscription.created",
-                customer_id=customer_id,
-                external_id=str(sub.id),
-                occurred_at=occurred,
-                payload={
-                    "external_id": sub.id,
-                    "customer_external_id": sub.customer,
-                    "plan_external_id": plan_id,
-                    "status": sub.status,
-                    "mrr_cents": mrr,
-                    "quantity": sum(
-                        (it.quantity or 1) for it in (sub.items.data if sub.items else [])
-                    ),
-                    "currency": sub.currency,
-                    "started_at": _ts(sub.start_date),
-                    "trial_start": _ts(sub.trial_start),
-                    "trial_end": _ts(sub.trial_end),
-                    "current_period_start": _ts(sub.current_period_start),  # type: ignore[attr-defined]
-                    "current_period_end": _ts(sub.current_period_end),  # type: ignore[attr-defined]
-                },
-            )
-            if sub.status == "active":
                 yield self._make_event(
-                    "subscription.activated",
+                    "subscription.created",
                     customer_id=customer_id,
                     external_id=str(sub.id),
                     occurred_at=occurred,
-                    payload={"external_id": sub.id, "mrr_cents": mrr},
+                    payload={
+                        "external_id": sub.id,
+                        "customer_external_id": sub.customer,
+                        "plan_external_id": plan_id,
+                        "status": sub.status,
+                        "mrr_cents": mrr,
+                        "quantity": sum(
+                            (it.quantity or 1) for it in (sub.items.data if sub.items else [])
+                        ),
+                        "currency": sub.currency,
+                        "started_at": _ts(sub.start_date),
+                        "trial_start": _ts(sub.trial_start),
+                        "trial_end": _ts(sub.trial_end),
+                        "current_period_start": _ts(sub.current_period_start),  # type: ignore[attr-defined]
+                        "current_period_end": _ts(sub.current_period_end),  # type: ignore[attr-defined]
+                    },
                 )
-            elif sub.status == "canceled":
-                yield self._make_event(
-                    "subscription.churned",
-                    customer_id=customer_id,
-                    external_id=str(sub.id),
-                    occurred_at=occurred,
-                    payload={"external_id": sub.id, "prev_mrr_cents": mrr},
-                )
+                if sub.status == "active":
+                    yield self._make_event(
+                        "subscription.activated",
+                        customer_id=customer_id,
+                        external_id=str(sub.id),
+                        occurred_at=occurred,
+                        payload={"external_id": sub.id, "mrr_cents": mrr},
+                    )
+                elif sub.status == "canceled":
+                    yield self._make_event(
+                        "subscription.churned",
+                        customer_id=customer_id,
+                        external_id=str(sub.id),
+                        occurred_at=occurred,
+                        payload={"external_id": sub.id, "prev_mrr_cents": mrr},
+                    )
 
-        # 3. Invoices
+        # 3. Invoices (no test_clock filter needed — invoices are visible globally)
         params = {"limit": 100}
         if created_filter:
             params["created"] = created_filter
