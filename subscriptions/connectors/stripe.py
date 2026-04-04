@@ -550,8 +550,9 @@ class StripeConnector(WebhookConnector):
                 mrr = self._compute_mrr(sub_dict)
                 occurred = datetime.fromtimestamp(sub.created, tz=UTC)
                 plan_id = ""
-                if sub.items and sub.items.data:
-                    plan_id = str(sub.items.data[0].price.id)
+                items_data = sub_dict.get("items", {}).get("data", [])
+                if items_data:
+                    plan_id = str(items_data[0].get("price", {}).get("id", ""))
                 customer_id = str(sub.customer or "")
 
                 yield self._make_event(
@@ -565,9 +566,9 @@ class StripeConnector(WebhookConnector):
                         "plan_external_id": plan_id,
                         "status": sub.status,
                         "mrr_cents": mrr,
-                        "quantity": sum(
-                            (it.quantity or 1) for it in (sub.items.data if sub.items else [])
-                        ),
+                        "quantity": sum((it.get("quantity", 1) or 1) for it in items_data)
+                        if items_data
+                        else 1,
                         "currency": sub.currency,
                         "started_at": _ts(sub.start_date),
                         "trial_start": _ts(sub.trial_start),
