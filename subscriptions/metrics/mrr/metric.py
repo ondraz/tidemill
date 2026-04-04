@@ -201,6 +201,8 @@ class MrrMetric(Metric):
                 )
             case "breakdown":
                 return await self._mrr_breakdown(params["start"], params["end"], spec)
+            case "waterfall":
+                return await self._mrr_waterfall(params["start"], params["end"], spec)
             case "arr":
                 mrr = await self._current_mrr(params.get("at"), spec)
                 if isinstance(mrr, list):
@@ -252,6 +254,69 @@ class MrrMetric(Metric):
         stmt, params = q.compile(mm)
         result = await self.db.execute(stmt, params)
         return [dict(r) for r in result.mappings().all()]
+
+    async def _mrr_waterfall(
+        self,
+        start: date,
+        end: date,
+        spec: QuerySpec | None,
+    ) -> list[dict[str, Any]]:
+        import pandas as pd
+
+        months = pd.date_range(start, end, freq="MS")
+        if len(months) < 2:
+            return []
+
+        # 1. Baseline MRR at start of range
+        baseline = await self._current_mrr(start, spec)
+        if isinstance(baseline, list):
+            baseline = sum(r.get("mrr", 0) or 0 for r in baseline)
+        baseline = baseline or 0
+
+        # 2. All movements in the range, grouped by month + movement_type
+        mm = self.movement_model
+        q = (
+            mm.measures.amount
+            + mm.dimension("movement_type")
+            + mm.filter("occurred_at", "between", (start, end))
+            + mm.time_grain("occurred_at", "month")
+        )
+        if spec:
+            q = q + mm.apply_spec(spec)
+
+        stmt, params = q.compile(mm)
+        result = await self.db.execute(stmt, params)
+        rows = result.mappings().all()
+
+        # Index movements by (month, type)
+        movements_by_month: dict[str, dict[str, float]] = {}
+        for r in rows:
+            month_key = r["period"].strftime("%Y-%m")
+            mt = r["movement_type"]
+            movements_by_month.setdefault(month_key, {})[mt] = float(r["amount_base"])
+        movement_types = ["new", "expansion", "contraction", "churn", "reactivation"]
+
+        # 3. Build waterfall
+        waterfall = []
+        ending_mrr = float(baseline)
+        for month in months:
+            month_key = month.strftime("%Y-%m")
+            mvmt = movements_by_month.get(month_key, {})
+            starting_mrr = ending_mrr
+            net_change = sum(mvmt.get(mt, 0) for mt in movement_types)
+            ending_mrr = starting_mrr + net_change
+
+            entry: dict[str, Any] = {
+                "month": month_key,
+                "starting_mrr": round(starting_mrr, 2),
+            }
+            for mt in movement_types:
+                entry[mt] = round(mvmt.get(mt, 0), 2)
+            entry["net_change"] = round(net_change, 2)
+            entry["ending_mrr"] = round(ending_mrr, 2)
+            waterfall.append(entry)
+
+        return waterfall
 
     async def _mrr_breakdown(
         self,

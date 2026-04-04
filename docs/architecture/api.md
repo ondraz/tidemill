@@ -156,6 +156,7 @@ async def get_mrr(
 | `GET` | `/api/metrics/mrr` | MRR (point or series) |
 | `GET` | `/api/metrics/arr` | ARR (point or series) |
 | `GET` | `/api/metrics/mrr/breakdown` | Net new MRR breakdown |
+| `GET` | `/api/metrics/mrr/waterfall` | Monthly MRR waterfall (movements per month) |
 | `GET` | `/api/metrics/churn` | Churn rate (logo or revenue) |
 | `GET` | `/api/metrics/retention` | Cohort retention matrix |
 | `GET` | `/api/metrics/ltv` | LTV (point or series) |

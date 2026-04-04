@@ -54,8 +54,8 @@ check-integration:
 
 check-e2e:
 	@test -n "$(STRIPE_API_KEY)" || (echo "Error: STRIPE_API_KEY must be set" && exit 1)
-	STRIPE_API_KEY=$(STRIPE_API_KEY) ./scripts/test-stripe-local.sh --cleanup-only
-	STRIPE_API_KEY=$(STRIPE_API_KEY) ./scripts/test-stripe-local.sh
+	STRIPE_API_KEY=$(STRIPE_API_KEY) ./scripts/test-e2e.sh --cleanup-only
+	STRIPE_API_KEY=$(STRIPE_API_KEY) ./scripts/test-e2e.sh
 
 
 docs:
