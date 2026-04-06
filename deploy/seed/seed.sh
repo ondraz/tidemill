@@ -15,7 +15,7 @@ set -euo pipefail
 
 : "${STRIPE_API_KEY:?Set STRIPE_API_KEY (sk_test_...)}"
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 COMPOSE_DIR="$ROOT/deploy/compose"
 COMPOSE="docker compose -f $COMPOSE_DIR/docker-compose.yml -f $COMPOSE_DIR/docker-compose.local.yml"
 API="http://localhost:8000"

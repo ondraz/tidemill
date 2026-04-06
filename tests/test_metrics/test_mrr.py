@@ -41,9 +41,28 @@ class TestMrrHandler:
         assert row[2] == "sub_1"
 
     @pytest.mark.asyncio
-    async def test_movement_appended_on_created(self, metric, db):
+    async def test_created_no_movement(self, metric, db):
+        """subscription.created only upserts snapshot, no movement."""
         event = make_evt(
             "subscription.created",
+            {"external_id": "sub_1", "mrr_cents": 5000, "currency": "USD"},
+        )
+        await metric.handle_event(event)
+        await db.commit()
+
+        row = (
+            await db.execute(
+                text(
+                    "SELECT movement_type FROM metric_mrr_movement WHERE subscription_id = 'sub_1'"
+                )
+            )
+        ).fetchone()
+        assert row is None  # no movement on created
+
+    @pytest.mark.asyncio
+    async def test_movement_appended_on_activated(self, metric, db):
+        event = make_evt(
+            "subscription.activated",
             {"external_id": "sub_1", "mrr_cents": 5000, "currency": "USD"},
         )
         await metric.handle_event(event)
@@ -66,7 +85,7 @@ class TestMrrHandler:
         """subscription.changed with higher MRR → expansion movement."""
         await metric.handle_event(
             make_evt(
-                "subscription.created",
+                "subscription.activated",
                 {"external_id": "sub_1", "mrr_cents": 5000, "currency": "USD"},
             )
         )
@@ -109,7 +128,7 @@ class TestMrrHandler:
     async def test_contraction(self, metric, db):
         await metric.handle_event(
             make_evt(
-                "subscription.created",
+                "subscription.activated",
                 {"external_id": "sub_1", "mrr_cents": 9000, "currency": "USD"},
             )
         )
@@ -226,7 +245,7 @@ class TestMrrHandler:
     async def test_idempotent_replay(self, metric, db):
         """Processing the same event twice → one movement row."""
         event = make_evt(
-            "subscription.created",
+            "subscription.activated",
             {"external_id": "sub_1", "mrr_cents": 5000, "currency": "USD"},
         )
         await metric.handle_event(event)

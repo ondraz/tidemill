@@ -131,47 +131,48 @@ class StripeConnector(WebhookConnector):
             return datetime.fromtimestamp(ts, tz=UTC)
         return datetime.now(UTC)
 
-    # Cache test clock frozen times to avoid repeated API calls.
-    _clock_cache: dict[str, int] = {}
-
-    @classmethod
-    def _resolve_test_clock(cls, clock_id: str) -> int | None:
-        """Return the frozen_time for a test clock, with caching."""
-        if clock_id in cls._clock_cache:
-            return cls._clock_cache[clock_id]
-        try:
-            clock = stripe.test_helpers.TestClock.retrieve(clock_id)
-            cls._clock_cache[clock_id] = clock.frozen_time
-            return clock.frozen_time
-        except Exception:
-            return None
-
-    @classmethod
-    def _sub_occurred(cls, sub: dict[str, Any], wh: dict[str, Any]) -> datetime:
-        """Best timestamp for a subscription status-change event.
+    @staticmethod
+    def _sub_occurred(sub: dict[str, Any], wh: dict[str, Any]) -> datetime:
+        """Best timestamp for a subscription event.
 
         Stripe test clocks set ``wh["created"]`` to real wall-clock time, but
-        the subscription's billing fields use the simulated clock.
+        object-level fields use the simulated clock.  We collect all
+        simulated-time candidates and pick the most recent one.
 
         Priority:
-        1. ``ended_at`` / ``canceled_at`` — set by Stripe in simulated time.
-        2. ``current_period_start`` — removed in Stripe API 2024+, but check.
-        3. Test clock ``frozen_time`` — accurate simulated time.
-        4. ``wh["created"]`` — real wall-clock time (correct for production).
+        1. ``ended_at`` / ``canceled_at`` — terminal lifecycle events.
+        2. Best of ``trial_end`` and subscription-item ``created`` — both
+           in simulated time for test clocks.  ``trial_end`` captures trial
+           conversions; item ``created`` captures plan/quantity changes.
+        3. ``wh["created"]`` — wall-clock time (correct for production).
         """
-        for field in ("ended_at", "canceled_at", "current_period_start"):
+        # 1. Terminal timestamps (always simulated time).
+        for field in ("ended_at", "canceled_at"):
             ts = sub.get(field)
             if ts:
                 return datetime.fromtimestamp(ts, tz=UTC)
 
-        # For test clock subscriptions, look up the clock's frozen time.
-        clock_id = sub.get("test_clock")
-        if clock_id:
-            frozen = cls._resolve_test_clock(clock_id)
-            if frozen:
-                return datetime.fromtimestamp(frozen, tz=UTC)
+        # 2. Collect simulated-time candidates.  The most recent one
+        #    reflects when the subscription reached its current state.
+        candidates: list[int] = []
 
-        return datetime.fromtimestamp(wh["created"], tz=UTC)
+        trial_end = sub.get("trial_end")
+        if trial_end:
+            candidates.append(trial_end)
+
+        for item in sub.get("items", {}).get("data", []):
+            created = item.get("created")
+            if created:
+                candidates.append(created)
+
+        if candidates:
+            return datetime.fromtimestamp(max(candidates), tz=UTC)
+
+        # 3. Wall-clock time (correct for production subscriptions).
+        ts = wh.get("created") or sub.get("created")
+        if ts:
+            return datetime.fromtimestamp(ts, tz=UTC)
+        return datetime.now(UTC)
 
     # ── customer handlers ────────────────────────────────────────────────
 
@@ -251,7 +252,20 @@ class StripeConnector(WebhookConnector):
             )
         )
 
-        if sub.get("status") == "trialing":
+        if sub.get("status") == "active":
+            events.append(
+                self._make_event(
+                    "subscription.activated",
+                    customer_id=cust_id,
+                    external_id=sub["id"],
+                    occurred_at=self._occurred(sub),
+                    payload={
+                        "external_id": sub["id"],
+                        "mrr_cents": self._compute_mrr(sub),
+                    },
+                )
+            )
+        elif sub.get("status") == "trialing":
             events.append(
                 self._make_event(
                     "subscription.trial_started",

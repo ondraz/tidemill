@@ -266,7 +266,13 @@ CREATE TABLE metric_mrr_movement (
 ```python
 async def handle_event(self, event: Event) -> None:
     match event.type:
-        case "subscription.created" | "subscription.activated":
+        case "subscription.created":
+            # Snapshot only — "new" movement deferred to subscription.activated
+            # to avoid double-counting trials that later convert.
+            await self._upsert_snapshot(event, event.payload["mrr_cents"],
+                                        event.payload["mrr_base_cents"])
+
+        case "subscription.activated":
             await self._upsert_snapshot(event, event.payload["mrr_cents"],
                                         event.payload["mrr_base_cents"])
             await self._append_movement(event, "new", event.payload["mrr_cents"],
@@ -427,6 +433,53 @@ FROM metric_mrr_movement m
 WHERE m.occurred_at BETWEEN :start AND :end
 GROUP BY m.movement_type, sub.plan_id
 ```
+
+**Waterfall query — monthly MRR bridge:**
+
+The waterfall builds a month-by-month bridge from starting MRR to ending MRR. It combines a baseline snapshot query with movement aggregation:
+
+1. **Baseline** — query `metric_mrr_snapshot` for total MRR at the start of the range (same as `_current_mrr(start)`)
+2. **Movements** — query `metric_mrr_movement` grouped by `date_trunc('month', occurred_at)` and `movement_type`
+3. **Accumulate** — walk months in order; each month's `starting_mrr` = previous month's `ending_mrr`, `ending_mrr` = `starting_mrr` + sum of movements
+
+```python
+async def _mrr_waterfall(self, start: date, end: date, spec: QuerySpec | None):
+    months = pd.date_range(start, end, freq="MS")
+    baseline = await self._current_mrr(start, spec)    # step 1
+
+    mm = self.movement_model  # MRRMovementCube
+    q = (                                               # step 2
+        mm.measures.amount
+        + mm.dimension("movement_type")
+        + mm.filter("occurred_at", "between", (start, end))
+        + mm.time_grain("occurred_at", "month")
+    )
+    # ...execute and index by (month, movement_type)...
+
+    waterfall = []                                      # step 3
+    ending_mrr = baseline
+    for month in months:
+        starting_mrr = ending_mrr
+        net_change = sum(movements for this month)
+        ending_mrr = starting_mrr + net_change
+        waterfall.append({month, starting_mrr, new, expansion,
+                          contraction, churn, reactivation,
+                          net_change, ending_mrr})
+    return waterfall
+```
+
+The movement query SQL (step 2):
+
+```sql
+SELECT date_trunc('month', m.occurred_at) AS period,
+       m.movement_type,
+       SUM(m.amount_base_cents) / 100.0 AS amount_base
+FROM metric_mrr_movement m
+WHERE m.occurred_at BETWEEN :start AND :end
+GROUP BY period, m.movement_type
+```
+
+Months with no movements appear with all-zero changes and MRR carried forward from the previous month.
 
 ### Churn (P0)
 

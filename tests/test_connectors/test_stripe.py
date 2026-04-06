@@ -183,10 +183,12 @@ class TestCustomerTranslation:
 class TestSubscriptionTranslation:
     def test_created_active(self, connector: StripeConnector):
         events = connector.translate(_sub_wh("customer.subscription.created", status="active"))
-        assert len(events) == 1
+        assert len(events) == 2
         assert events[0].type == "subscription.created"
         assert events[0].payload["mrr_cents"] == 5000
         assert events[0].payload["status"] == "active"
+        assert events[1].type == "subscription.activated"
+        assert events[1].payload["mrr_cents"] == 5000
 
     def test_created_trialing_emits_trial_started(self, connector: StripeConnector):
         wh = _sub_wh("customer.subscription.created", status="trialing")
@@ -322,6 +324,82 @@ class TestSubscriptionTranslation:
         assert len(events) == 1
         assert events[0].type == "subscription.churned"
         assert events[0].payload["prev_mrr_cents"] == 5000
+
+
+# ── Timestamp attribution (_sub_occurred) ──────────────────────────────────
+
+
+class TestSubOccurred:
+    """Verify that _sub_occurred picks the correct simulated timestamp."""
+
+    def test_plan_change_uses_item_created(self):
+        """Plan change: use the newest item ``created`` (simulated time)."""
+        sub = {
+            "status": "active",
+            "created": 1693526400,  # 2023-09-01 (sim)
+            "canceled_at": None,
+            "ended_at": None,
+            "trial_end": None,
+            "items": {
+                "data": [
+                    {"created": 1696118400, "price": {"id": "p1"}},  # 2023-10-01 (sim)
+                    {"created": 1696118400, "price": {"id": "p2"}},
+                ]
+            },
+        }
+        wh = {"created": 1743800000}  # wall-clock (far future)
+        result = StripeConnector._sub_occurred(sub, wh)
+        assert result.year == 2023
+        assert result.month == 10
+
+    def test_trial_conversion_uses_trial_end(self):
+        """Trial → active: ``trial_end`` is newer than item ``created``."""
+        sub = {
+            "status": "active",
+            "created": 1693526400,  # 2023-09-01 (sim)
+            "canceled_at": None,
+            "ended_at": None,
+            "trial_end": 1696118400,  # 2023-10-01 (sim)
+            "items": {
+                "data": [
+                    {"created": 1693526400, "price": {"id": "p1"}},  # original items
+                ]
+            },
+        }
+        wh = {"created": 1743800000}
+        result = StripeConnector._sub_occurred(sub, wh)
+        assert result.year == 2023
+        assert result.month == 10
+
+    def test_canceled_at_takes_priority(self):
+        """Cancellation: ``canceled_at`` beats everything else."""
+        sub = {
+            "status": "canceled",
+            "created": 1693526400,
+            "canceled_at": 1701388800,  # 2023-12-01
+            "ended_at": None,
+            "trial_end": 1696118400,
+            "items": {"data": [{"created": 1693526400, "price": {"id": "p1"}}]},
+        }
+        wh = {"created": 1743800000}
+        result = StripeConnector._sub_occurred(sub, wh)
+        assert result.year == 2023
+        assert result.month == 12
+
+    def test_production_sub_uses_wh_created(self):
+        """Non-test-clock sub with no item timestamps: fall back to wh created."""
+        sub = {
+            "status": "active",
+            "created": 1693526400,
+            "canceled_at": None,
+            "ended_at": None,
+            "trial_end": None,
+            "items": {"data": []},
+        }
+        wh = {"created": 1696118400}  # 2023-10-01
+        result = StripeConnector._sub_occurred(sub, wh)
+        assert result.year == 2023
+        assert result.month == 10
 
 
 # ── Invoice translations ─────────────────────────────────────────────────

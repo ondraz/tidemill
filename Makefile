@@ -1,4 +1,4 @@
-.PHONY: docs check check-integration check-e2e dev dev-down dev-reset lint test typecheck install install-dev install-pre-commit
+.PHONY: docs check check-integration seed dev dev-down dev-reset lint test typecheck install install-dev install-pre-commit
 
 install:
 	uv sync --frozen
@@ -54,10 +54,10 @@ check-integration:
 
 COMPOSE_LOCAL := docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.local.yml
 
-check-e2e:
+seed:
 	@test -n "$(STRIPE_API_KEY)" || (echo "Error: STRIPE_API_KEY must be set" && exit 1)
-	STRIPE_API_KEY=$(STRIPE_API_KEY) ./scripts/test-e2e.sh --cleanup-only
-	STRIPE_API_KEY=$(STRIPE_API_KEY) ./scripts/test-e2e.sh
+	STRIPE_API_KEY=$(STRIPE_API_KEY) ./deploy/seed/seed.sh --cleanup-only
+	STRIPE_API_KEY=$(STRIPE_API_KEY) ./deploy/seed/seed.sh
 	@POSTGRES_PASSWORD=test $(COMPOSE_LOCAL) stop
 
 

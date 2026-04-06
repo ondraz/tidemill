@@ -42,7 +42,22 @@ class MrrMetric(Metric):
         ext_id = p["external_id"]
 
         match event.type:
-            case "subscription.created" | "subscription.activated":
+            case "subscription.created":
+                # Snapshot only — the "new" movement is created by
+                # subscription.activated so we don't double-count
+                # trials that later convert.
+                mrr = p.get("mrr_cents", 0)
+                currency = p.get("currency", "USD") or "USD"
+                mrr_base = await to_base_cents(mrr, currency, event.occurred_at.date(), self.db)
+                await self._upsert_snapshot(
+                    event,
+                    ext_id,
+                    mrr,
+                    mrr_base,
+                    currency,
+                )
+
+            case "subscription.activated":
                 mrr = p.get("mrr_cents", 0)
                 currency = p.get("currency", "USD") or "USD"
                 mrr_base = await to_base_cents(mrr, currency, event.occurred_at.date(), self.db)
