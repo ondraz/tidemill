@@ -359,6 +359,19 @@ class StripeConnector(WebhookConnector):
                         payload={"external_id": sub["id"], "mrr_cents": mrr},
                     )
                 )
+            elif new_status in ("incomplete_expired", "unpaid"):
+                events.append(
+                    self._make_event(
+                        "subscription.churned",
+                        customer_id=cust_id,
+                        external_id=sub["id"],
+                        occurred_at=occurred,
+                        payload={
+                            "external_id": sub["id"],
+                            "prev_mrr_cents": mrr,
+                        },
+                    )
+                )
 
         # Resume from pause
         if "pause_collection" in prev and sub.get("pause_collection") is None:
@@ -649,7 +662,7 @@ class StripeConnector(WebhookConnector):
                         occurred_at=occurred,
                         payload={"external_id": sub.id, "mrr_cents": mrr},
                     )
-                elif sub.status == "canceled":
+                elif sub.status in ("canceled", "incomplete_expired", "unpaid"):
                     yield self._make_event(
                         "subscription.churned",
                         customer_id=customer_id,

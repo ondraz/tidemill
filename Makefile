@@ -86,7 +86,7 @@ dev-reset:
 
 docs:
 	@echo "Starting MkDocs server..."
-	uv tool run --from mkdocs-material mkdocs serve -f docs/mkdocs.yml
+	uv tool run --from mkdocs-material mkdocs serve -a 127.0.0.1:8001 -f docs/mkdocs.yml
 
 
 .PHONY: install-post-hooks
