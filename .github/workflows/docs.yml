@@ -15,4 +15,4 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
-      - run: uv tool run --from mkdocs-material mkdocs gh-deploy --force -f docs/mkdocs.yml
+      - run: uv run mkdocs gh-deploy --force -f docs/mkdocs.yml

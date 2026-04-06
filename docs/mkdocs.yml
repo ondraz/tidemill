@@ -54,6 +54,7 @@ nav:
       - Database: architecture/database.md
       - Connectors: architecture/connectors.md
       - Cubes & Query Algebra: architecture/cubes.md
+      - Query Algebra Examples: architecture/example-queries.ipynb
       - Metrics: architecture/metrics.md
       - API: architecture/api.md
       - Deployment: architecture/deployment.md
