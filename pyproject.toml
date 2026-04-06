@@ -14,10 +14,10 @@ dependencies = [
     "aiokafka>=0.12",
     "typer>=0.15",
     "pydantic>=2.10",
+    "asyncpg>=0.29",
 ]
 
 [project.optional-dependencies]
-pg = ["asyncpg>=0.29"]
 dev = []
 
 [tool.uv]

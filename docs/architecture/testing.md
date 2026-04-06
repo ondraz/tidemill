@@ -29,20 +29,26 @@ export STRIPE_API_KEY=sk_test_...
 ## Quick Start (3 minutes)
 
 ```bash
-# Terminal 1: Start the app
-cd deploy/compose
-docker compose up -d
+# Terminal 1: Start dev environment (PostgreSQL + Redpanda + Stripe webhook forwarding)
+make dev    # requires STRIPE_API_KEY to be set
 
-# Terminal 2: Forward Stripe webhooks to local server
-stripe listen --forward-to localhost:8000/api/webhooks/stripe
-# Note the whsec_... signing secret printed at startup
+# Terminal 2: Seed test data
+make seed   # requires STRIPE_API_KEY to be set
 
-# Terminal 3: Seed test data
-cd deploy/seed
-python stripe_seed.py --customers 10 --months 3
+# Start API and Worker from VS Code (F5) or manually:
+TIDEMILL_DATABASE_URL=postgresql+asyncpg://tidemill:test@localhost:5432/tidemill \
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
+uv run uvicorn tidemill.api.app:app --port 8000 --reload
 ```
 
-The seed script creates customers, subscriptions, and advances time through 3 months of billing. Stripe fires webhook events for every invoice, payment, and renewal — the CLI forwards them to your local server.
+`make dev` starts PostgreSQL (:5432), Redpanda (:9092), and a background `stripe listen` process that forwards webhook events to `localhost:8000`. `make seed` cleans up any existing test clocks, then creates a fresh dataset using Stripe Test Clocks — Stripe fires webhook events for every invoice, payment, and renewal.
+
+When you're done:
+
+```bash
+make dev-down    # Stop dev environment and stripe listen
+make dev-reset   # Stop and delete all volumes (fresh start)
+```
 
 ## Seed Script
 
@@ -72,14 +78,15 @@ The seed script creates customers, subscriptions, and advances time through 3 mo
 ### Usage
 
 ```bash
-# Default: 15 customers, 6 months of history
+# Seed test data (cleans up existing clocks first, then creates fresh data)
+make seed   # requires STRIPE_API_KEY
+
+# Or run the seed script directly:
+cd deploy/seed
 python stripe_seed.py
 
-# Smaller dataset for quick testing
-python stripe_seed.py --customers 5 --months 2
-
-# Cleanup: delete the test clock and all its data
-python stripe_seed.py --cleanup clock_...
+# Cleanup only (delete all test clocks):
+./deploy/seed/seed.sh --cleanup-only
 ```
 
 ### Events Generated
@@ -233,8 +240,13 @@ stripe.test_helpers.TestClock.advance(
 Deleting a test clock deletes **all** resources attached to it (customers, subscriptions, invoices, charges):
 
 ```bash
-python deploy/seed/stripe_seed.py --cleanup clock_...
-# or
+# Via make (cleans up all clocks before re-seeding)
+make seed
+
+# Cleanup only, no re-seed
+./deploy/seed/seed.sh --cleanup-only
+
+# Or delete a specific clock manually
 stripe test_helpers test_clocks delete clock_...
 ```
 

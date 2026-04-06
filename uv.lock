@@ -11,7 +11,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-03-23T12:11:46.150529Z"
+exclude-newer = "2026-03-23T12:30:10.948824Z"
 exclude-newer-span = "P14D"
 
 [[package]]
@@ -2093,17 +2093,13 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiokafka" },
+    { name = "asyncpg" },
     { name = "fastapi" },
     { name = "pydantic" },
     { name = "sqlalchemy" },
     { name = "stripe" },
     { name = "typer" },
     { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.optional-dependencies]
-pg = [
-    { name = "asyncpg" },
 ]
 
 [package.dev-dependencies]
@@ -2127,7 +2123,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiokafka", specifier = ">=0.12" },
-    { name = "asyncpg", marker = "extra == 'pg'", specifier = ">=0.29" },
+    { name = "asyncpg", specifier = ">=0.29" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "pydantic", specifier = ">=2.10" },
     { name = "sqlalchemy", specifier = ">=2.0,<3" },
@@ -2135,7 +2131,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.15" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34" },
 ]
-provides-extras = ["pg", "dev"]
+provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [
