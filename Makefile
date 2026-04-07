@@ -12,9 +12,10 @@ install-pre-commit: ## Update and install pre-commit hooks
 	uv run pre-commit autoupdate
 	uv run pre-commit install
 
-install-dev: ## Install dev dependencies + pre-commit hooks
+install-dev: ## Install dev dependencies + pre-commit hooks + post-checkout hook
 	uv sync --frozen --extra dev
 	$(MAKE) install-pre-commit
+	$(MAKE) install-post-hooks
 
 
 check: lint test typecheck ## Run all checks (lint + test + typecheck)
