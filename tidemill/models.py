@@ -232,3 +232,6 @@ subscription = Table(
 # Metric tables are defined in each metric's own tables.py module.
 # Importing the metrics package triggers registration on this shared metadata.
 import tidemill.metrics  # noqa: E402, F401
+
+# Auth, dashboard, and chart tables.
+import tidemill.models_auth  # noqa: E402, F401

@@ -1,4 +1,4 @@
-.PHONY: help docs check check-integration seed dev dev-down dev-reset lint test typecheck install install-dev install-pre-commit
+.PHONY: help docs check check-integration seed dev dev-down dev-reset lint test typecheck install install-dev install-pre-commit frontend frontend-build
 
 .DEFAULT_GOAL := help
 
@@ -14,6 +14,7 @@ install-pre-commit: ## Update and install pre-commit hooks
 
 install-dev: ## Install dev dependencies + pre-commit hooks + post-checkout hook
 	uv sync --frozen --extra dev
+	cd frontend && npm install
 	$(MAKE) install-pre-commit
 	$(MAKE) install-post-hooks
 
@@ -60,35 +61,34 @@ check-integration: ## Run integration tests (starts PostgreSQL in Docker)
 
 COMPOSE_LOCAL := docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.local.yml
 
-seed: ## Seed Stripe test data (requires STRIPE_API_KEY)
-	@test -n "$(STRIPE_API_KEY)" || (echo "Error: STRIPE_API_KEY must be set" && exit 1)
-	STRIPE_API_KEY=$(STRIPE_API_KEY) ./deploy/seed/seed.sh --cleanup-only
-	STRIPE_API_KEY=$(STRIPE_API_KEY) ./deploy/seed/seed.sh
-	@POSTGRES_PASSWORD=test $(COMPOSE_LOCAL) stop
+seed: ## Seed Stripe test data
+	./deploy/seed/seed.sh --cleanup-only
+	./deploy/seed/seed.sh
+	@$(COMPOSE_LOCAL) stop
 
 
 COMPOSE_DEV := docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.dev.yml
 
-dev: ## Start dev environment (requires STRIPE_API_KEY)
-	@test -n "$(STRIPE_API_KEY)" || (echo "Error: STRIPE_API_KEY must be set" && exit 1)
-	POSTGRES_PASSWORD=test $(COMPOSE_DEV) up -d
+dev: ## Start dev environment
+	$(COMPOSE_DEV) up -d
 	@echo ""
 	@echo "Infrastructure running: PostgreSQL :5432, Redpanda :9092"
 	@echo "Starting stripe listen (PID written to /tmp/stripe-listen-dev.pid)..."
 	@stripe listen --forward-to http://localhost:8000/api/webhooks/stripe --latest > /tmp/stripe-listen-dev.log 2>&1 & echo $$! > /tmp/stripe-listen-dev.pid
-	@echo ""
-	@echo "Start API and Worker from VS Code (F5) or:"
-	@echo "  TIDEMILL_DATABASE_URL=postgresql+asyncpg://tidemill:test@localhost:5432/tidemill \\"
-	@echo "  KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \\"
-	@echo "  uv run uvicorn tidemill.api.app:app --port 8000 --reload"
 
 dev-down: ## Stop dev environment
 	@if [ -f /tmp/stripe-listen-dev.pid ]; then kill $$(cat /tmp/stripe-listen-dev.pid) 2>/dev/null || true; rm -f /tmp/stripe-listen-dev.pid; echo "Stopped stripe listen"; fi
-	POSTGRES_PASSWORD=test $(COMPOSE_DEV) down
+	$(COMPOSE_DEV) down
 
 dev-reset: ## Stop dev environment and delete volumes
-	POSTGRES_PASSWORD=test $(COMPOSE_DEV) down -v
+	$(COMPOSE_DEV) down -v
 
+
+frontend: ## Start frontend dev server on :5173
+	cd frontend && npm run dev
+
+frontend-build: ## Build frontend for production
+	cd frontend && npm ci && npm run build
 
 docs: ## Start MkDocs dev server on :8001
 	@echo "Starting MkDocs server..."

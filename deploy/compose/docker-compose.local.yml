@@ -1,7 +1,13 @@
 services:
   api:
+    build:
+      target: api
     ports:
       - "8000:8000"
+
+  worker:
+    build:
+      target: api
 
   caddy:
     profiles: [disabled]

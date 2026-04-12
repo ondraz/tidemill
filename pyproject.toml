@@ -15,6 +15,8 @@ dependencies = [
     "typer>=0.15",
     "pydantic>=2.10",
     "asyncpg>=0.29",
+    "httpx>=0.27",
+    "PyJWT[crypto]>=2.9",
 ]
 
 [project.optional-dependencies]
@@ -69,7 +71,7 @@ line-length = 99
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "TCH"]
 
 [tool.ruff.lint.per-file-ignores]
-"tidemill/api/routers/*.py" = ["B008", "TCH003"]
+"tidemill/api/routers/*.py" = ["B008", "TCH001", "TCH003"]
 "tidemill/metrics/*/routes.py" = ["B008", "TCH003"]
 "tidemill/metrics/route_helpers.py" = ["B008"]
 "tidemill/connectors/*/routes.py" = ["B008", "TCH003"]
@@ -85,6 +87,10 @@ packages = ["tidemill"]
 [[tool.mypy.overrides]]
 module = ["tidemill.metrics.mrr", "tidemill.metrics.churn", "tidemill.metrics.retention", "tidemill.metrics.ltv", "tidemill.metrics.trials"]
 disable_error_code = ["override"]
+
+[[tool.mypy.overrides]]
+module = ["jwt", "jwt.*"]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["aiokafka", "aiokafka.*"]

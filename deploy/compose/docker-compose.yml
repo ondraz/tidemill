@@ -37,6 +37,7 @@ services:
     build:
       context: ../../
       dockerfile: deploy/compose/Dockerfile
+      target: full
     restart: unless-stopped
     command: >
       uv run uvicorn tidemill.api.app:app
@@ -46,6 +47,11 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
       STRIPE_API_KEY: ${STRIPE_API_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      AUTH_ENABLED: ${AUTH_ENABLED:-true}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
+      CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:-}
+      CLERK_JWKS_URL: ${CLERK_JWKS_URL:-}
+      CORS_ORIGINS: https://${DOMAIN:-localhost}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 5s
@@ -59,11 +65,14 @@ services:
         condition: service_healthy
     expose:
       - "8000"
+    volumes:
+      - frontend_assets:/srv/frontend
 
   worker:
     build:
       context: ../../
       dockerfile: deploy/compose/Dockerfile
+      target: api
     restart: unless-stopped
     command: uv run python -m tidemill.worker
     environment:
@@ -86,6 +95,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
+      - frontend_assets:/srv/frontend:ro
     depends_on:
       api:
         condition: service_started
@@ -95,3 +105,4 @@ volumes:
   postgres_data:
   redpanda_data:
   caddy_data:
+  frontend_assets:

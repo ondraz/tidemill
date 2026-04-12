@@ -37,6 +37,34 @@ STRIPE_API_KEY=sk_test_... python stripe_seed.py --cleanup        # delete all s
 STRIPE_API_KEY=sk_test_... python stripe_seed.py --cleanup CLOCK_ID  # delete specific clock
 ```
 
+## Running Tests
+
+### Unit Tests
+
+```bash
+make test                # runs pytest (excludes integration tests)
+make check               # runs lint + test + typecheck
+```
+
+Unit tests use an in-memory SQLite database (via `aiosqlite`) — no Docker or PostgreSQL required.
+
+### Integration Tests
+
+```bash
+make check-integration   # starts a PostgreSQL container, runs integration tests, cleans up
+```
+
+This starts a temporary PostgreSQL container on port 5433, runs tests marked `@pytest.mark.integration`, and removes the container afterward.
+
+### Frontend Type-Checking
+
+```bash
+cd frontend
+npm run build            # runs tsc -b && vite build (type errors fail the build)
+```
+
+There is no separate `tsc --noEmit` target — the `build` command runs the TypeScript compiler first.
+
 ## Plans
 
 All plans use usage-based billing via Stripe Billing Meters (`analytical_query` events):
@@ -87,6 +115,51 @@ python deploy/seed/stripe_seed.py --cleanup
 python deploy/seed/stripe_seed.py --cleanup clock_...
 ```
 
+## Verifying Metrics After Seeding
+
+Start the dev stack and API, then verify metrics via curl or the frontend:
+
+```bash
+# Check MRR
+curl localhost:8000/api/metrics/mrr
+
+# Check MRR time series
+curl "localhost:8000/api/metrics/mrr?start=2025-10-01&end=2026-03-30&interval=month"
+
+# Check MRR breakdown
+curl "localhost:8000/api/metrics/mrr/breakdown?start=2025-09-01&end=2026-03-31"
+
+# Check churn
+curl "localhost:8000/api/metrics/churn?start=2025-12-01&end=2026-01-01"
+
+# Check retention
+curl "localhost:8000/api/metrics/retention?start=2025-09-01&end=2026-03-31"
+
+# Check all metrics
+curl localhost:8000/api/metrics/summary
+```
+
+Or open the frontend at `http://localhost:5173` and navigate to the report pages — MRR, Churn, Retention, LTV, Trials — all query the same API endpoints.
+
+## Verifying the Frontend
+
+With the API running and seeded data in PostgreSQL:
+
+1. Start the frontend: `make frontend`
+2. Open `http://localhost:5173` (with `AUTH_ENABLED=false` on the API, no login required)
+3. Navigate each report page and verify charts render with data:
+   - **Overview** (`/`) — KPI cards for all metrics
+   - **MRR** (`/reports/mrr`) — line chart, bar breakdown, waterfall
+   - **Churn** (`/reports/churn`) — logo and revenue churn rate charts
+   - **Retention** (`/reports/retention`) — cohort heatmap
+   - **LTV** (`/reports/ltv`) — LTV line chart
+   - **Trials** (`/reports/trials`) — conversion rate chart
+4. Test dashboard CRUD:
+   - Create a dashboard at `/dashboards`
+   - Save a chart from any report page (bookmark icon)
+   - Add the saved chart to your dashboard
+5. If auth is enabled, test the login flow and API key management at `/settings/api-keys`
+
 ## Events Generated
 
 As time advances through each billing cycle, Stripe fires webhook events:
@@ -132,28 +205,6 @@ Clock time: October 1, 2025 ──advance──► November 1, 2025 ──advanc
 When you advance the clock from October to November, Stripe processes everything that would have happened: invoice generation, payment attempts, subscription renewals, trial expirations, metered usage billing. Every action fires the same webhook events as production.
 
 The seed script groups customers into test clocks with a maximum of 3 customers per clock (Stripe's limit) and advances all clocks in parallel.
-
-```python
-import stripe
-
-# Create a clock starting 6 months ago
-clock = stripe.test_helpers.TestClock.create(
-    frozen_time=1727740800,  # Oct 1, 2025
-    name="My test"
-)
-
-# Create a customer ON this clock
-customer = stripe.Customer.create(
-    name="Test",
-    test_clock=clock.id,
-)
-
-# Advance 1 month — triggers invoice + charge + renewal
-stripe.test_helpers.TestClock.advance(
-    clock.id,
-    frozen_time=1730419200,  # Nov 1, 2025
-)
-```
 
 ## Test Cards
 
@@ -209,28 +260,6 @@ stripe_seed.py          stripe listen              API server              Worke
       |                       |   GET /api/metrics/mrr  |                     |
       |                       |  <----------------------+                     |
       |                       |   {"mrr": 1234.00}      |                     |
-```
-
-Verify metrics after seeding:
-
-```bash
-# Check MRR
-curl localhost:8000/api/metrics/mrr
-
-# Check MRR time series
-curl "localhost:8000/api/metrics/mrr?start=2025-10-01&end=2026-03-30&interval=month"
-
-# Check MRR breakdown
-curl "localhost:8000/api/metrics/mrr/breakdown?start=2025-09-01&end=2026-03-31"
-
-# Check churn
-curl "localhost:8000/api/metrics/churn?start=2025-12-01&end=2026-01-01"
-
-# Check retention
-curl "localhost:8000/api/metrics/retention?start=2025-09-01&end=2026-03-31"
-
-# Check all metrics
-curl localhost:8000/api/metrics/summary
 ```
 
 ## Lago Testing (Same-Database Mode)

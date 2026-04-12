@@ -1,3 +1,24 @@
 {$DOMAIN:localhost} {
-	reverse_proxy api:8000
+	root * /srv/frontend
+	try_files {path} /index.html
+	file_server
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /auth/* {
+		reverse_proxy api:8000
+	}
+	handle /healthz {
+		reverse_proxy api:8000
+	}
+	handle /readyz {
+		reverse_proxy api:8000
+	}
+	handle /docs {
+		reverse_proxy api:8000
+	}
+	handle /openapi.json {
+		reverse_proxy api:8000
+	}
 }

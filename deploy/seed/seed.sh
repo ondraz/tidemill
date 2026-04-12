@@ -8,8 +8,8 @@
 #   - STRIPE_API_KEY env var set (sk_test_...)
 #
 # Usage:
-#   STRIPE_API_KEY=sk_test_... ./scripts/test-stripe-local.sh
-#   STRIPE_API_KEY=sk_test_... ./scripts/test-stripe-local.sh --cleanup-only
+#   ./deploy/seed/seed.sh
+#   ./deploy/seed/seed.sh --cleanup-only
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -31,11 +31,11 @@ full_cleanup() {
         wait "$STRIPE_PID" 2>/dev/null || true
     fi
     # Stop compose and delete volumes
-    POSTGRES_PASSWORD=test $COMPOSE down -v --remove-orphans 2>/dev/null || true
+    $COMPOSE down -v --remove-orphans 2>/dev/null || true
     echo "Stopped Docker Compose (volumes removed)"
     # Cleanup Stripe test clocks
     echo "Cleaning up Stripe test clocks..."
-    STRIPE_API_KEY="$STRIPE_API_KEY" uv run python "$ROOT/deploy/seed/stripe_seed.py" --cleanup 2>/dev/null || true
+    uv run python "$ROOT/deploy/seed/stripe_seed.py" --cleanup 2>/dev/null || true
     echo "Done."
 }
 
@@ -55,8 +55,7 @@ fi
 trap stop_stripe_listen EXIT
 
 echo "=== Starting local stack ==="
-POSTGRES_PASSWORD=test STRIPE_API_KEY="$STRIPE_API_KEY" \
-    $COMPOSE up -d --build --wait 2>&1 | tail -5
+$COMPOSE up -d --build --wait 2>&1 | tail -5
 
 echo ""
 echo "=== Waiting for API ==="
@@ -94,7 +93,7 @@ echo "Webhook secret: ${WHSEC:0:12}..."
 
 echo ""
 echo "=== Seeding Stripe test data ==="
-STRIPE_API_KEY="$STRIPE_API_KEY" uv run python "$ROOT/deploy/seed/stripe_seed.py" \
+uv run python "$ROOT/deploy/seed/stripe_seed.py" \
     --customers "$SEED_CUSTOMERS" --months "$SEED_MONTHS"
 
 echo ""
@@ -106,30 +105,30 @@ echo "=== Checking results ==="
 echo ""
 
 # Sources
-sources=$(curl -sf "$API/api/sources")
+sources=$(curl -sf "$API/api/sources" || echo "CURL_FAILED")
 echo "Sources: $sources"
 
 # Metrics
-metrics=$(curl -sf "$API/api/metrics")
+metrics=$(curl -sf "$API/api/metrics" || echo "CURL_FAILED")
 echo "Metrics: $metrics"
 
 # MRR
-mrr=$(curl -sf "$API/api/metrics/mrr?at=2026-03-01")
+mrr=$(curl -sf "$API/api/metrics/mrr?at=2026-03-01" || echo "CURL_FAILED")
 echo "MRR at 2026-03-01: $mrr cents"
 
 # ARR
-arr=$(curl -sf "$API/api/metrics/arr?at=2026-03-01")
+arr=$(curl -sf "$API/api/metrics/arr?at=2026-03-01" || echo "CURL_FAILED")
 echo "ARR at 2026-03-01: $arr cents"
 
 # MRR breakdown
 echo ""
 echo "MRR breakdown (full period):"
-curl -sf "$API/api/metrics/mrr/breakdown?start=2025-09-01&end=2026-03-31" | python3 -m json.tool
+curl -sf "$API/api/metrics/mrr/breakdown?start=2025-09-01&end=2026-03-31" | python3 -m json.tool || echo "(failed)"
 
 # Retention
 echo ""
 echo "Retention:"
-curl -sf "$API/api/metrics/retention?start=2025-09-01&end=2026-03-31" | python3 -m json.tool
+curl -sf "$API/api/metrics/retention?start=2025-09-01&end=2026-03-31" | python3 -m json.tool || echo "(failed)"
 
 echo ""
 echo "=== Validating ==="
@@ -142,10 +141,10 @@ else
     echo "PASS: Sources present"
 fi
 
-if [[ "$metrics" == '["churn","mrr","retention"]' ]]; then
+if [[ "$metrics" == '["churn","ltv","mrr","retention","trials"]' ]]; then
     echo "PASS: All metrics registered"
 else
-    echo "FAIL: Expected [churn, mrr, retention], got: $metrics"
+    echo "FAIL: Expected [churn, ltv, mrr, retention, trials], got: $metrics"
     errors=$((errors + 1))
 fi
 

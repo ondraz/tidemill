@@ -6,10 +6,12 @@ import os
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, Response
 
 from tidemill.bus import EventProducer
+from tidemill.config import AuthConfig
 from tidemill.database import make_engine, make_session_factory
 
 if TYPE_CHECKING:
@@ -56,20 +58,52 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="Tidemill API", lifespan=lifespan)
 
-# Register routers
-from tidemill.api.routers import health, metrics, sources, webhooks  # noqa: E402
+# ── CORS ────────────────────────────────────────────────────────────────
 
+_cfg = AuthConfig()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cfg.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Auth dependency list (empty when auth is disabled) ──────────────────
+
+from tidemill.api.deps import require_user  # noqa: E402
+
+_auth_deps = [Depends(require_user)] if _cfg.auth_enabled else []
+
+# ── Register routers ────────────────────────────────────────────────────
+
+from tidemill.api.routers import health, metrics, sources, webhooks  # noqa: E402
+from tidemill.api.routers.api_keys import router as api_keys_router  # noqa: E402
+from tidemill.api.routers.auth import router as auth_router  # noqa: E402
+from tidemill.api.routers.dashboards import router as dashboards_router  # noqa: E402
+
+# Public routers
 app.include_router(health.router)
+app.include_router(auth_router)
 app.include_router(webhooks.router, prefix="/api")
-app.include_router(metrics.router, prefix="/api")
-app.include_router(sources.router, prefix="/api")
+
+# Protected routers
+app.include_router(metrics.router, prefix="/api", dependencies=_auth_deps)
+app.include_router(sources.router, prefix="/api", dependencies=_auth_deps)
+app.include_router(api_keys_router, prefix="/api", dependencies=_auth_deps)
+app.include_router(dashboards_router, prefix="/api", dependencies=_auth_deps)
 
 # Discover and mount per-metric routers
 from tidemill.metrics.registry import discover_metrics  # noqa: E402
 
 for _metric in discover_metrics():
     if _metric.router is not None:
-        app.include_router(_metric.router, prefix="/api", tags=[f"metric:{_metric.name}"])
+        app.include_router(
+            _metric.router,
+            prefix="/api",
+            tags=[f"metric:{_metric.name}"],
+            dependencies=_auth_deps,
+        )
 
 # Discover and mount per-connector routers
 from tidemill.connectors.registry import get_registry  # noqa: E402
@@ -77,7 +111,7 @@ from tidemill.connectors.registry import get_registry  # noqa: E402
 for _conn_cls in get_registry().values():
     _router = _conn_cls.router()
     if _router is not None:
-        app.include_router(_router, prefix="/api")
+        app.include_router(_router, prefix="/api", dependencies=_auth_deps)
 
 
 @app.get("/", include_in_schema=False)

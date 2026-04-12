@@ -45,3 +45,69 @@ class HealthResponse(BaseModel):
 class MetricResponse(BaseModel):
     metric: str
     result: Any
+
+
+# ── Auth & API Keys ─────────────────────────────────────────────────────
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str | None = None
+    avatar_url: str | None = None
+
+
+class ApiKeyCreate(BaseModel):
+    name: str
+
+
+class ApiKeyResponse(BaseModel):
+    id: str
+    name: str
+    key_prefix: str
+    created_at: datetime
+    last_used_at: datetime | None = None
+    revoked_at: datetime | None = None
+
+
+class ApiKeyCreated(ApiKeyResponse):
+    key: str
+
+
+# ── Dashboards & Charts ─────────────────────────────────────────────────
+
+
+class DashboardCreate(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class DashboardUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+
+class SectionCreate(BaseModel):
+    title: str
+    position: int = 0
+
+
+class SectionUpdate(BaseModel):
+    title: str | None = None
+    position: int | None = None
+
+
+class SavedChartCreate(BaseModel):
+    name: str
+    config: dict[str, Any]
+
+
+class SavedChartUpdate(BaseModel):
+    name: str | None = None
+    config: dict[str, Any] | None = None
+
+
+class DashboardChartAdd(BaseModel):
+    saved_chart_id: str
+    section_id: str
+    position: int = 0
