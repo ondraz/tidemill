@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Open-source subscription analytics engine — transparent, auditable metric computation (MRR, Churn, Retention, LTV) for any billing system. Stripe is the primary integration; Lago and Kill Bill are supported as secondary connectors via same-database mode.
 
-**Current state:** Architecture documentation and deployment infrastructure are complete. Application source code has not been implemented yet.
+**Current state:** Core application implemented — connectors (Stripe), metrics (MRR, Churn, Retention, LTV, Trials), event pipeline, query algebra, FastAPI, and deployment infrastructure. Lago/Kill Bill connectors are P1.
 
 **Stack:** Python 3.11+ (tidemill package) + PostgreSQL + Kafka/Redpanda + FastAPI + CLI.
 
@@ -67,7 +67,9 @@ Each metric (MRR, Churn, Retention) is a self-contained class (`Metric` subclass
 
 **P0:** MRR, Churn (logo + revenue + net revenue), Basic cohort retention, Stripe integration, CLI, FastAPI, Docker deployment (PostgreSQL + Kafka + API + Worker), Documented metric methodology
 
-**P1:** Lago integration, Kill Bill integration, LTV, CAC, Expansion/contraction MRR, Customer segmentation, Web dashboard, Data warehouse export
+**P1 (implemented):** LTV, Trials
+
+**P1 (remaining):** Lago integration, Kill Bill integration, CAC, Customer segmentation, Web dashboard, Data warehouse export
 
 **Non-goals for V1:** Payment processing, revenue recovery, board-ready reporting, CRM, general-purpose BI
 
@@ -82,36 +84,38 @@ Start with `docs/architecture/overview.md` for the full system design. Key files
 - **API:** `api.md` — CLI commands, FastAPI endpoints, programmatic Python usage
 - **Research:** `docs/research/` — Market analysis, competitive matrix, product positioning
 
-## Package Design (To Be Implemented)
+## Package Structure
 
 ```
 tidemill/
-├── __init__.py              # Public API: MetricsEngine, connectors
 ├── engine.py                # MetricsEngine — routes queries to metrics
-├── models.py                # SQLAlchemy models + Pydantic schemas
-├── database.py              # Database connection and session management
+├── models.py                # SQLAlchemy Core tables (billing entities)
 ├── events.py                # Internal event schema (dataclasses)
+├── fx.py                    # Foreign exchange rate conversion
 ├── bus.py                   # Kafka producer/consumer
 ├── state.py                 # Core consumer: events → base tables
 ├── connectors/
-│   ├── __init__.py          # Connector base classes + registry
 │   ├── base.py              # WebhookConnector + DatabaseConnector ABCs
-│   ├── stripe.py            # Stripe webhook translator — reference implementation
+│   ├── stripe.py            # Stripe webhook translator
 │   ├── lago.py              # Lago database connector (P1)
 │   └── killbill.py          # Kill Bill database connector (P1)
 ├── metrics/
-│   ├── __init__.py          # Metric base class + registry
+│   ├── base.py              # Metric ABC + QuerySpec
+│   ├── registry.py          # @register decorator, discovery, dependency resolution
 │   ├── query.py             # Cube, QueryFragment, compilation
-│   ├── mrr.py               # P0: MRR, ARR, net new MRR
-│   ├── churn.py             # P0: Logo, revenue, net revenue churn
-│   ├── retention.py         # P0: Cohorts, NRR, GRR
-│   ├── ltv.py               # P1: LTV, ARPU
-│   └── trials.py            # P1: Trial conversion
+│   ├── route_helpers.py     # Shared FastAPI helpers
+│   ├── mrr/                 # MRR, ARR, net new MRR, waterfall
+│   ├── churn/               # Logo churn, revenue churn
+│   ├── retention/           # Cohort retention, NRR, GRR
+│   ├── ltv/                 # LTV, ARPU, cohort LTV
+│   └── trials/              # Trial conversion rate, funnel
 ├── cli/
 │   └── main.py              # CLI entry point
 └── api/
-    └── app.py               # FastAPI facade
+    └── app.py               # FastAPI application
 ```
+
+Each metric module: `tables.py` (schema), `cubes.py` (query model), `metric.py` (logic), `routes.py` (API), `__init__.py`.
 
 ## Development Commands
 

@@ -80,3 +80,5 @@ nav:
       - MRR: notebooks/01_mrr.ipynb
       - Churn: notebooks/02_churn.ipynb
       - Retention: notebooks/03_retention.ipynb
+      - LTV: notebooks/04_ltv.ipynb
+      - Trials: notebooks/05_trials.ipynb

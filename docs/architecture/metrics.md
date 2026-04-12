@@ -596,33 +596,60 @@ GRR = (start_mrr - contraction - churn) / start_mrr
 
 ### LTV (P1)
 
-**Subscribes to (ingestion mode):** `invoice.paid`, `subscription.churned`, `customer.created`
+**Subscribes to (ingestion mode):** `invoice.paid`
+
+**Dependencies:** `mrr` (ARPU queries MRR snapshot), `churn` (simple LTV uses logo churn rate)
 
 **Tables:**
 
 ```sql
--- Revenue per customer (updated on each paid invoice)
-CREATE TABLE metric_ltv_customer_revenue (
-    id               UUID PRIMARY KEY,
-    source_id        UUID NOT NULL,
-    customer_id      TEXT NOT NULL,
-    total_cents      BIGINT NOT NULL DEFAULT 0,      -- original currency sum
-    total_base_cents  BIGINT NOT NULL DEFAULT 0,      -- base-currency equivalent sum
-    currency         TEXT NOT NULL,                  -- ISO 4217
-    invoice_count    INT NOT NULL DEFAULT 0,
-    first_invoice_at TIMESTAMPTZ,
-    last_invoice_at  TIMESTAMPTZ,
-    UNIQUE(source_id, customer_id)
+-- Append-only log of paid invoices (idempotent via event_id)
+CREATE TABLE metric_ltv_invoice (
+    id                UUID PRIMARY KEY,
+    event_id          UUID NOT NULL UNIQUE,   -- idempotency key
+    source_id         UUID NOT NULL,
+    customer_id       TEXT NOT NULL,
+    amount_cents      BIGINT NOT NULL,        -- original currency
+    amount_base_cents BIGINT NOT NULL,        -- base currency at FX rate on paid_at
+    currency          TEXT NOT NULL,           -- ISO 4217
+    paid_at           TIMESTAMPTZ NOT NULL
 );
+```
+
+**Event handling:**
+
+```python
+async def handle_event(self, event: Event) -> None:
+    # invoice.paid → insert with ON CONFLICT (event_id) DO NOTHING
+    # Amount converted to base currency via FX module
 ```
 
 **Queries:**
 
-Simple LTV: `ARPU / logo_churn_rate`
+ARPU (queries MRR snapshot directly):
+```sql
+SELECT SUM(s.mrr_base_cents) / COUNT(DISTINCT s.customer_id)
+FROM metric_mrr_snapshot s
+WHERE s.mrr_base_cents > 0
+```
 
-Cohort LTV: average `total_base_cents` per customer grouped by cohort month (base currency for cross-currency comparison); also available in original currency per `currency`.
+Simple LTV: `ARPU / logo_churn_rate` — delegates to MRR and Churn metrics.
 
-ARPU: `SUM(mrr_base_cents) / COUNT(DISTINCT active customers)` — queries MRR metric's snapshot table.
+Cohort LTV (joins invoice log with retention cohort table via `LtvInvoiceCube`):
+```sql
+SELECT rc.cohort_month,
+       COUNT(DISTINCT li.customer_id) AS customer_count,
+       SUM(li.amount_base_cents) AS total_revenue
+FROM metric_ltv_invoice li
+JOIN metric_retention_cohort rc
+    ON rc.source_id = li.source_id AND rc.customer_id = li.customer_id
+WHERE li.paid_at BETWEEN :start AND :end
+GROUP BY rc.cohort_month
+```
+
+**Cube:** `LtvInvoiceCube` — measures: `total_revenue`, `total_revenue_original`, `invoice_count`, `customer_count`; dimensions: `source_id`, `currency`, `customer_country` (via customer join), `cohort_month` (via retention cohort join).
+
+**API endpoints:** `GET /metrics/ltv` (simple), `GET /metrics/ltv/arpu`, `GET /metrics/ltv/cohort`
 
 ### Trials (P1)
 
@@ -631,6 +658,7 @@ ARPU: `SUM(mrr_base_cents) / COUNT(DISTINCT active customers)` — queries MRR m
 **Tables:**
 
 ```sql
+-- Append-only trial lifecycle events (idempotent via event_id)
 CREATE TABLE metric_trial_event (
     id              UUID PRIMARY KEY,
     event_id        UUID NOT NULL UNIQUE,
@@ -642,16 +670,31 @@ CREATE TABLE metric_trial_event (
 );
 ```
 
-**Query — conversion rate:**
+**Event handling:**
 
-```sql
-SELECT
-    COUNT(CASE WHEN event_type = 'converted' THEN 1 END)::float /
-    NULLIF(COUNT(CASE WHEN event_type = 'started' THEN 1 END), 0)
-    AS trial_conversion_rate
-FROM metric_trial_event
-WHERE occurred_at BETWEEN :start AND :end
+```python
+# Maps event types to trial event types:
+#   subscription.trial_started   → "started"
+#   subscription.trial_converted → "converted"
+#   subscription.trial_expired   → "expired"
+# Insert with ON CONFLICT (event_id) DO NOTHING
 ```
+
+**Queries:**
+
+Conversion rate — groups by `event_type` via `TrialEventCube`, computes ratio in Python:
+```python
+by_type = {r["event_type"]: r["trial_count"] for r in rows}
+return by_type.get("converted", 0) / by_type.get("started", 0)
+```
+
+Series — same grouping with `time_grain("occurred_at", interval)` for per-period breakdown.
+
+Funnel — counts per event_type with conversion rate: `{started, converted, expired, conversion_rate}`.
+
+**Cube:** `TrialEventCube` — measures: `count`, `customer_count`; dimensions: `source_id`, `event_type`, `customer_country` (via customer join).
+
+**API endpoints:** `GET /metrics/trials` (conversion rate), `GET /metrics/trials/series`, `GET /metrics/trials/funnel`
 
 ## MetricsEngine
 
@@ -841,5 +884,7 @@ Dependency graph for built-in metrics:
 mrr ──────────────────► retention (NRR/GRR)
   └──────────────────► quick_ratio
   └──────────────────► ltv (ARPU)
-churn ─────────────► ltv (churn rate denominator)
+churn ─────────────────► ltv (churn rate denominator)
 ```
+
+Trials has no dependencies — it only processes its own events.
