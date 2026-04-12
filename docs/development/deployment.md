@@ -35,7 +35,7 @@ deploy/
 
 ## Deployment Modes
 
-The deployment depends on which [connector type](connectors.md) is used:
+The deployment depends on which [connector type](../architecture/connectors.md) is used:
 
 ### Full Deployment (Stripe / Ingestion Mode) — Primary
 

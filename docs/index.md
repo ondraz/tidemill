@@ -12,8 +12,9 @@ Implementation plan for the analytics engine.
 - [Connectors](architecture/connectors.md) — webhook translators for Stripe, Lago, Kill Bill
 - [Metrics](architecture/metrics.md) — metric plugin system with self-managed tables
 - [API](architecture/api.md) — FastAPI endpoints
-- [Deployment](architecture/deployment.md) — Docker Compose on Hetzner, path to Kubernetes
-- [Testing](architecture/testing.md) — Stripe Test Clocks, seed scripts, webhook forwarding
+- [Development](development/development.md) - Local development
+- [Deployment](development/deployment.md) — Docker Compose on Hetzner, path to Kubernetes
+- [Testing](development/testing.md) — Stripe Test Clocks, seed scripts, webhook forwarding
 
 ## Research
 

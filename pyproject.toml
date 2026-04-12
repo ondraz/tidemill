@@ -83,7 +83,7 @@ warn_unused_configs = true
 packages = ["tidemill"]
 
 [[tool.mypy.overrides]]
-module = ["tidemill.metrics.mrr", "tidemill.metrics.churn", "tidemill.metrics.retention"]
+module = ["tidemill.metrics.mrr", "tidemill.metrics.churn", "tidemill.metrics.retention", "tidemill.metrics.ltv", "tidemill.metrics.trials"]
 disable_error_code = ["override"]
 
 [[tool.mypy.overrides]]
