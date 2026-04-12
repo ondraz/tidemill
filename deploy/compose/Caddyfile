@@ -1,8 +1,4 @@
 {$DOMAIN:localhost} {
-	root * /srv/frontend
-	try_files {path} /index.html
-	file_server
-
 	handle /api/* {
 		reverse_proxy api:8000
 	}
@@ -20,5 +16,11 @@
 	}
 	handle /openapi.json {
 		reverse_proxy api:8000
+	}
+
+	handle {
+		root * /srv/frontend
+		try_files {path} /index.html
+		file_server
 	}
 }
