@@ -24,11 +24,13 @@ tidemill/
 │   │   ├── database.md                 # PostgreSQL schema, deployment topologies
 │   │   ├── events.md                   # Internal event schema, Kafka topics
 │   │   ├── metrics.md                  # Metrics (dual-mode computation)
-│   │   ├── cubes.md                   # Cubes & query algebra
-│   │   ├── connectors.md              # Webhook (Stripe) + database (Lago) connectors
+│   │   ├── cubes.md                    # Cubes & query algebra
+│   │   ├── connectors.md               # Webhook (Stripe) + database (Lago) connectors
 │   │   ├── api.md                      # FastAPI endpoints + CLI interface
-│   │   ├── deployment.md              # Docker Compose + Terraform IaC
-│   │   └── testing.md                 # Stripe test clocks, seed scripts
+│   ├── development/                    # Local development setup, testing, deployment
+│   │   ├── development.md              # Local development environment setup
+│   │   └── testing.md                  # Test data generation, seed scripts
+│   │   ├── deployment.md               # Docker Compose + Terraform IaC
 │   └── research/                       # Market & competitive analysis
 │       ├── *.md                        # Research documents
 ├── deploy/

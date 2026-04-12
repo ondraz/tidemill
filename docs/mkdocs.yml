@@ -64,8 +64,10 @@ nav:
       - Query Algebra Examples: architecture/example-queries.ipynb
       - Metrics: architecture/metrics.md
       - API: architecture/api.md
-      - Deployment: architecture/deployment.md
-      - Testing: architecture/testing.md
+  - Development:
+      - Development: development/development.md
+      - Testing: development/testing.md  
+      - Deployment: development/deployment.md
   - Research:
       - Market Overview: research/market-overview.md
       - Business Models: research/business-models.md
