@@ -39,6 +39,12 @@ runcmd:
     cat > /opt/tidemill/deploy/compose/.env <<EOF
     POSTGRES_PASSWORD=$(openssl rand -hex 24)
     DOMAIN=${domain}
+    STRIPE_API_KEY=${stripe_api_key}
+    STRIPE_WEBHOOK_SECRET=${stripe_webhook_secret}
+    AUTH_ENABLED=true
+    CLERK_PUBLISHABLE_KEY=${clerk_publishable_key}
+    CLERK_SECRET_KEY=${clerk_secret_key}
+    CLERK_JWKS_URL=${clerk_jwks_url}
     EOF
 
   # Start services

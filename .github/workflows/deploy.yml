@@ -22,8 +22,8 @@ jobs:
 
       - name: Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no root@subscriptions <<'EOF'
-            cd /opt/subscriptions
+          ssh -o StrictHostKeyChecking=no root@tidemill <<'EOF'
+            cd /opt/tidemill
             git fetch --tags
             git checkout ${{ github.ref_name }}
             docker compose -f deploy/compose/docker-compose.yml build

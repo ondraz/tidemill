@@ -20,8 +20,13 @@ resource "hcloud_server" "tidemill" {
   firewall_ids = [hcloud_firewall.tidemill.id]
 
   user_data = templatefile("${path.module}/cloud-init.yml", {
-    domain             = var.domain
-    tailscale_auth_key = var.tailscale_auth_key
+    domain                = var.domain
+    tailscale_auth_key    = var.tailscale_auth_key
+    stripe_api_key        = var.stripe_api_key
+    stripe_webhook_secret = var.stripe_webhook_secret
+    clerk_publishable_key = var.clerk_publishable_key
+    clerk_secret_key      = var.clerk_secret_key
+    clerk_jwks_url        = var.clerk_jwks_url
   })
 
   labels = {

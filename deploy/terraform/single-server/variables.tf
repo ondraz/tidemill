@@ -49,3 +49,40 @@ variable "domain_zone" {
   description = "Parent DNS zone managed in Hetzner (e.g. example.com)"
   type        = string
 }
+
+# ── Stripe ──────────────────────────────────────────────────────────────
+
+variable "stripe_api_key" {
+  description = "Stripe API key (sk_live_... or sk_test_...)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "stripe_webhook_secret" {
+  description = "Stripe webhook signing secret (whsec_...)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+# ── Clerk ───────────────────────────────────────────────────────────────
+
+variable "clerk_publishable_key" {
+  description = "Clerk publishable key (pk_live_... or pk_test_...)"
+  type        = string
+  default     = ""
+}
+
+variable "clerk_secret_key" {
+  description = "Clerk secret key (sk_live_... or sk_test_...)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "clerk_jwks_url" {
+  description = "Clerk JWKS URL for JWT verification"
+  type        = string
+  default     = ""
+}
