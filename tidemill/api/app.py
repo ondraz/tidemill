@@ -46,6 +46,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     app.state.session_factory = make_session_factory(engine)
 
+    # Connector configs — used by webhook handlers for signature verification.
+    app.state.connector_configs = {
+        "stripe": {
+            "api_key": os.environ.get("STRIPE_API_KEY", ""),
+            "webhook_secret": os.environ.get("STRIPE_WEBHOOK_SECRET", ""),
+        },
+    }
+
     producer = EventProducer(bootstrap_servers=kafka_url)
     await producer.start()
     app.state.producer = producer

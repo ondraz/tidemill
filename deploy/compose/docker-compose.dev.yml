@@ -5,9 +5,12 @@
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 #
 # Then start the API and worker from VS Code (or terminal):
-#   TIDEMILL_DATABASE_URL=postgresql+asyncpg://tidemill:test@localhost:5432/tidemill \
+#   TIDEMILL_DATABASE_URL=postgresql+asyncpg://tidemill:<POSTGRES_PASSWORD>@localhost:5432/tidemill \
 #   KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
+#   AUTH_ENABLED=false \
 #   uv run uvicorn tidemill.api.app:app --host 0.0.0.0 --port 8000 --reload
+#
+# Use the POSTGRES_PASSWORD from deploy/compose/.env
 
 services:
   postgres:

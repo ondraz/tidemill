@@ -38,6 +38,8 @@ services:
       context: ../../
       dockerfile: deploy/compose/Dockerfile
       target: full
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:-}
     restart: unless-stopped
     command: >
       uv run uvicorn tidemill.api.app:app

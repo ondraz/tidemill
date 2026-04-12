@@ -55,6 +55,7 @@ fi
 trap stop_stripe_listen EXIT
 
 echo "=== Starting local stack ==="
+export AUTH_ENABLED=false
 $COMPOSE up -d --build --wait 2>&1 | tail -5
 
 echo ""

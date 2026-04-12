@@ -1,6 +1,8 @@
 # ── Stage 1: Build frontend ──────────────────────────────────────────────
 FROM node:22-slim AS frontend-build
 
+ARG VITE_CLERK_PUBLISHABLE_KEY
+
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci

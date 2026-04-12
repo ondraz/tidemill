@@ -12,12 +12,7 @@
         "--port", "8000",
         "--reload"
       ],
-      "env": {
-        "TIDEMILL_DATABASE_URL": "postgresql+asyncpg://tidemill:test@localhost:5432/tidemill",
-        "KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
-        "STRIPE_API_KEY": "${env:STRIPE_API_KEY}",
-        "STRIPE_WEBHOOK_SECRET": "${env:STRIPE_WEBHOOK_SECRET}"
-      },
+      "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
       "justMyCode": false
     },
@@ -26,10 +21,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "tidemill.worker",
-      "env": {
-        "TIDEMILL_DATABASE_URL": "postgresql+asyncpg://tidemill:test@localhost:5432/tidemill",
-        "KAFKA_BOOTSTRAP_SERVERS": "localhost:9092"
-      },
+      "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
       "justMyCode": false
     }
