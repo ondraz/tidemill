@@ -24,12 +24,12 @@ export function SummaryReport() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <KPICard
           title="MRR"
-          value={data?.mrr != null ? formatCurrency(data.mrr) : '—'}
+          value={data?.mrr != null ? formatCurrency(data.mrr / 100) : '—'}
           loading={isLoading}
         />
         <KPICard
           title="ARR"
-          value={data?.arr != null ? formatCurrency(data.arr) : '—'}
+          value={data?.arr != null ? formatCurrency(data.arr / 100) : '—'}
           loading={isLoading}
         />
         <KPICard
@@ -54,12 +54,12 @@ export function SummaryReport() {
         />
         <KPICard
           title="LTV"
-          value={data?.ltv != null ? formatCurrency(data.ltv) : '—'}
+          value={data?.ltv != null ? formatCurrency(data.ltv / 100) : '—'}
           loading={isLoading}
         />
         <KPICard
           title="ARPU"
-          value={data?.arpu != null ? formatCurrency(data.arpu) : '—'}
+          value={data?.arpu != null ? formatCurrency(data.arpu / 100) : '—'}
           loading={isLoading}
         />
         <KPICard
