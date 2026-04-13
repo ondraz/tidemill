@@ -27,6 +27,8 @@ const COLORS = {
   endingMrr: '#333333',
 }
 
+const BAR_SIZE = 40
+
 export function WaterfallChart({ data, loading }: WaterfallChartProps) {
   if (loading) {
     return <div className="h-64 flex items-center justify-center text-muted-foreground">Loading...</div>
@@ -47,18 +49,23 @@ export function WaterfallChart({ data, loading }: WaterfallChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <ComposedChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 20 }}>
+      <ComposedChart
+        data={chartData}
+        barSize={BAR_SIZE}
+        barGap={-BAR_SIZE}
+        margin={{ top: 5, right: 20, bottom: 5, left: 20 }}
+      >
         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
         <XAxis dataKey="month" tick={{ fontSize: 12 }} />
         <YAxis width={80} tickFormatter={formatCurrency} tick={{ fontSize: 12 }} />
         <ReferenceLine y={0} stroke="#000" strokeWidth={0.5} />
         <Tooltip formatter={(v) => formatCurrency(Number(v))} />
         <Legend />
-        <Bar dataKey="New" stackId="a" fill={COLORS.new} />
-        <Bar dataKey="Expansion" stackId="a" fill={COLORS.expansion} />
-        <Bar dataKey="Reactivation" stackId="a" fill={COLORS.reactivation} />
-        <Bar dataKey="Contraction" stackId="a" fill={COLORS.contraction} />
-        <Bar dataKey="Churn" stackId="a" fill={COLORS.churn} />
+        <Bar dataKey="New" stackId="pos" fill={COLORS.new} />
+        <Bar dataKey="Expansion" stackId="pos" fill={COLORS.expansion} />
+        <Bar dataKey="Reactivation" stackId="pos" fill={COLORS.reactivation} />
+        <Bar dataKey="Contraction" stackId="neg" fill={COLORS.contraction} />
+        <Bar dataKey="Churn" stackId="neg" fill={COLORS.churn} />
         <Line
           type="monotone"
           dataKey="Ending MRR"
