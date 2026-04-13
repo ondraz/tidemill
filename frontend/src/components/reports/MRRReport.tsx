@@ -1,28 +1,47 @@
-import { useState } from 'react'
 import { useTimeRange } from '@/hooks/useTimeRange'
 import { useMRR, useMRRBreakdown, useMRRWaterfall } from '@/hooks/useMetrics'
+import { useMetric } from '@/hooks/useMetrics'
 import { KPICard } from '@/components/charts/KPICard'
 import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart'
-import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
+import { MRRBreakdownChart } from '@/components/charts/MRRBreakdownChart'
 import { WaterfallChart } from '@/components/charts/WaterfallChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
 import { TimeRangePicker } from '@/components/controls/TimeRangePicker'
 import { DimensionPicker } from '@/components/controls/DimensionPicker'
 import { formatCurrency } from '@/lib/formatters'
 import { MRR_DIMENSIONS } from '@/lib/constants'
-import type { TimeSeriesPoint, WaterfallEntry } from '@/lib/types'
+import { useState } from 'react'
+import type { WaterfallEntry } from '@/lib/types'
 
 export function MRRReport() {
   const { start, end, interval, setRange } = useTimeRange({ range: 'last_1y' })
   const [dimensions, setDimensions] = useState<string[]>([])
 
   const seriesParams = { start, end, interval, dimensions }
-  const { data: series, isLoading: seriesLoading } = useMRR<TimeSeriesPoint[]>(seriesParams)
-  const { data: breakdown, isLoading: breakdownLoading } = useMRRBreakdown<TimeSeriesPoint[]>(seriesParams)
+  const { data: breakdown, isLoading: breakdownLoading } = useMRRBreakdown<Record<string, unknown>[]>(seriesParams)
   const { data: waterfall, isLoading: waterfallLoading } = useMRRWaterfall<WaterfallEntry[]>({ start, end })
-  const { data: current, isLoading: currentLoading } = useMRR<{ mrr?: number; arr?: number }>({})
+  const { data: currentMrr, isLoading: mrrLoading } = useMRR<number>({})
+  const { data: currentArr, isLoading: arrLoading } = useMetric<number>('/api/metrics/arr', {})
 
-  const breakdownBars = dimensions.length > 0 ? dimensions : ['mrr']
+  // Derive MRR Over Time from waterfall ending_mrr (cents → dollars)
+  const mrrOverTime = (waterfall ?? []).map((row) => ({
+    date: row.month + '-01',
+    mrr: row.ending_mrr / 100,
+  }))
+
+  // Transform breakdown: API returns {movement_type, amount_base} in cents
+  // Ensure all 5 movement types are present (including reactivation)
+  const MOVEMENT_TYPES = ['new', 'expansion', 'reactivation', 'contraction', 'churn'] as const
+  const breakdownMap = new Map(
+    (breakdown ?? []).map((row) => [
+      String(row.movement_type ?? '').toLowerCase(),
+      (Number(row.amount_base) || 0) / 100,
+    ])
+  )
+  const breakdownData = MOVEMENT_TYPES.map((type) => ({
+    type: type.replace(/^./, (c) => c.toUpperCase()),
+    Amount: breakdownMap.get(type) ?? 0,
+  }))
 
   return (
     <div className="space-y-4">
@@ -45,13 +64,13 @@ export function MRRReport() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KPICard
           title="Current MRR"
-          value={current?.mrr != null ? formatCurrency(current.mrr) : '—'}
-          loading={currentLoading}
+          value={currentMrr != null ? formatCurrency(currentMrr / 100) : '—'}
+          loading={mrrLoading}
         />
         <KPICard
           title="ARR"
-          value={current?.arr != null ? formatCurrency(current.arr) : '—'}
-          loading={currentLoading}
+          value={currentArr != null ? formatCurrency(currentArr / 100) : '—'}
+          loading={arrLoading}
         />
       </div>
 
@@ -60,18 +79,17 @@ export function MRRReport() {
         chartConfig={{
           name: 'MRR Over Time',
           metric: 'mrr',
-          endpoint: '/api/metrics/mrr',
-          params: { start, end, interval },
-          dimensions,
+          endpoint: '/api/metrics/mrr/waterfall',
+          params: { start, end },
           chartType: 'line',
           timeRangeMode: 'fixed',
         }}
       >
         <TimeSeriesChart
-          data={series ?? []}
+          data={mrrOverTime}
           dataKey="mrr"
           formatter={formatCurrency}
-          loading={seriesLoading}
+          loading={waterfallLoading}
         />
       </ChartContainer>
 
@@ -87,12 +105,9 @@ export function MRRReport() {
           timeRangeMode: 'fixed',
         }}
       >
-        <BarBreakdownChart
-          data={breakdown ?? []}
-          bars={breakdownBars}
-          formatter={formatCurrency}
+        <MRRBreakdownChart
+          data={breakdownData}
           loading={breakdownLoading}
-          stacked={dimensions.length > 0}
         />
       </ChartContainer>
 

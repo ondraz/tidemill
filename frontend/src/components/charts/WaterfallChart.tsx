@@ -54,11 +54,11 @@ export function WaterfallChart({ data, loading }: WaterfallChartProps) {
         <ReferenceLine y={0} stroke="#000" strokeWidth={0.5} />
         <Tooltip formatter={(v) => formatCurrency(Number(v))} />
         <Legend />
-        <Bar dataKey="New" stackId="pos" fill={COLORS.new} />
-        <Bar dataKey="Expansion" stackId="pos" fill={COLORS.expansion} />
-        <Bar dataKey="Reactivation" stackId="pos" fill={COLORS.reactivation} />
-        <Bar dataKey="Contraction" stackId="neg" fill={COLORS.contraction} />
-        <Bar dataKey="Churn" stackId="neg" fill={COLORS.churn} />
+        <Bar dataKey="New" stackId="a" fill={COLORS.new} />
+        <Bar dataKey="Expansion" stackId="a" fill={COLORS.expansion} />
+        <Bar dataKey="Reactivation" stackId="a" fill={COLORS.reactivation} />
+        <Bar dataKey="Contraction" stackId="a" fill={COLORS.contraction} />
+        <Bar dataKey="Churn" stackId="a" fill={COLORS.churn} />
         <Line
           type="monotone"
           dataKey="Ending MRR"
