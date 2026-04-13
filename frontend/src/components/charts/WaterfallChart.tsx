@@ -19,6 +19,7 @@ interface WaterfallChartProps {
 }
 
 const COLORS = {
+  startingMrr: '#bdc3c7',
   new: '#2ecc71',
   expansion: '#3498db',
   reactivation: '#9b59b6',
@@ -39,6 +40,7 @@ export function WaterfallChart({ data, loading }: WaterfallChartProps) {
 
   const chartData = data.map((row) => ({
     month: formatMonthYear(row.month + '-01'),
+    'Starting MRR': row.starting_mrr / 100,
     New: row.new / 100,
     Expansion: row.expansion / 100,
     Reactivation: row.reactivation / 100,
@@ -61,6 +63,7 @@ export function WaterfallChart({ data, loading }: WaterfallChartProps) {
         <ReferenceLine y={0} stroke="#000" strokeWidth={0.5} />
         <Tooltip formatter={(v) => formatCurrency(Number(v))} />
         <Legend />
+        <Bar dataKey="Starting MRR" stackId="pos" fill={COLORS.startingMrr} />
         <Bar dataKey="New" stackId="pos" fill={COLORS.new} />
         <Bar dataKey="Expansion" stackId="pos" fill={COLORS.expansion} />
         <Bar dataKey="Reactivation" stackId="pos" fill={COLORS.reactivation} />
