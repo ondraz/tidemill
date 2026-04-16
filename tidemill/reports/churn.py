@@ -49,6 +49,77 @@ def customer_detail(
     return df.sort_values("customer").reset_index(drop=True)
 
 
+def snapshot(
+    tm: TidemillClient,
+    start: str,
+    end: str,
+    detail: pd.DataFrame | None = None,
+) -> dict[str, Any]:
+    """Logo and revenue churn rates with set sizes for the period.
+
+    Args:
+        tm: Tidemill API client.
+        start: ISO date string for window start.
+        end: ISO date string for window end.
+        detail: Pre-fetched customer detail from :func:`customer_detail`.
+            Fetched automatically if not provided.
+
+    Returns:
+        Dict with churn rates, customer counts, and MRR totals.
+    """
+    if detail is None:
+        detail = customer_detail(tm, start, end)
+    churned = detail[detail.fully_churned] if len(detail) else detail
+    return {
+        "logo_churn": tm.churn(start, end, type="logo"),
+        "revenue_churn": tm.churn(start, end, type="revenue"),
+        "c_start": len(detail),
+        "c_churned": len(churned),
+        "starting_mrr_cents": int(detail.starting_mrr_cents.sum()) if len(detail) else 0,
+        "churned_mrr_cents": int(detail.churned_mrr_cents.sum()) if len(detail) else 0,
+        "logo_churned_mrr_cents": int(churned.churned_mrr_cents.sum()) if len(churned) else 0,
+    }
+
+
+def revenue_events(
+    tm: TidemillClient,
+    start: str,
+    end: str,
+    detail: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """Per-customer revenue churn events for active-at-start customers.
+
+    Returns one row per customer in C_start showing their churned MRR
+    (zero if no churn events). Useful for seeing which customers
+    contribute to revenue churn.
+
+    Args:
+        tm: Tidemill API client.
+        start: ISO date string for window start.
+        end: ISO date string for window end.
+        detail: Pre-fetched customer detail from :func:`customer_detail`.
+    """
+    if detail is None:
+        detail = customer_detail(tm, start, end)
+    events = tm.churn_revenue_events(start, end)
+    ev_by_cust = {e["customer_id"]: e for e in events}
+
+    rows: list[dict[str, Any]] = []
+    for _, r in detail.iterrows():
+        cid = r["customer"]
+        ev = ev_by_cust.get(cid)
+        rows.append(
+            {
+                "customer": cid,
+                "customer_name": r.get("customer_name", ""),
+                "starting_mrr_cents": int(r["starting_mrr_cents"]),
+                "churned_mrr_cents": int(ev["mrr_cents"]) if ev else 0,
+                "fully_churned": bool(r["fully_churned"]),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def timeline(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     """Fetch monthly logo and revenue churn rates.
 
@@ -98,6 +169,31 @@ def monthly_lost_mrr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
 # ── style ────────────────────────────────────────────────────────────
 
 
+def style_snapshot(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+    """Format churn snapshot as a styled table.
+
+    Args:
+        data: Dict from :func:`snapshot`.
+    """
+    pct = lambda v: f"{v:.1%}" if v is not None else "N/A"  # noqa: E731
+    dlr = lambda c: f"${c / 100:,.2f}"  # noqa: E731
+    rows = [
+        {
+            "Metric": "Logo churn",
+            "Numerator": f"{data['c_churned']} customers",
+            "Denominator": f"{data['c_start']} customers",
+            "Rate": pct(data["logo_churn"]),
+        },
+        {
+            "Metric": "Revenue churn",
+            "Numerator": dlr(data["churned_mrr_cents"]),
+            "Denominator": dlr(data["starting_mrr_cents"]),
+            "Rate": pct(data["revenue_churn"]),
+        },
+    ]
+    return pd.DataFrame(rows).style.hide(axis="index")
+
+
 def style_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     """Format monthly churn rates as a styled table.
 
@@ -109,6 +205,49 @@ def style_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
             "logo_churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
             "revenue_churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
         }
+    )
+
+
+def style_revenue_events(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+    """Format per-customer revenue churn table with totals.
+
+    Args:
+        df: DataFrame from :func:`revenue_events`.
+    """
+    display = df.copy()
+    display["starting_mrr"] = display.starting_mrr_cents.apply(lambda c: f"${c / 100:,.2f}")
+    display["churned_mrr"] = display.churned_mrr_cents.apply(lambda c: f"${c / 100:,.2f}")
+
+    total_start = int(df.starting_mrr_cents.sum())
+    total_churned = int(df.churned_mrr_cents.sum())
+    totals = pd.DataFrame(
+        [
+            {
+                "customer": "TOTAL",
+                "customer_name": "",
+                "starting_mrr": f"${total_start / 100:,.2f}",
+                "churned_mrr": f"${total_churned / 100:,.2f}",
+                "fully_churned": "",
+            }
+        ]
+    )
+    display = pd.concat([display, totals], ignore_index=True)
+
+    cols = ["customer", "customer_name", "starting_mrr", "churned_mrr", "fully_churned"]
+
+    def _highlight(row: pd.Series) -> list[str]:
+        if row.get("churned_mrr") not in ("$0.00", ""):
+            return ["background-color: #FEF3C7"] * len(row)
+        return [""] * len(row)
+
+    rate = total_churned / total_start if total_start else 0
+    return (
+        display[cols]
+        .style.apply(_highlight, axis=1)
+        .set_caption(
+            f"Revenue churn: {rate:.1%} = ${total_churned / 100:,.2f} / ${total_start / 100:,.2f}"
+        )
+        .hide(axis="index")
     )
 
 

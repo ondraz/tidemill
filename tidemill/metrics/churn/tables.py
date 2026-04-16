@@ -16,6 +16,21 @@ metric_churn_customer_state = Table(
     UniqueConstraint("source_id", "customer_id", name="uq_churn_state_customer"),
 )
 
+metric_churn_active_subscription = Table(
+    "metric_churn_active_subscription",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, nullable=False),
+    Column("customer_id", Text, nullable=False),
+    Column("subscription_id", Text, nullable=False),
+    UniqueConstraint(
+        "source_id",
+        "customer_id",
+        "subscription_id",
+        name="uq_churn_active_sub",
+    ),
+)
+
 metric_churn_event = Table(
     "metric_churn_event",
     metadata,

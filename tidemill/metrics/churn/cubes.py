@@ -71,6 +71,7 @@ class ChurnEventCube(Cube):
         customer_id = Dim("ce.customer_id")
         churn_type = Dim("ce.churn_type")
         cancel_reason = Dim("ce.cancel_reason")
+        customer_name = Dim("c.name", join="customer", label="customer_name")
         customer_country = Dim("c.country", join="customer", label="customer_country")
         # Used to scope churn events to customers active at period start
         customer_first_active = Dim(

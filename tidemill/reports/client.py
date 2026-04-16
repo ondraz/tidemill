@@ -90,6 +90,10 @@ class TidemillClient:
         """Per-customer churn detail for the period."""
         return self.get("/api/metrics/churn/customers", start=start, end=end)
 
+    def churn_revenue_events(self, start: str, end: str) -> list[dict[str, Any]]:
+        """Individual revenue-churn events for active-at-start customers."""
+        return self.get("/api/metrics/churn/revenue-events", start=start, end=end)
+
     # ── Retention ────────────────────────────────────────────────────
 
     def retention(self, start: str, end: str, **kw: Any) -> Any:

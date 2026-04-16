@@ -3,8 +3,8 @@
 
 Creates customers across usage-based and flat-fee plans, advances time through
 6 months of billing cycles, reports metered usage, and simulates churn,
-upgrades, and failed payments — generating the full set of webhook events
-our connectors need to handle.
+reactivation, upgrades, and failed payments — generating the full set of webhook
+events our connectors need to handle.
 
 Plan structure:
   Starter      — pure PAYG, $0.02 per analytical query
@@ -17,7 +17,7 @@ Prerequisites:
     export STRIPE_API_KEY=sk_test_...
 
 Usage:
-    python stripe_seed.py                  # full seed (17 customers, 6 months)
+    python stripe_seed.py                  # full seed (19 customers, 6 months)
     python stripe_seed.py --customers 5    # fewer customers
     python stripe_seed.py --months 3       # shorter history
     python stripe_seed.py --cleanup CLOCK_ID
@@ -40,31 +40,36 @@ METER_EVENT_NAME = "analytical_query"
 # Configuration
 # ---------------------------------------------------------------------------
 
-# (name_prefix, plan, billing, action, monthly_queries, change_month)
+# (name_prefix, plan, billing, action, monthly_queries, change_month, reactivate_month)
 #   change_month: loop iteration when the lifecycle action fires (None = stays active).
+#   reactivate_month: for churn_reactivate, the month a new subscription is created
+#     on the same plan (must be > change_month + 1 to leave a full offline month).
 #   With --months 6, month 0 ≈ start date, month 5 ≈ 5 months later.
 ARCHETYPES = [
-    ("Active Starter", "Starter", "month", "active", 50, None),
-    ("Active Starter", "Starter", "month", "active", 30, None),
-    ("Active Starter Heavy", "Starter", "month", "active", 120, None),
-    ("Active Monthly Pro", "Professional", "month", "active", 8000, None),
-    ("Active Monthly Pro", "Professional", "month", "active", 15000, None),
-    ("Active Annual Pro", "Professional", "year", "active", 12000, None),
-    ("Active Annual Enterprise", "Enterprise", "year", "active", 0, None),
+    ("Active Starter", "Starter", "month", "active", 50, None, None),
+    ("Active Starter", "Starter", "month", "active", 30, None, None),
+    ("Active Starter Heavy", "Starter", "month", "active", 120, None, None),
+    ("Active Monthly Pro", "Professional", "month", "active", 8000, None, None),
+    ("Active Monthly Pro", "Professional", "month", "active", 15000, None, None),
+    ("Active Annual Pro", "Professional", "year", "active", 12000, None, None),
+    ("Active Annual Enterprise", "Enterprise", "year", "active", 0, None, None),
     # Early changes (months 1–2)
-    ("Churned Starter", "Starter", "month", "churn", 20, 1),
-    ("Upgraded Starter→Pro", "Starter", "month", "upgrade", 80, 1),
-    ("Downgraded Pro→Starter", "Professional", "month", "downgrade", 2000, 2),
+    ("Churned Starter", "Starter", "month", "churn", 20, 1, None),
+    ("Upgraded Starter→Pro", "Starter", "month", "upgrade", 80, 1, None),
+    ("Downgraded Pro→Starter", "Professional", "month", "downgrade", 2000, 2, None),
     # Mid changes (month 3)
-    ("Churned Pro", "Professional", "month", "churn", 9000, 3),
+    ("Churned Pro", "Professional", "month", "churn", 9000, 3, None),
     # Late changes (months 4–5)
-    ("Upgraded Starter→Pro", "Starter", "month", "upgrade", 60, 4),
-    ("Late Churned Starter", "Starter", "month", "churn", 45, 5),
-    ("Late Downgraded Pro→Starter", "Professional", "month", "downgrade", 3000, 4),
+    ("Upgraded Starter→Pro", "Starter", "month", "upgrade", 60, 4, None),
+    ("Late Churned Starter", "Starter", "month", "churn", 45, 5, None),
+    ("Late Downgraded Pro→Starter", "Professional", "month", "downgrade", 3000, 4, None),
+    # Churn then reactivate (win-back)
+    ("Churn→Reactivate Starter", "Starter", "month", "churn_reactivate", 40, 1, 3),
+    ("Churn→Reactivate Pro", "Professional", "month", "churn_reactivate", 5000, 2, 4),
     # Ongoing / special
-    ("Failed Payment Starter", "Starter", "month", "fail_payment", 40, None),
-    ("Trial→Active Starter", "trial", "month", "trial_convert", 25, 1),
-    ("Trial→Expired", "trial", "month", "trial_expire", 0, None),
+    ("Failed Payment Starter", "Starter", "month", "fail_payment", 40, None, None),
+    ("Trial→Active Starter", "trial", "month", "trial_convert", 25, 1, None),
+    ("Trial→Expired", "trial", "month", "trial_expire", 0, None, None),
 ]
 
 # ---------------------------------------------------------------------------
@@ -309,7 +314,15 @@ def seed(num_customers: int, num_months: int) -> str:
     entries = []
 
     print(f"\nCreating {num_customers} customers and subscriptions...")
-    for i, (name, plan, billing, action, base_usage, change_month) in enumerate(archetypes):
+    for i, (
+        name,
+        plan,
+        billing,
+        action,
+        base_usage,
+        change_month,
+        reactivate_month,
+    ) in enumerate(archetypes):
         # Create a new clock when needed
         if i % MAX_CUSTOMERS_PER_CLOCK == 0:
             batch = i // MAX_CUSTOMERS_PER_CLOCK + 1
@@ -345,6 +358,7 @@ def seed(num_customers: int, num_months: int) -> str:
                 "base_usage": base_usage,
                 "active": True,
                 "change_month": change_month,
+                "reactivate_month": reactivate_month,
             }
         )
 
@@ -417,6 +431,27 @@ def seed(num_customers: int, num_months: int) -> str:
                 # Trial ended, now billing as Starter — start reporting usage
                 entry["base_usage"] = 25
                 print(f"  → Trial converted for {cust.name}, now active Starter")
+
+            elif action == "churn_reactivate":
+                # Immediate cancel so the customer is clearly gone until reactivation
+                stripe.Subscription.cancel(sub.id)
+                entry["active"] = False
+                print(f"  → Cancelled {cust.name} (reactivates month {entry['reactivate_month']})")
+
+        # ── Reactivate previously-churned customers on the same plan ──
+        for entry in entries:
+            if entry.get("reactivate_month") != month or entry["active"]:
+                continue
+            cust = entry["customer"]
+            items = subscription_items(plans, entry["plan"], entry["billing"])
+            new_sub = stripe.Subscription.create(
+                customer=cust.id,
+                items=items,
+                trial_end="now",
+            )
+            entry["subscription"] = new_sub
+            entry["active"] = True
+            print(f"  → Reactivated {cust.name} on {entry['plan']}")
 
         # ── Handle previous month's trial outcomes (convert or churn) ──
         for entry in entries:
@@ -544,7 +579,7 @@ def cleanup(clock_id: str | None = None) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed Stripe test data")
     parser.add_argument(
-        "--customers", type=int, default=17, help="Number of customers (default: 17)"
+        "--customers", type=int, default=19, help="Number of customers (default: 19)"
     )
     parser.add_argument("--months", type=int, default=6, help="Months of history (default: 6)")
     parser.add_argument(

@@ -31,3 +31,13 @@ async def get_churn_customers(
     end: date = Query(...),
 ) -> Any:
     return await query_metric("churn", {"start": start, "end": end, "type": "detail"}, None)
+
+
+@router.get("/metrics/churn/revenue-events")
+async def get_churn_revenue_events(
+    start: date = Query(...),
+    end: date = Query(...),
+) -> Any:
+    return await query_metric(
+        "churn", {"start": start, "end": end, "type": "revenue_events"}, None
+    )

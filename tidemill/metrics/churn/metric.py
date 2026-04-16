@@ -68,40 +68,89 @@ class ChurnMetric(Metric):
                 )
 
             case "subscription.activated" | "subscription.reactivated":
-                await self.db.execute(
+                sub_id = p.get("external_id", event.external_id)
+                # Track this subscription as active; skip if already tracked
+                # (idempotent — duplicate Kafka deliveries won't double-count)
+                result = await self.db.execute(
                     text(
-                        "INSERT INTO metric_churn_customer_state"
-                        " (id, source_id, customer_id, active_subscriptions,"
-                        "  first_active_at)"
-                        " VALUES (:id, :src, :cid, 1, :now)"
-                        " ON CONFLICT ON CONSTRAINT uq_churn_state_customer"
-                        " DO UPDATE SET"
-                        "  active_subscriptions ="
-                        "    metric_churn_customer_state.active_subscriptions + 1,"
-                        "  first_active_at = COALESCE("
-                        "    metric_churn_customer_state.first_active_at,"
-                        "    EXCLUDED.first_active_at),"
-                        "  churned_at = NULL"
+                        "INSERT INTO metric_churn_active_subscription"
+                        " (id, source_id, customer_id, subscription_id)"
+                        " VALUES (:id, :src, :cid, :sid)"
+                        " ON CONFLICT ON CONSTRAINT uq_churn_active_sub"
+                        " DO NOTHING"
+                        " RETURNING id"
                     ),
                     {
                         "id": str(uuid.uuid4()),
                         "src": event.source_id,
                         "cid": event.customer_id,
-                        "now": event.occurred_at,
+                        "sid": sub_id,
                     },
                 )
+                if result.fetchone() is None:
+                    # Duplicate — subscription already counted, just clear churned_at
+                    await self.db.execute(
+                        text(
+                            "UPDATE metric_churn_customer_state"
+                            " SET churned_at = NULL"
+                            " WHERE source_id = :src AND customer_id = :cid"
+                        ),
+                        {"src": event.source_id, "cid": event.customer_id},
+                    )
+                else:
+                    # New activation — increment counter
+                    await self.db.execute(
+                        text(
+                            "INSERT INTO metric_churn_customer_state"
+                            " (id, source_id, customer_id, active_subscriptions,"
+                            "  first_active_at)"
+                            " VALUES (:id, :src, :cid, 1, :now)"
+                            " ON CONFLICT ON CONSTRAINT uq_churn_state_customer"
+                            " DO UPDATE SET"
+                            "  active_subscriptions ="
+                            "    metric_churn_customer_state.active_subscriptions + 1,"
+                            "  first_active_at = COALESCE("
+                            "    metric_churn_customer_state.first_active_at,"
+                            "    EXCLUDED.first_active_at),"
+                            "  churned_at = NULL"
+                        ),
+                        {
+                            "id": str(uuid.uuid4()),
+                            "src": event.source_id,
+                            "cid": event.customer_id,
+                            "now": event.occurred_at,
+                        },
+                    )
 
             case "subscription.churned":
-                # Decrement active count
-                await self.db.execute(
+                sub_id = p.get("external_id", event.external_id)
+                # Remove subscription from active set; skip if already removed
+                # (idempotent — duplicate deliveries won't double-decrement)
+                removed = await self.db.execute(
                     text(
-                        "UPDATE metric_churn_customer_state SET"
-                        "  active_subscriptions ="
-                        "    GREATEST(active_subscriptions - 1, 0)"
-                        " WHERE source_id = :src AND customer_id = :cid"
+                        "DELETE FROM metric_churn_active_subscription"
+                        " WHERE source_id = :src"
+                        "   AND customer_id = :cid"
+                        "   AND subscription_id = :sid"
+                        " RETURNING id"
                     ),
-                    {"src": event.source_id, "cid": event.customer_id},
+                    {
+                        "src": event.source_id,
+                        "cid": event.customer_id,
+                        "sid": sub_id,
+                    },
                 )
+                if removed.fetchone() is not None:
+                    # Decrement active count
+                    await self.db.execute(
+                        text(
+                            "UPDATE metric_churn_customer_state SET"
+                            "  active_subscriptions ="
+                            "    GREATEST(active_subscriptions - 1, 0)"
+                            " WHERE source_id = :src AND customer_id = :cid"
+                        ),
+                        {"src": event.source_id, "cid": event.customer_id},
+                    )
                 # Check if fully churned (0 active) → set churned_at + logo event
                 result = await self.db.execute(
                     text(
@@ -188,6 +237,8 @@ class ChurnMetric(Metric):
                 return await self._revenue_churn(start, end, spec)
             case "detail":
                 return await self._customer_detail(start, end)
+            case "revenue_events":
+                return await self._revenue_events(start, end)
             case other:
                 raise ValueError(f"Unknown churn type: {other}")
 
@@ -362,4 +413,54 @@ class ChurnMetric(Metric):
             }
             for cid in sorted(active_customers)
             if mrr_by_cust.get(cid, 0) > 0
+        ]
+
+    async def _revenue_events(
+        self,
+        start: date,
+        end: date,
+    ) -> list[dict[str, Any]]:
+        """Individual revenue-churn events for customers active at start.
+
+        Returns one row per churn event with customer, name, MRR lost,
+        and event timestamp.
+        """
+        em = self.event_model
+
+        # Revenue churn events in window, scoped to active-at-start customers
+        q = (
+            em.dimension("customer_id")
+            + em.dimension("customer_name")
+            + em.measures.revenue_lost
+            + em.measures.count
+            + em.filter("churn_type", "=", "revenue")
+            + em.filter("occurred_at", "between", (start, end))
+            + em.filter("customer_first_active", "<", start)
+        )
+        stmt, params = q.compile(em)
+        result = await self.db.execute(stmt, params)
+        rows = result.mappings().all()
+
+        # Filter to customers with positive starting MRR
+        from tidemill.metrics.mrr.cubes import MRRMovementCube
+
+        mm = MRRMovementCube
+        mq = (
+            mm.dimension("customer_id") + mm.measures.amount + mm.filter("occurred_at", "<", start)
+        )
+        mstmt, mparams = mq.compile(mm)
+        mresult = await self.db.execute(mstmt, mparams)
+        mrr_by_cust = {
+            r["customer_id"]: int(r["amount_base"] or 0) for r in mresult.mappings().all()
+        }
+
+        return [
+            {
+                "customer_id": r["customer_id"],
+                "customer_name": r["customer_name"],
+                "mrr_cents": abs(int(r["revenue_lost"] or 0)),
+                "events": int(r["churn_count"]),
+            }
+            for r in rows
+            if mrr_by_cust.get(r["customer_id"], 0) > 0
         ]
