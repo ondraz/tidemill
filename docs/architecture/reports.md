@@ -1,6 +1,6 @@
-# Reports & Stripe Validation
+# Reports
 
-> Pre-built charts, styled tables, and ground-truth comparison for every Tidemill metric.
+> Pre-built charts, styled tables, and analytics for every Tidemill metric.
 > Last updated: April 2026
 
 ## Overview
@@ -13,17 +13,14 @@
 | **Style** | `style_waterfall()`, … | `pd.io.formats.style.Styler` | Rich table display in Jupyter |
 | **Chart** | `plot_waterfall()`, … | `plotly.graph_objects.Figure` | Interactive Plotly visualisation |
 
-`tidemill.reports.stripecheck` is the data layer — it fetches from the Stripe API, computes ground-truth metrics independently, and compares them with Tidemill's event-driven results.
-
 ## Quick start
 
 ```python
 from tidemill.reports import setup, mrr, churn, retention, ltv, trials
-from tidemill.reports.stripecheck import TidemillClient, StripeData
+from tidemill.reports.client import TidemillClient
 
 setup()                          # activate Tidemill Plotly template
 tm = TidemillClient()            # reads TIDEMILL_API env var
-sd = StripeData()                # uses stripe.api_key
 
 # Data → style → chart (each layer is independent)
 df = mrr.waterfall(tm, "2025-09-01", "2026-04-30")
@@ -37,7 +34,6 @@ mrr.plot_waterfall(df)           # Plotly figure
 |----------|---------|-------------|
 | `TIDEMILL_API` | `http://localhost:8000` | Tidemill REST API base URL |
 | `TIDEMILL_API_KEY` | *(empty)* | Bearer token (omit if auth disabled) |
-| `STRIPE_API_KEY` | — | Stripe API key (required for `StripeData`) |
 
 ## Module reference
 
@@ -51,27 +47,48 @@ from tidemill.reports import setup, mrr, churn, retention, ltv, trials
 
 ---
 
+### `tidemill.reports.client`
+
+`TidemillClient` — thin wrapper around the Tidemill REST API. Every metric endpoint has a typed convenience method:
+
+| Method | Returns |
+|--------|---------|
+| `mrr(at=None)` | MRR in cents |
+| `arr(at=None)` | ARR in cents |
+| `mrr_breakdown(start, end)` | List of movement dicts |
+| `mrr_waterfall(start, end)` | List of monthly waterfall dicts |
+| `churn(start, end, type="logo")` | Churn rate (float or None) |
+| `churn_customers(start, end)` | Per-customer churn detail |
+| `retention(start, end, **kw)` | Cohort retention data |
+| `ltv(start, end)` | Simple LTV in cents |
+| `arpu(at=None)` | ARPU in cents |
+| `cohort_ltv(start, end)` | Per-cohort LTV breakdown |
+| `trial_rate(start, end)` | Trial conversion rate |
+| `trial_funnel(start, end)` | Funnel dict |
+| `trial_series(start, end, interval)` | Time-series list |
+| `sources()` | Connected billing sources |
+
+---
+
 ### `tidemill.reports.mrr`
 
-MRR comparison, breakdown, waterfall, and trend charts.
+MRR breakdown, waterfall, and trend charts.
 
 #### Data functions
 
 | Function | Inputs | Returns |
 |----------|--------|---------|
-| `stripe_comparison(tm, sd, at=None)` | `TidemillClient`, `StripeData`, optional ISO date | `dict` with `tidemill`, `stripe`, `diff` (dollars), `match` (bool), `arr` |
 | `breakdown(tm, start, end)` | `TidemillClient`, ISO date range | `DataFrame` with `movement_type`, `amount_base`, `amount` |
 | `waterfall(tm, start, end)` | `TidemillClient`, ISO date range | `DataFrame` with monthly starting/ending MRR and movements (dollars) |
+| `movement_log(tm, start, end)` | `TidemillClient`, ISO date range | `DataFrame` with per-customer daily movements |
 | `trend(tm, start, end)` | `TidemillClient`, ISO date range | `DataFrame` with `month` and `ending_mrr` (dollars) |
-| `stripe_status_breakdown(sd)` | `StripeData` | `DataFrame` with `status`, `count`, `mrr` (dollars) |
 
 #### Style functions
 
 | Function | Input | Output |
 |----------|-------|--------|
-| `style_stripe_comparison(data)` | dict from `stripe_comparison` | Styler |
 | `style_waterfall(df)` | DataFrame from `waterfall` | Styler |
-| `style_stripe_status_breakdown(df)` | DataFrame from `stripe_status_breakdown` | Styler |
+| `style_movement_log(df)` | DataFrame from `movement_log` | Styler |
 
 #### Chart functions
 
@@ -80,19 +97,18 @@ MRR comparison, breakdown, waterfall, and trend charts.
 | `plot_breakdown(df)` | DataFrame from `breakdown` | Bar chart — MRR movements |
 | `plot_waterfall(df)` | DataFrame from `waterfall` | Stacked bar + ending MRR line |
 | `plot_trend(df)` | DataFrame from `trend` | Area line — MRR over time |
-| `plot_stripe_status_breakdown(df)` | DataFrame from `stripe_status_breakdown` | Pie (count) + bar (MRR) |
 
 ---
 
 ### `tidemill.reports.churn`
 
-Churn comparison with Stripe, monthly timelines, and lost MRR.
+Customer churn sets, monthly timelines, and lost MRR.
 
 #### Data functions
 
 | Function | Inputs | Returns |
 |----------|--------|---------|
-| `stripe_overview(tm, sd, start, end)` | `TidemillClient`, `StripeData`, ISO date range | `dict` with `tidemill`/`stripe` sub-dicts, match booleans, `active_mrr_cents` |
+| `customer_detail(tm, start, end)` | `TidemillClient`, ISO date range | `DataFrame` with per-customer churn detail (C_start / C_churned) |
 | `timeline(tm, start, end)` | `TidemillClient`, ISO date range | `DataFrame` with `month`, `logo_churn`, `revenue_churn` (decimals) |
 | `monthly_lost_mrr(tm, start, end)` | `TidemillClient`, ISO date range | `DataFrame` with `month`, `churn_dollars` |
 
@@ -100,14 +116,14 @@ Churn comparison with Stripe, monthly timelines, and lost MRR.
 
 | Function | Input | Output |
 |----------|-------|--------|
-| `style_stripe_overview(data)` | dict from `stripe_overview` | Styler |
+| `style_c_start(detail)` | DataFrame from `customer_detail` | Styler — customers active at period start with MRR |
+| `style_c_churned(detail)` | DataFrame from `customer_detail` | Styler — fully churned customers with lost MRR |
 | `style_timeline(df)` | DataFrame from `timeline` | Styler |
 
 #### Chart functions
 
 | Function | Input | Chart type |
 |----------|-------|------------|
-| `plot_stripe_overview(data)` | dict from `stripe_overview` | Pie (logo churn) + bar (revenue impact) |
 | `plot_timeline(df)` | DataFrame from `timeline` | Dual line — logo + revenue churn rates |
 | `plot_monthly_lost_mrr(df)` | DataFrame from `monthly_lost_mrr` | Bar chart — churned MRR per month |
 
@@ -115,14 +131,12 @@ Churn comparison with Stripe, monthly timelines, and lost MRR.
 
 ### `tidemill.reports.retention`
 
-Cohort retention heatmaps, average curves, and NRR/GRR tracking.
+Monthly NRR and GRR tracking.
 
 #### Data functions
 
 | Function | Inputs | Returns |
 |----------|--------|---------|
-| `stripe_heatmap(sd, start, end)` | `StripeData`, ISO date range | `DataFrame` — retention % matrix (cohort x month-offset). `df.attrs["cohort_sizes"]` has cohort sizes |
-| `stripe_curve(sd, start, end)` | `StripeData`, ISO date range | `Series` — average retention % by month offset |
 | `nrr_grr(tm, start, end)` | `TidemillClient`, ISO date range | `DataFrame` with `month`, `nrr`, `grr` (decimals) |
 
 #### Style functions
@@ -135,8 +149,6 @@ Cohort retention heatmaps, average curves, and NRR/GRR tracking.
 
 | Function | Input | Chart type |
 |----------|-------|------------|
-| `plot_stripe_heatmap(df)` | DataFrame from `stripe_heatmap` | Heatmap (RdYlGn, 0–100%) |
-| `plot_stripe_curve(avg)` | Series from `stripe_curve` | Area line — average retention curve |
 | `plot_nrr_grr(df)` | DataFrame from `nrr_grr` | Dual line — NRR + GRR with 100% reference |
 
 ---
@@ -166,6 +178,7 @@ ARPU, simple LTV, implied churn, and cohort LTV breakdowns.
 |----------|-------|------------|
 | `plot_arpu_timeline(df)` | DataFrame from `arpu_timeline` | Area line — monthly ARPU |
 | `plot_cohort(df)` | DataFrame from `cohort` | Dual bar — avg revenue + customer count per cohort |
+| `plot_ltv_overview(data)` | dict from `overview` | Bar — ARPU vs LTV |
 
 ---
 
@@ -193,80 +206,6 @@ Trial funnel, conversion rates, and monthly outcomes.
 |----------|-------|------------|
 | `plot_funnel(data)` | dict from `funnel` | Bar (funnel counts) + pie (conversion rate) |
 | `plot_timeline(df)` | DataFrame from `timeline` | Stacked bar (outcomes) + line (conversion rate) |
-
----
-
-## Stripe validation (`stripecheck`)
-
-The `tidemill.reports.stripecheck` subpackage provides the data layer for comparing Tidemill's event-driven metrics against ground truth computed directly from Stripe API objects.
-
-```python
-from tidemill.reports.stripecheck import TidemillClient, StripeData, compare
-
-tm = TidemillClient()
-sd = StripeData()
-
-compare.mrr(tm, sd, at="2026-03-01")
-# {'tidemill': 100933, 'stripe': 100933, 'diff': 0, 'match': True}
-```
-
-### Components
-
-#### `TidemillClient`
-
-Thin wrapper around the Tidemill REST API. Every metric endpoint has a typed convenience method:
-
-| Method | Returns |
-|--------|---------|
-| `mrr(at=None)` | MRR in cents |
-| `arr(at=None)` | ARR in cents |
-| `mrr_breakdown(start, end)` | List of movement dicts |
-| `mrr_waterfall(start, end)` | List of monthly waterfall dicts |
-| `churn(start, end, type="logo")` | Churn rate (float or None) |
-| `retention(start, end, **kw)` | Cohort retention data |
-| `ltv(start, end)` | Simple LTV in cents |
-| `arpu(at=None)` | ARPU in cents |
-| `cohort_ltv(start, end)` | Per-cohort LTV breakdown |
-| `trial_rate(start, end)` | Trial conversion rate |
-| `trial_funnel(start, end)` | Funnel dict |
-| `trial_series(start, end, interval)` | Time-series list |
-| `sources()` | Connected billing sources |
-
-#### `StripeData`
-
-Lazy-loading container for Stripe subscription data. Hits the Stripe API only on first access and caches the result.
-
-| Property / Method | Description |
-|-------------------|-------------|
-| `.subscriptions` | DataFrame with `id`, `customer`, `status`, `mrr_cents`, `currency`, `created_at`, `canceled_at`, `trial_start`, `trial_end` |
-| `.raw` | Underlying Stripe subscription dicts |
-| `.active` | Filtered to `status == "active"` |
-| `.canceled` | Filtered to `status == "canceled"` |
-| `.summary()` | One-line string with status counts |
-
-In **test/sandbox mode**, `StripeData` iterates over all Test Clocks and fetches subscriptions from each. In live mode, it lists all subscriptions directly.
-
-#### `stripe_metrics`
-
-Ground-truth metric computation from raw Stripe data:
-
-| Function | Description |
-|----------|-------------|
-| `subscription_mrr(sub)` | MRR contribution of a single subscription (cents). Normalises day/week/month/year intervals |
-| `active_mrr(subs)` | Total MRR across active subscriptions (cents) |
-| `churn_rates(subs, start, end)` | Logo and revenue churn rates with full breakdown |
-| `cohort_retention(subs, start, end)` | Cohort retention matrix (% DataFrame) |
-
-#### `compare`
-
-Side-by-side comparison functions:
-
-| Function | Description |
-|----------|-------------|
-| `mrr(tm, sd, at=None)` | MRR: Tidemill vs Stripe, with diff and match flag |
-| `per_subscription_mrr(sd)` | Per-subscription MRR table for debugging mismatches |
-| `churn(tm, sd, start, end)` | Logo + revenue churn comparison |
-| `retention(tm, sd, start, end)` | Merged retention DataFrame from both sources |
 
 ---
 
@@ -302,8 +241,8 @@ The `docs/notebooks/` directory contains Jupyter notebooks that use the reports 
 
 | Notebook | Metric |
 |----------|--------|
-| `01_mrr.ipynb` | MRR comparison, breakdown, waterfall, trend |
-| `02_churn.ipynb` | Churn overview, timeline, lost MRR |
-| `03_retention.ipynb` | Cohort heatmap, retention curve, NRR/GRR |
+| `01_mrr.ipynb` | MRR breakdown, waterfall, trend |
+| `02_churn.ipynb` | Customer churn sets, timeline, lost MRR |
+| `03_retention.ipynb` | NRR/GRR |
 | `04_ltv.ipynb` | LTV overview, ARPU timeline, cohort LTV |
 | `05_trials.ipynb` | Trial funnel, monthly outcomes |

@@ -5,51 +5,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 
 from tidemill.reports._style import COLORS
 
 if TYPE_CHECKING:
-    from tidemill.reports.stripecheck.stripe_data import StripeData
-    from tidemill.reports.stripecheck.tidemill_client import TidemillClient
+    from tidemill.reports.client import TidemillClient
 
 
 # ── data ─────────────────────────────────────────────────────────────
-
-
-def stripe_heatmap(sd: StripeData, start: str, end: str) -> pd.DataFrame:
-    """Build cohort retention matrix from Stripe data.
-
-    Args:
-        sd: Stripe data source.
-        start: ISO date string for calendar range start.
-        end: ISO date string for calendar range end.
-
-    Returns:
-        Retention percentage DataFrame (cohort x month-offset).
-        Cohort sizes available via ``df.attrs["cohort_sizes"]``.
-    """
-    from tidemill.reports.stripecheck.stripe_metrics import cohort_retention
-
-    return cohort_retention(sd.subscriptions, start, end)
-
-
-def stripe_curve(sd: StripeData, start: str, end: str) -> pd.Series:
-    """Average retention curve across all cohorts.
-
-    Args:
-        sd: Stripe data source.
-        start: ISO date string for calendar range start.
-        end: ISO date string for calendar range end.
-
-    Returns:
-        Series of average retention % by month offset.
-    """
-    from tidemill.reports.stripecheck.stripe_metrics import cohort_retention
-
-    retention_pct = cohort_retention(sd.subscriptions, start, end)
-    return retention_pct.mean(axis=0)
 
 
 def nrr_grr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
@@ -93,63 +57,7 @@ def style_nrr_grr(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     return df.set_index("month").style.format({"nrr": fmt_pct, "grr": fmt_pct})
 
 
-def style_stripe_retention(df: pd.DataFrame) -> pd.io.formats.style.Styler:
-    """Format retention matrix as a colour-graded table.
-
-    Args:
-        df: Retention matrix from :func:`stripe_heatmap`.
-    """
-    return df.style.format("{:.0f}%").background_gradient(cmap="RdYlGn", vmin=0, vmax=100)
-
-
 # ── charts ───────────────────────────────────────────────────────────
-
-
-def plot_stripe_heatmap(df: pd.DataFrame) -> go.Figure:
-    """Cohort retention heatmap.
-
-    Args:
-        df: Retention matrix from :func:`stripe_heatmap`.
-    """
-    fig = px.imshow(
-        df,
-        text_auto=".0f",
-        color_continuous_scale="RdYlGn",
-        zmin=0,
-        zmax=100,
-        labels={"x": "Months since signup", "y": "Cohort month", "color": "Retention %"},
-    )
-    fig.update_layout(title="Cohort Retention Heatmap (Stripe)", height=350)
-    return fig
-
-
-def plot_stripe_curve(avg: pd.Series) -> go.Figure:
-    """Average retention curve.
-
-    Args:
-        avg: Series from :func:`stripe_curve` (or ``heatmap_df.mean(axis=0)``).
-    """
-    fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=avg.index,
-            y=avg.values,
-            mode="lines+markers+text",
-            fill="tozeroy",
-            line={"color": COLORS["nrr"], "width": 2},
-            marker={"size": 8},
-            text=[f"{v:.0f}%" for v in avg.values],
-            textposition="top center",
-        )
-    )
-    fig.update_layout(
-        title="Average Retention Curve (Stripe)",
-        xaxis_title="Months since signup",
-        yaxis_title="Retention %",
-        yaxis_ticksuffix="%",
-        yaxis_range=[0, 105],
-    )
-    return fig
 
 
 def plot_nrr_grr(df: pd.DataFrame) -> go.Figure:

@@ -10,40 +10,27 @@ import plotly.graph_objects as go
 from tidemill.reports._style import COLORS
 
 if TYPE_CHECKING:
-    from tidemill.reports.stripecheck.stripe_data import StripeData
-    from tidemill.reports.stripecheck.tidemill_client import TidemillClient
+    from tidemill.reports.client import TidemillClient
 
 
 # ── data ─────────────────────────────────────────────────────────────
 
 
-def stripe_comparison(
-    tm: TidemillClient,
-    sd: StripeData,
-    at: str | None = None,
-) -> dict[str, Any]:
-    """Fetch MRR / ARR from Tidemill and Stripe.
+def snapshot(tm: TidemillClient, at: str | None = None) -> dict[str, Any]:
+    """Current MRR and ARR.
 
     Args:
         tm: Tidemill API client.
-        sd: Stripe data source.
-        at: Optional ISO date to query MRR at a specific point.
+        at: Optional ISO date to query at a specific point.
 
     Returns:
-        Dict with ``tidemill``, ``stripe``, ``diff`` (all dollars),
-        ``match`` (bool), ``arr`` (dollars).
+        Dict with ``mrr`` and ``arr`` in dollars.
     """
-    from tidemill.reports.stripecheck.stripe_metrics import active_mrr
-
-    tm_mrr = tm.mrr(at=at)
-    st_mrr = active_mrr(sd.subscriptions)
-    tm_arr = tm.arr(at=at)
+    mrr_cents = tm.mrr(at=at)
+    arr_cents = tm.arr(at=at)
     return {
-        "tidemill": tm_mrr / 100,
-        "stripe": st_mrr / 100,
-        "diff": (tm_mrr - st_mrr) / 100,
-        "match": tm_mrr == st_mrr,
-        "arr": tm_arr / 100,
+        "mrr": mrr_cents / 100,
+        "arr": arr_cents / 100,
     }
 
 
@@ -215,53 +202,17 @@ def trend(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     return df
 
 
-def stripe_status_breakdown(sd: StripeData) -> pd.DataFrame:
-    """Subscription count and MRR grouped by Stripe status.
-
-    Args:
-        sd: Stripe data source.
-
-    Returns:
-        Summary DataFrame with ``status``, ``count``, ``mrr`` (dollars).
-    """
-    df = sd.subscriptions
-    summary = (
-        df.groupby("status")
-        .agg(count=("id", "count"), mrr_cents=("mrr_cents", "sum"))
-        .reset_index()
-    )
-    summary["mrr"] = summary.mrr_cents / 100
-    return summary
-
-
 # ── style ────────────────────────────────────────────────────────────
 
 
-def style_stripe_comparison(data: dict[str, Any]) -> pd.io.formats.style.Styler:
-    """Format comparison dict as a styled table.
+def style_snapshot(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+    """Format MRR/ARR snapshot as a styled table.
 
     Args:
-        data: Dict from :func:`stripe_comparison`.
+        data: Dict from :func:`snapshot`.
     """
-    df = pd.DataFrame(
-        [
-            {
-                "MRR (Tidemill)": data["tidemill"],
-                "MRR (Stripe)": data["stripe"],
-                "Difference": data["diff"],
-                "Match": data["match"],
-                "ARR": data["arr"],
-            }
-        ]
-    )
-    return df.style.format(
-        {
-            "MRR (Tidemill)": "${:,.2f}",
-            "MRR (Stripe)": "${:,.2f}",
-            "Difference": "${:,.2f}",
-            "ARR": "${:,.2f}",
-        }
-    ).hide(axis="index")
+    df = pd.DataFrame([{"MRR": data["mrr"], "ARR": data["arr"]}])
+    return df.style.format("${:,.2f}").hide(axis="index")
 
 
 def style_waterfall(df: pd.DataFrame) -> pd.io.formats.style.Styler:
@@ -282,15 +233,6 @@ def style_waterfall(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     ]
     styled = df.set_index("month")[display_cols]
     return styled.style.format("${:,.2f}")
-
-
-def style_stripe_status_breakdown(df: pd.DataFrame) -> pd.io.formats.style.Styler:
-    """Format status breakdown as a styled table.
-
-    Args:
-        df: DataFrame from :func:`stripe_status_breakdown`.
-    """
-    return df[["status", "count", "mrr"]].style.format({"mrr": "${:,.2f}"}).hide(axis="index")
 
 
 # ── charts ───────────────────────────────────────────────────────────
@@ -394,42 +336,4 @@ def plot_trend(df: pd.DataFrame) -> go.Figure:
         yaxis_tickformat=",",
         yaxis_rangemode="tozero",
     )
-    return fig
-
-
-def plot_stripe_status_breakdown(df: pd.DataFrame) -> go.Figure:
-    """Subscription count pie + MRR-by-status bar.
-
-    Args:
-        df: DataFrame from :func:`stripe_status_breakdown`.
-    """
-    from plotly.subplots import make_subplots
-
-    colors = [COLORS.get(s, COLORS["grey"]) for s in df.status]
-
-    fig = make_subplots(
-        rows=1,
-        cols=2,
-        specs=[[{"type": "domain"}, {"type": "xy"}]],
-        subplot_titles=["Subscriptions by Status", "MRR by Status"],
-    )
-    fig.add_trace(
-        go.Pie(labels=df.status, values=df["count"], marker_colors=colors),
-        row=1,
-        col=1,
-    )
-    fig.add_trace(
-        go.Bar(
-            x=df.status,
-            y=df.mrr,
-            marker_color=colors,
-            text=[f"${v:,.2f}" for v in df.mrr],
-            textposition="outside",
-            showlegend=False,
-        ),
-        row=1,
-        col=2,
-    )
-    fig.update_yaxes(title_text="MRR ($)", tickprefix="$", tickformat=",", row=1, col=2)
-    fig.update_layout(height=450)
     return fig

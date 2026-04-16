@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 from tidemill.reports._style import COLORS
 
 if TYPE_CHECKING:
-    from tidemill.reports.stripecheck.tidemill_client import TidemillClient
+    from tidemill.reports.client import TidemillClient
 
 
 # ── data ─────────────────────────────────────────────────────────────
