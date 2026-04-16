@@ -65,6 +65,7 @@ class MRRSnapshotCube(Cube):
         # Product (via subscription → plan → product)
         product_name = Dim("prod.name", join="product", label="product_name")
         # Customer
+        customer_name = Dim("c.name", join="customer", label="customer_name")
         customer_country = Dim("c.country", join="customer", label="customer_country")
         # Subscription attributes
         collection_method = Dim(
@@ -116,6 +117,7 @@ class MRRMovementCube(Cube):
     class Dimensions:
         # Source
         source_id = Dim("m.source_id")
+        customer_id = Dim("m.customer_id")
         currency = Dim("m.currency")
         movement_type = Dim("m.movement_type")
         # Plan
@@ -127,6 +129,7 @@ class MRRMovementCube(Cube):
         # Product
         product_name = Dim("prod.name", join="product", label="product_name")
         # Customer
+        customer_name = Dim("c.name", join="customer", label="customer_name")
         customer_country = Dim("c.country", join="customer", label="customer_country")
         # Subscription attributes
         collection_method = Dim(

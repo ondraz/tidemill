@@ -186,6 +186,8 @@ class ChurnMetric(Metric):
                 return await self._logo_churn(start, end, spec)
             case "revenue":
                 return await self._revenue_churn(start, end, spec)
+            case "detail":
+                return await self._customer_detail(start, end)
             case other:
                 raise ValueError(f"Unknown churn type: {other}")
 
@@ -272,3 +274,77 @@ class ChurnMetric(Metric):
         if start_mrr == 0:
             return None
         return float(churn_amount) / float(start_mrr)
+
+    async def _customer_detail(
+        self,
+        start: date,
+        end: date,
+    ) -> list[dict[str, Any]]:
+        """Per-customer churn breakdown for the period.
+
+        Returns one row per customer who was active at period start, with
+        their logo/revenue churn contributions and starting MRR.
+        """
+        em = self.event_model
+        sm = self.state_model
+
+        # 1. Customers active at start
+        aq = (
+            sm.dimension("customer_id")
+            + sm.measures.count
+            + sm.where("cs.first_active_at", "<", start)
+            + sm.where("COALESCE(cs.churned_at, '9999-12-31'::timestamptz)", ">=", start)
+        )
+        astmt, aparams = aq.compile(sm)
+        aresult = await self.db.execute(astmt, aparams)
+        active_customers = {r["customer_id"] for r in aresult.mappings().all()}
+
+        # 2. Logo churn events per customer (fully churned)
+        lq = (
+            em.dimension("customer_id")
+            + em.measures.count
+            + em.filter("churn_type", "=", "logo")
+            + em.filter("occurred_at", "between", (start, end))
+            + em.filter("customer_first_active", "<", start)
+        )
+        lstmt, lparams = lq.compile(em)
+        lresult = await self.db.execute(lstmt, lparams)
+        logo_by_cust = {r["customer_id"]: int(r["churn_count"]) for r in lresult.mappings().all()}
+
+        # 3. Revenue churn per customer
+        rq = (
+            em.dimension("customer_id")
+            + em.measures.revenue_lost
+            + em.filter("churn_type", "=", "revenue")
+            + em.filter("occurred_at", "between", (start, end))
+            + em.filter("customer_first_active", "<", start)
+        )
+        rstmt, rparams = rq.compile(em)
+        rresult = await self.db.execute(rstmt, rparams)
+        rev_by_cust = {
+            r["customer_id"]: abs(int(r["revenue_lost"] or 0)) for r in rresult.mappings().all()
+        }
+
+        # 4. Per-customer starting MRR (cumulative movements before start)
+        from tidemill.metrics.mrr.cubes import MRRMovementCube
+
+        mm = MRRMovementCube
+        mq = (
+            mm.dimension("customer_id") + mm.measures.amount + mm.filter("occurred_at", "<", start)
+        )
+        mstmt, mparams = mq.compile(mm)
+        mresult = await self.db.execute(mstmt, mparams)
+        mrr_by_cust = {
+            r["customer_id"]: int(r["amount_base"] or 0) for r in mresult.mappings().all()
+        }
+
+        return [
+            {
+                "customer_id": cid,
+                "active_at_start": True,
+                "fully_churned": cid in logo_by_cust,
+                "churned_mrr_cents": rev_by_cust.get(cid, 0),
+                "starting_mrr_cents": mrr_by_cust.get(cid, 0),
+            }
+            for cid in sorted(active_customers)
+        ]

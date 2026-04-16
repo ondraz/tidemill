@@ -86,6 +86,10 @@ class TidemillClient:
         """Churn rate for the period.  ``type`` is ``"logo"`` or ``"revenue"``."""
         return self.get("/api/metrics/churn", start=start, end=end, type=type)
 
+    def churn_customers(self, start: str, end: str) -> list[dict[str, Any]]:
+        """Per-customer churn detail for the period."""
+        return self.get("/api/metrics/churn/customers", start=start, end=end)
+
     # ── Retention ────────────────────────────────────────────────────
 
     def retention(self, start: str, end: str, **kw: Any) -> Any:

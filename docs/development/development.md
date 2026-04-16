@@ -195,6 +195,29 @@ payment_intent.succeeded,payment_intent.payment_failed,\
 charge.refunded
 ```
 
+## Database Backup and Restore
+
+Backup the PostgreSQL database to a file before re-seeding or making destructive changes. Backups are stored in `deploy/backup/` (gitignored).
+
+### Backup
+
+```bash
+cd deploy/compose
+docker compose exec -T postgres pg_dump -U tidemill --format=custom tidemill \
+  > ../backup/tidemill_$(date +%Y-%m-%d).dump
+```
+
+### Restore
+
+```bash
+cd deploy/compose
+docker compose cp ../backup/tidemill_2026-04-16.dump postgres:/tmp/restore.dump
+docker compose exec postgres pg_restore -U tidemill --clean --if-exists -d tidemill /tmp/restore.dump
+docker compose exec postgres rm /tmp/restore.dump
+```
+
+`--clean --if-exists` drops existing objects before recreating them, so the database returns to the exact state captured in the dump.
+
 ## Stopping and Resetting
 
 ```bash

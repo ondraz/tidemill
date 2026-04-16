@@ -23,3 +23,11 @@ async def get_churn(
 ) -> Any:
     spec = parse_spec(dimensions, filter, granularity)
     return await query_metric("churn", {"start": start, "end": end, "type": type}, spec)
+
+
+@router.get("/metrics/churn/customers")
+async def get_churn_customers(
+    start: date = Query(...),
+    end: date = Query(...),
+) -> Any:
+    return await query_metric("churn", {"start": start, "end": end, "type": "detail"}, None)

@@ -239,20 +239,35 @@ class MrrMetric(Metric):
         at: date | None,
         spec: QuerySpec | None,
     ) -> Any:
-        m = self.model
         use_original = spec and "currency" in (spec.dimensions or [])
-        measure = m.measures.mrr_original if use_original else m.measures.mrr
 
+        if at is not None:
+            # Historical MRR: cumulative sum of movements before the date.
+            # The snapshot table only stores the latest state per subscription,
+            # so filtering by snapshot_at misses subscriptions modified later.
+            mm = self.movement_model
+            measure = mm.measures.amount_original if use_original else mm.measures.amount
+            dq = measure + mm.filter("occurred_at", "<", at)
+            if spec:
+                dq = dq + mm.apply_spec(spec)
+            stmt, params = dq.compile(mm)
+            result = await self.db.execute(stmt, params)
+            rows = result.mappings().all()
+            if not spec or not spec.dimensions:
+                label = "amount_original" if use_original else "amount_base"
+                return float(rows[0][label] or 0) if rows else 0
+            src = "amount_original" if use_original else "amount_base"
+            return [{("mrr" if k == src else k): v for k, v in dict(r).items()} for r in rows]
+
+        # Current MRR: snapshot table (efficient single-table query)
+        m = self.model
+        measure = m.measures.mrr_original if use_original else m.measures.mrr
         q = measure + m.where("s.mrr_base_cents", ">", 0)
-        if at:
-            q = q + m.filter("snapshot_at", "<=", at)
         if spec:
             q = q + m.apply_spec(spec)
-
         stmt, params = q.compile(m)
         result = await self.db.execute(stmt, params)
         rows = result.mappings().all()
-
         if not spec or not spec.dimensions:
             return rows[0]["mrr"] if rows else 0
         return [dict(r) for r in rows]

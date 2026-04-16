@@ -92,6 +92,112 @@ def waterfall(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     return df
 
 
+def movement_log(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
+    """Per-customer MRR movements with timestamps, split by month.
+
+    Fetches the MRR breakdown dimensioned by ``customer_id`` and
+    ``customer_name`` with daily granularity so every individual movement
+    that feeds the waterfall chart is visible and auditable.
+
+    Args:
+        tm: Tidemill API client.
+        start: ISO date string for period start.
+        end: ISO date string for period end.
+
+    Returns:
+        DataFrame with ``month``, ``date``, ``customer_name``,
+        ``customer_id``, ``movement_type``, ``amount`` (dollars),
+        sorted by date then movement type.
+    """
+    cols = ["month", "date", "customer_name", "customer_id", "movement_type", "amount"]
+    data = tm.get(
+        "/api/metrics/mrr/breakdown",
+        start=start,
+        end=end,
+        dimensions=["customer_id", "customer_name"],
+        granularity="day",
+    )
+    if not data:
+        return pd.DataFrame(columns=cols)
+
+    df = pd.DataFrame(data)
+    df["amount"] = df["amount_base"] / 100
+    df["date"] = pd.to_datetime(df["period"]).dt.strftime("%Y-%m-%d")
+    df["month"] = pd.to_datetime(df["period"]).dt.strftime("%Y-%m")
+    df["customer_name"] = df["customer_name"].fillna("")
+
+    type_order = {"new": 0, "expansion": 1, "reactivation": 2, "contraction": 3, "churn": 4}
+    df["_order"] = df["movement_type"].map(type_order).fillna(5)
+    df = df.sort_values(["date", "_order", "customer_name"]).reset_index(drop=True)
+    return df[cols]
+
+
+def style_movement_log(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+    """Format movement log with colour-coded movement types and monthly subtotals.
+
+    Args:
+        df: DataFrame from :func:`movement_log`.
+    """
+    type_order = {"new": 0, "expansion": 1, "reactivation": 2, "contraction": 3, "churn": 4}
+
+    # Build display rows with subtotal rows inserted after each month
+    rows: list[dict[str, str]] = []
+    subtotal_indices: list[int] = []
+
+    for month, grp in df.groupby("month", sort=True):
+        for _, r in grp.iterrows():
+            rows.append(
+                {
+                    "month": month,
+                    "date": r["date"],
+                    "customer": r["customer_name"] or r["customer_id"],
+                    "customer_id": r["customer_id"],
+                    "movement": r["movement_type"],
+                    "amount": f"${r['amount']:,.2f}",
+                }
+            )
+        # Monthly subtotal
+        totals = grp.groupby("movement_type")["amount"].sum()
+        parts = []
+        for mt in sorted(totals.index, key=lambda t: type_order.get(t, 5)):
+            parts.append(f"{mt}: ${totals[mt]:,.2f}")
+        net = grp["amount"].sum()
+        subtotal_indices.append(len(rows))
+        rows.append(
+            {
+                "month": month,
+                "date": "",
+                "customer": "",
+                "customer_id": "",
+                "movement": " | ".join(parts),
+                "amount": f"${net:,.2f}",
+            }
+        )
+
+    display = pd.DataFrame(rows)
+
+    def _highlight_subtotals(row: pd.Series) -> list[str]:
+        if row.name in subtotal_indices:
+            return ["font-weight: bold; background-color: #F5F5F4"] * len(row)
+        return [""] * len(row)
+
+    def _color_movement(val: object) -> str:
+        colors = {
+            "new": f"color: {COLORS['new']}",
+            "expansion": f"color: {COLORS['expansion']}",
+            "reactivation": f"color: {COLORS['reactivation']}",
+            "contraction": f"color: {COLORS['contraction']}",
+            "churn": f"color: {COLORS['churn']}",
+        }
+        return colors.get(str(val), "")
+
+    return (
+        display.style.apply(_highlight_subtotals, axis=1)
+        .map(_color_movement, subset=["movement"])
+        .hide(axis="index")
+    )
+
+
 def trend(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     """Fetch ending MRR per month.
 

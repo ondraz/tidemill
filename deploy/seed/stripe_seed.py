@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Seed Stripe test mode with realistic subscription data using Test Clocks.
+"""Seed Stripe test mode with realistic subscription data using Test Clocks.
 
 Creates customers across usage-based and flat-fee plans, advances time through
 6 months of billing cycles, reports metered usage, and simulates churn,
@@ -18,7 +17,7 @@ Prerequisites:
     export STRIPE_API_KEY=sk_test_...
 
 Usage:
-    python stripe_seed.py                  # full seed (15 customers, 6 months)
+    python stripe_seed.py                  # full seed (17 customers, 6 months)
     python stripe_seed.py --customers 5    # fewer customers
     python stripe_seed.py --months 3       # shorter history
     python stripe_seed.py --cleanup CLOCK_ID
@@ -41,23 +40,31 @@ METER_EVENT_NAME = "analytical_query"
 # Configuration
 # ---------------------------------------------------------------------------
 
-# (name_prefix, plan, billing, action, monthly_queries)
+# (name_prefix, plan, billing, action, monthly_queries, change_month)
+#   change_month: loop iteration when the lifecycle action fires (None = stays active).
+#   With --months 6, month 0 ≈ start date, month 5 ≈ 5 months later.
 ARCHETYPES = [
-    ("Active Starter", "Starter", "month", "active", 50),
-    ("Active Starter", "Starter", "month", "active", 30),
-    ("Active Starter Heavy", "Starter", "month", "active", 120),
-    ("Active Monthly Pro", "Professional", "month", "active", 8000),
-    ("Active Monthly Pro", "Professional", "month", "active", 15000),
-    ("Active Annual Pro", "Professional", "year", "active", 12000),
-    ("Active Annual Enterprise", "Enterprise", "year", "active", 0),
-    ("Churned Starter", "Starter", "month", "churn", 20),
-    ("Churned Pro", "Professional", "month", "churn", 9000),
-    ("Upgraded Starter→Pro", "Starter", "month", "upgrade", 80),
-    ("Upgraded Starter→Pro", "Starter", "month", "upgrade", 60),
-    ("Downgraded Pro→Starter", "Professional", "month", "downgrade", 2000),
-    ("Failed Payment Starter", "Starter", "month", "fail_payment", 40),
-    ("Trial→Active Starter", "trial", "month", "trial_convert", 25),
-    ("Trial→Expired", "trial", "month", "trial_expire", 0),
+    ("Active Starter", "Starter", "month", "active", 50, None),
+    ("Active Starter", "Starter", "month", "active", 30, None),
+    ("Active Starter Heavy", "Starter", "month", "active", 120, None),
+    ("Active Monthly Pro", "Professional", "month", "active", 8000, None),
+    ("Active Monthly Pro", "Professional", "month", "active", 15000, None),
+    ("Active Annual Pro", "Professional", "year", "active", 12000, None),
+    ("Active Annual Enterprise", "Enterprise", "year", "active", 0, None),
+    # Early changes (months 1–2)
+    ("Churned Starter", "Starter", "month", "churn", 20, 1),
+    ("Upgraded Starter→Pro", "Starter", "month", "upgrade", 80, 1),
+    ("Downgraded Pro→Starter", "Professional", "month", "downgrade", 2000, 2),
+    # Mid changes (month 3)
+    ("Churned Pro", "Professional", "month", "churn", 9000, 3),
+    # Late changes (months 4–5)
+    ("Upgraded Starter→Pro", "Starter", "month", "upgrade", 60, 4),
+    ("Late Churned Starter", "Starter", "month", "churn", 45, 5),
+    ("Late Downgraded Pro→Starter", "Professional", "month", "downgrade", 3000, 4),
+    # Ongoing / special
+    ("Failed Payment Starter", "Starter", "month", "fail_payment", 40, None),
+    ("Trial→Active Starter", "trial", "month", "trial_convert", 25, 1),
+    ("Trial→Expired", "trial", "month", "trial_expire", 0, None),
 ]
 
 # ---------------------------------------------------------------------------
@@ -302,7 +309,7 @@ def seed(num_customers: int, num_months: int) -> str:
     entries = []
 
     print(f"\nCreating {num_customers} customers and subscriptions...")
-    for i, (name, plan, billing, action, base_usage) in enumerate(archetypes):
+    for i, (name, plan, billing, action, base_usage, change_month) in enumerate(archetypes):
         # Create a new clock when needed
         if i % MAX_CUSTOMERS_PER_CLOCK == 0:
             batch = i // MAX_CUSTOMERS_PER_CLOCK + 1
@@ -337,6 +344,7 @@ def seed(num_customers: int, num_months: int) -> str:
                 "billing": billing,
                 "base_usage": base_usage,
                 "active": True,
+                "change_month": change_month,
             }
         )
 
@@ -361,53 +369,54 @@ def seed(num_customers: int, num_months: int) -> str:
                     entry["active"] = False
                     print(f"  → Cancelled trial for {entry['customer'].name}")
 
-        # ── Month 2 actions: churn, upgrade, downgrade, trial activation ──
-        if month == 1:
-            for entry in entries:
-                action = entry["action"]
-                sub = entry["subscription"]
-                cust = entry["customer"]
+        # ── Scheduled lifecycle changes (churn, upgrade, downgrade, trial) ──
+        for entry in entries:
+            if entry.get("change_month") != month:
+                continue
+            action = entry["action"]
+            sub = entry["subscription"]
+            cust = entry["customer"]
 
-                if action == "churn":
-                    stripe.Subscription.modify(sub.id, cancel_at_period_end=True)
-                    print(f"  → Marked {cust.name} for cancellation")
+            if action == "churn":
+                stripe.Subscription.modify(sub.id, cancel_at_period_end=True)
+                print(f"  → Marked {cust.name} for cancellation")
 
-                elif action == "upgrade":
-                    # Starter → Professional monthly
-                    old_items = sub["items"]["data"]
-                    modify_items = [{"id": it.id, "deleted": True} for it in old_items]
-                    modify_items.append({"price": plans["Professional"]["base_monthly"].id})
-                    modify_items.append({"price": plans["Professional"]["metered_monthly"].id})
-                    sub = stripe.Subscription.modify(
-                        sub.id,
-                        items=modify_items,
-                        proration_behavior="create_prorations",
-                    )
-                    entry["subscription"] = sub
-                    entry["plan"] = "Professional"
-                    entry["base_usage"] = 12000
-                    print(f"  → Upgraded {cust.name} to Professional")
+            elif action == "upgrade":
+                # Starter → Professional monthly
+                old_items = sub["items"]["data"]
+                modify_items = [{"id": it.id, "deleted": True} for it in old_items]
+                modify_items.append({"price": plans["Professional"]["base_monthly"].id})
+                modify_items.append({"price": plans["Professional"]["metered_monthly"].id})
+                sub = stripe.Subscription.modify(
+                    sub.id,
+                    items=modify_items,
+                    proration_behavior="create_prorations",
+                )
+                entry["subscription"] = sub
+                entry["plan"] = "Professional"
+                entry["base_usage"] = 12000
+                print(f"  → Upgraded {cust.name} to Professional")
 
-                elif action == "downgrade":
-                    # Professional → Starter
-                    old_items = sub["items"]["data"]
-                    modify_items = [{"id": it.id, "deleted": True} for it in old_items]
-                    modify_items.append({"price": plans["Starter"]["base_monthly"].id})
-                    modify_items.append({"price": plans["Starter"]["metered_monthly"].id})
-                    sub = stripe.Subscription.modify(
-                        sub.id,
-                        items=modify_items,
-                        proration_behavior="create_prorations",
-                    )
-                    entry["subscription"] = sub
-                    entry["plan"] = "Starter"
-                    entry["base_usage"] = 40
-                    print(f"  → Downgraded {cust.name} to Starter")
+            elif action == "downgrade":
+                # Professional → Starter
+                old_items = sub["items"]["data"]
+                modify_items = [{"id": it.id, "deleted": True} for it in old_items]
+                modify_items.append({"price": plans["Starter"]["base_monthly"].id})
+                modify_items.append({"price": plans["Starter"]["metered_monthly"].id})
+                sub = stripe.Subscription.modify(
+                    sub.id,
+                    items=modify_items,
+                    proration_behavior="create_prorations",
+                )
+                entry["subscription"] = sub
+                entry["plan"] = "Starter"
+                entry["base_usage"] = 40
+                print(f"  → Downgraded {cust.name} to Starter")
 
-                elif action == "trial_convert":
-                    # Trial ended, now billing as Starter — start reporting usage
-                    entry["base_usage"] = 25
-                    print(f"  → Trial converted for {cust.name}, now active Starter")
+            elif action == "trial_convert":
+                # Trial ended, now billing as Starter — start reporting usage
+                entry["base_usage"] = 25
+                print(f"  → Trial converted for {cust.name}, now active Starter")
 
         # ── Handle previous month's trial outcomes (convert or churn) ──
         for entry in entries:
@@ -472,9 +481,6 @@ def seed(num_customers: int, num_months: int) -> str:
         prev = current
         current += timedelta(days=32)
         current = current.replace(day=1)
-        now = datetime.now(UTC)
-        if current > now:
-            current = now
 
         target_ts = int(current.timestamp())
         print(f"  Advancing to {current.date()}...")
@@ -489,6 +495,16 @@ def seed(num_customers: int, num_months: int) -> str:
             if entry["active"] and entry["base_usage"] > 0:
                 usage = random_usage(entry["base_usage"])
                 report_usage(entry["customer"].id, usage, mid_month_ts)
+
+    # ── Final advance to close the last month's billing cycle ──
+    current += timedelta(days=32)
+    current = current.replace(day=1)
+    target_ts = int(current.timestamp())
+    print(f"  Final advance to {current.date()} (closing last billing cycle)...")
+    for c in clocks:
+        stripe.test_helpers.TestClock.advance(c.id, frozen_time=target_ts)
+    for c in clocks:
+        wait_for_clock(c.id)
 
     clock_ids = [c.id for c in clocks]
     print(f"\n{'=' * 60}")
@@ -528,7 +544,7 @@ def cleanup(clock_id: str | None = None) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed Stripe test data")
     parser.add_argument(
-        "--customers", type=int, default=15, help="Number of customers (default: 15)"
+        "--customers", type=int, default=17, help="Number of customers (default: 17)"
     )
     parser.add_argument("--months", type=int, default=6, help="Months of history (default: 6)")
     parser.add_argument(

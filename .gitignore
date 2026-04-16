@@ -223,3 +223,6 @@ build/
 # IDE
 .idea/
 subscriptions.code-workspace
+
+# Database backups
+deploy/backup/

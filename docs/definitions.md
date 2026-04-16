@@ -75,8 +75,10 @@ $$
 
 where:
 
-- $C_{\text{churned}}$ = customers with a logo churn event in $[\text{start}, \text{end})$
+- $C_{\text{churned}}$ = customers from $C_{\text{start}}$ with a logo churn event in $[\text{start}, \text{end})$
 - $C_{\text{start}}$ = customers active at period start, i.e. `first_active_at` $< \text{start}$ and (`churned_at` $\geq \text{start}$ or still active)
+
+Only customers in $C_{\text{start}}$ can appear in the numerator — customers who both join and churn within the period are excluded.
 
 ### Revenue Churn Rate
 
@@ -88,8 +90,11 @@ $$
 
 where:
 
-- $|\text{Churn MRR}|$ = absolute value of MRR movements with type `churn` in $[\text{start}, \text{end})$
-- $\text{MRR}_{\text{start}}$ = total MRR at period start (from snapshot)
+- $|\text{Churn MRR}|$ = absolute value of MRR lost from customers in $C_{\text{start}}$ with churn events in $[\text{start}, \text{end})$
+- $\text{MRR}_{\text{start}}$ = total MRR at period start (cumulative movements before start)
+- $C_{\text{start}}$ = customers active at period start (`first_active_at` $< \text{start}$)
+
+As with logo churn, only revenue lost from customers active at period start is counted.
 
 ---
 
@@ -187,13 +192,15 @@ Tidemill's definitions are broadly aligned with ChartMogul but diverge in severa
 
 ### Logo Churn — same-period joiners
 
-ChartMogul excludes customers who both join and churn within the same reporting period from the churn numerator (they call this "Subscribed & Churned"). Tidemill counts them.
+Both Tidemill and ChartMogul exclude customers who both join and churn within the same reporting period from the churn numerator. Tidemill enforces this by scoping the numerator to $C_{\text{start}}$ (customers with `first_active_at` $< \text{start}$), so same-period joiners never appear.
+
+ChartMogul additionally excludes customers who churned and reactivated in the same period:
 
 $$
-\text{ChartMogul: } \text{Logo Churn Rate} = \frac{C_{\text{churned}} - C_{\text{joined\&churned}} - C_{\text{churned\&reactivated}}}{C_{\text{start}}}
+\text{ChartMogul: } \text{Logo Churn Rate} = \frac{C_{\text{churned}} - C_{\text{churned\&reactivated}}}{C_{\text{start}}}
 $$
 
-**Why we differ:** Tidemill's definition is simpler and counts every churn event. ChartMogul's exclusion prevents inflated churn rates in periods with high acquisition, but it also hides real losses. We may add this as a configurable option.
+**Where we still differ:** Tidemill counts a customer who churns and then reactivates within the period as a churn event. ChartMogul nets them out.
 
 ### Revenue Churn Rate — gross vs net
 
