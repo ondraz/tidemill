@@ -185,6 +185,75 @@ def style_movement_log(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     )
 
 
+def quick_ratio(tm: TidemillClient, start: str, end: str) -> dict[str, Any]:
+    """Compute the SaaS Quick Ratio from MRR movements.
+
+    ``Quick Ratio = (new + expansion + reactivation) / |churn + contraction|``
+
+    Measures growth efficiency: how much new MRR is added for every dollar
+    lost.  >4 is considered excellent, 1 is break-even, <1 is shrinking.
+
+    Args:
+        tm: Tidemill API client.
+        start: ISO date string for period start.
+        end: ISO date string for period end.
+
+    Returns:
+        Dict with ``gains``, ``losses`` (both positive dollars),
+        ``quick_ratio`` (float or None when losses are zero), and the
+        individual movement components.
+    """
+    df = breakdown(tm, start, end)
+    amounts = df.set_index("movement_type")["amount"].to_dict()
+    gain_parts = {
+        "new": amounts.get("new", 0.0),
+        "expansion": amounts.get("expansion", 0.0),
+        "reactivation": amounts.get("reactivation", 0.0),
+    }
+    loss_parts = {
+        "churn": abs(amounts.get("churn", 0.0)),
+        "contraction": abs(amounts.get("contraction", 0.0)),
+    }
+    gains = sum(gain_parts.values())
+    losses = sum(loss_parts.values())
+    return {
+        **gain_parts,
+        **loss_parts,
+        "gains": gains,
+        "losses": losses,
+        "quick_ratio": gains / losses if losses else None,
+    }
+
+
+def style_quick_ratio(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+    """Format Quick Ratio as a styled one-row summary.
+
+    Args:
+        data: Dict from :func:`quick_ratio`.
+    """
+    df = pd.DataFrame(
+        [
+            {
+                "New": data["new"],
+                "Expansion": data["expansion"],
+                "Reactivation": data["reactivation"],
+                "Gains": data["gains"],
+                "Churn": data["churn"],
+                "Contraction": data["contraction"],
+                "Losses": data["losses"],
+                "Quick Ratio": data["quick_ratio"],
+            }
+        ]
+    )
+    money = ["New", "Expansion", "Reactivation", "Gains", "Churn", "Contraction", "Losses"]
+    return df.style.format(
+        {
+            **{c: "${:,.2f}" for c in money},
+            "Quick Ratio": lambda v: f"{v:.2f}" if v is not None else "N/A",
+        }
+    ).hide(axis="index")
+
+
 def trend(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     """Fetch ending MRR per month.
 

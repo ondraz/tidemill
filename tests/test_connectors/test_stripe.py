@@ -249,6 +249,16 @@ class TestSubscriptionTranslation:
         )
         assert any(e.type == "subscription.trial_expired" for e in events)
 
+    def test_updated_trial_incomplete_expired(self, connector: StripeConnector):
+        events = connector.translate(
+            _sub_wh(
+                "customer.subscription.updated",
+                status="incomplete_expired",
+                prev_attrs={"status": "trialing"},
+            )
+        )
+        assert any(e.type == "subscription.trial_expired" for e in events)
+
     def test_updated_to_active(self, connector: StripeConnector):
         events = connector.translate(
             _sub_wh(
@@ -562,3 +572,87 @@ class TestMisc:
     def test_event_source_id_matches_connector(self, connector: StripeConnector):
         events = connector.translate(_customer_wh("customer.created"))
         assert events[0].source_id == SRC
+
+
+class TestBackfillTrialEvents:
+    """Trial lifecycle reconstruction from a subscription snapshot."""
+
+    @staticmethod
+    def _sub(
+        status: str, trial_start: int | None, trial_end: int | None, ended_at: int | None = None
+    ) -> dict:
+        return {
+            "id": "sub_test",
+            "status": status,
+            "trial_start": trial_start,
+            "trial_end": trial_end,
+            "ended_at": ended_at,
+        }
+
+    def test_no_trial_emits_nothing(self, connector: StripeConnector):
+        sub = self._sub("active", trial_start=None, trial_end=None)
+        assert list(connector._backfill_trial_events(sub, "cus_1", mrr=1000)) == []
+
+    def test_still_trialing_emits_started_only(self, connector: StripeConnector):
+        sub = self._sub("trialing", trial_start=1700000000, trial_end=1701000000)
+        events = list(connector._backfill_trial_events(sub, "cus_1", mrr=1000))
+        assert [e.type for e in events] == ["subscription.trial_started"]
+
+    def test_active_emits_started_and_converted(self, connector: StripeConnector):
+        sub = self._sub("active", trial_start=1700000000, trial_end=1701000000)
+        events = list(connector._backfill_trial_events(sub, "cus_1", mrr=1000))
+        assert [e.type for e in events] == [
+            "subscription.trial_started",
+            "subscription.trial_converted",
+        ]
+
+    def test_incomplete_expired_emits_started_and_expired(self, connector: StripeConnector):
+        sub = self._sub("incomplete_expired", trial_start=1700000000, trial_end=1701000000)
+        events = list(connector._backfill_trial_events(sub, "cus_1", mrr=1000))
+        assert [e.type for e in events] == [
+            "subscription.trial_started",
+            "subscription.trial_expired",
+        ]
+
+    def test_canceled_during_trial_emits_expired(self, connector: StripeConnector):
+        # ended_at < trial_end → canceled before conversion
+        sub = self._sub(
+            "canceled",
+            trial_start=1700000000,
+            trial_end=1701000000,
+            ended_at=1700500000,
+        )
+        events = list(connector._backfill_trial_events(sub, "cus_1", mrr=1000))
+        assert [e.type for e in events] == [
+            "subscription.trial_started",
+            "subscription.trial_expired",
+        ]
+
+    def test_canceled_at_trial_end_emits_converted(self, connector: StripeConnector):
+        # ended_at == trial_end → ambiguous; favour converted (sub did
+        # transition through active even if canceled immediately after)
+        sub = self._sub(
+            "canceled",
+            trial_start=1700000000,
+            trial_end=1701000000,
+            ended_at=1701000000,
+        )
+        events = list(connector._backfill_trial_events(sub, "cus_1", mrr=1000))
+        assert [e.type for e in events] == [
+            "subscription.trial_started",
+            "subscription.trial_converted",
+        ]
+
+    def test_canceled_after_conversion_emits_converted(self, connector: StripeConnector):
+        # ended_at > trial_end → converted, then churned later
+        sub = self._sub(
+            "canceled",
+            trial_start=1700000000,
+            trial_end=1701000000,
+            ended_at=1702000000,
+        )
+        events = list(connector._backfill_trial_events(sub, "cus_1", mrr=1000))
+        assert [e.type for e in events] == [
+            "subscription.trial_started",
+            "subscription.trial_converted",
+        ]

@@ -38,6 +38,7 @@ class RetentionCohortCube(Cube):
 
     class Dimensions:
         source_id = Dim("rc.source_id")
+        customer_id = Dim("rc.customer_id")
         cohort_month = Dim("rc.cohort_month")
         active_month = Dim("ra.active_month", join="activity")
         customer_country = Dim("c.country", join="customer", label="customer_country")

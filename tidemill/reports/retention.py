@@ -16,6 +16,52 @@ if TYPE_CHECKING:
 # ── data ─────────────────────────────────────────────────────────────
 
 
+def cohort(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
+    """Fetch cohort retention matrix as a pivot table.
+
+    Each row is a cohort (customers who first activated in that calendar
+    month); each column ``M0, M1, ... Mn`` is the fraction of the cohort
+    still active ``n`` months later.
+
+    Args:
+        tm: Tidemill API client.
+        start: ISO date string — earliest cohort month to include.
+        end: ISO date string — latest cohort month to include.
+
+    Returns:
+        DataFrame indexed by ``cohort_month``, with ``cohort_size`` and
+        ``M0 .. Mn`` columns (retention as decimals).
+    """
+    rows = tm.cohort_matrix(start, end)
+    all_months = pd.period_range(start=start, end=end, freq="M")
+
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df["cohort_month"] = pd.to_datetime(df["cohort_month"]).dt.to_period("M")
+        df["active_month"] = pd.to_datetime(df["active_month"]).dt.to_period("M")
+        df["months_since"] = (df["active_month"] - df["cohort_month"]).apply(lambda x: x.n)
+        df = df[df["months_since"] >= 0]
+        df["retention"] = df["active_count"] / df["cohort_size"]
+
+        size_by_cohort = df.groupby("cohort_month")["cohort_size"].first()
+        pivot = df.pivot_table(
+            index="cohort_month",
+            columns="months_since",
+            values="retention",
+            aggfunc="first",
+        )
+        pivot.columns = [f"M{int(c)}" for c in pivot.columns]
+    else:
+        size_by_cohort = pd.Series(dtype="int64")
+        pivot = pd.DataFrame()
+
+    pivot = pivot.reindex(all_months)
+    pivot.insert(0, "cohort_size", size_by_cohort.reindex(all_months).fillna(0).astype(int))
+    pivot.index = pivot.index.astype(str)
+    pivot.index.name = "cohort_month"
+    return pivot.sort_index()
+
+
 def nrr_grr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     """Fetch monthly NRR and GRR from Tidemill.
 
@@ -47,6 +93,28 @@ def nrr_grr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
 # ── style ────────────────────────────────────────────────────────────
 
 
+def style_cohort(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+    """Format cohort retention as a styled heatmap-like table.
+
+    Args:
+        df: DataFrame from :func:`cohort`.
+    """
+    if df.empty:
+        return df.style
+    pct_cols = [c for c in df.columns if c.startswith("M")]
+    fmt_pct = lambda v: f"{v:.0%}" if pd.notna(v) else ""  # noqa: E731
+    return (
+        df.style.format({c: fmt_pct for c in pct_cols})
+        .format({"cohort_size": "{:,.0f}"})
+        .background_gradient(
+            subset=pct_cols,
+            cmap="Greens",
+            vmin=0,
+            vmax=1,
+        )
+    )
+
+
 def style_nrr_grr(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     """Format NRR/GRR as a styled table with percentage formatting.
 
@@ -58,6 +126,40 @@ def style_nrr_grr(df: pd.DataFrame) -> pd.io.formats.style.Styler:
 
 
 # ── charts ───────────────────────────────────────────────────────────
+
+
+def plot_cohort(df: pd.DataFrame) -> go.Figure:
+    """Cohort retention heatmap.
+
+    Args:
+        df: DataFrame from :func:`cohort`.
+    """
+    pct_cols = [c for c in df.columns if c.startswith("M")]
+    z = df[pct_cols].to_numpy() * 100
+    text = [[f"{v:.0%}" if pd.notna(v) else "" for v in row] for row in df[pct_cols].to_numpy()]
+
+    fig = go.Figure(
+        go.Heatmap(
+            z=z,
+            x=pct_cols,
+            y=[f"{idx} (n={int(s)})" for idx, s in zip(df.index, df["cohort_size"], strict=True)],
+            text=text,
+            texttemplate="%{text}",
+            colorscale="Greens",
+            zmin=0,
+            zmax=100,
+            colorbar={"title": "Retention (%)", "ticksuffix": "%"},
+            hovertemplate="Cohort %{y}<br>%{x}: %{z:.1f}%<extra></extra>",
+        )
+    )
+    fig.update_layout(
+        title="Cohort Retention",
+        xaxis_title="Months since cohort start",
+        yaxis_title="Cohort",
+        yaxis_autorange="reversed",
+        height=60 + 30 * len(df),
+    )
+    return fig
 
 
 def plot_nrr_grr(df: pd.DataFrame) -> go.Figure:

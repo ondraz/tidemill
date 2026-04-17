@@ -100,6 +100,15 @@ class TidemillClient:
         """Cohort retention data.  Pass ``query_type="nrr"`` or ``"grr"``."""
         return self.get("/api/metrics/retention", start=start, end=end, **kw)
 
+    def cohort_matrix(self, start: str, end: str) -> list[dict[str, Any]]:
+        """Cohort retention matrix — one row per (cohort_month, active_month)."""
+        return self.get(
+            "/api/metrics/retention",
+            start=start,
+            end=end,
+            query_type="cohort_matrix",
+        )
+
     # ── LTV ──────────────────────────────────────────────────────────
 
     def ltv(self, start: str, end: str) -> int | None:

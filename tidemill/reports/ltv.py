@@ -42,7 +42,7 @@ def overview(tm: TidemillClient, start: str, end: str) -> dict[str, Any]:
 
 
 def arpu_timeline(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
-    """Fetch monthly ARPU values.
+    """Fetch monthly ARPU, MRR, and active customer counts.
 
     Args:
         tm: Tidemill API client.
@@ -50,17 +50,26 @@ def arpu_timeline(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
         end: ISO date string for period end.
 
     Returns:
-        DataFrame with ``month`` and ``arpu_dollars``.
+        DataFrame with ``month``, ``active_customers``, ``mrr_dollars``,
+        and ``arpu_dollars``.
     """
     months = pd.date_range(start, end, freq="MS")
     rows: list[dict[str, Any]] = []
     for m in months:
-        val = tm.arpu(at=m.strftime("%Y-%m-%d"))
-        rows.append({"month": m.strftime("%Y-%m"), "arpu": val})
+        at = (m + pd.DateOffset(months=1)).strftime("%Y-%m-%d")
+        arpu_cents = tm.arpu(at=at)
+        mrr_cents = tm.mrr(at=at)
+        customers = int(round(mrr_cents / arpu_cents)) if arpu_cents and mrr_cents else None
+        rows.append(
+            {
+                "month": m.strftime("%Y-%m"),
+                "active_customers": customers,
+                "mrr_dollars": mrr_cents / 100 if mrr_cents is not None else None,
+                "arpu_dollars": arpu_cents / 100 if arpu_cents is not None else None,
+            }
+        )
 
-    df = pd.DataFrame(rows)
-    df["arpu_dollars"] = df.arpu.apply(lambda v: v / 100 if v is not None else None)
-    return df
+    return pd.DataFrame(rows)
 
 
 def cohort(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
@@ -110,6 +119,26 @@ def style_overview(data: dict[str, Any]) -> pd.io.formats.style.Styler:
             "Implied Monthly Churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
         }
     ).hide(axis="index")
+
+
+def style_arpu_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+    """Format monthly ARPU timeline as a styled table.
+
+    Args:
+        df: DataFrame from :func:`arpu_timeline`.
+    """
+    cols = ["month", "active_customers", "mrr_dollars", "arpu_dollars"]
+    return (
+        df[cols]
+        .style.format(
+            {
+                "active_customers": lambda v: f"{v:,}" if v is not None else "N/A",
+                "mrr_dollars": lambda v: f"${v:,.2f}" if v is not None else "N/A",
+                "arpu_dollars": lambda v: f"${v:,.2f}" if v is not None else "N/A",
+            }
+        )
+        .hide(axis="index")
+    )
 
 
 def style_cohort(df: pd.DataFrame) -> pd.io.formats.style.Styler:

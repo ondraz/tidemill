@@ -42,6 +42,7 @@ class LtvInvoiceCube(Cube):
 
     class Dimensions:
         source_id = Dim("li.source_id")
+        customer_id = Dim("li.customer_id")
         currency = Dim("li.currency")
         customer_country = Dim("c.country", join="customer", label="customer_country")
         cohort_month = Dim("rc.cohort_month", join="cohort", label="cohort_month")

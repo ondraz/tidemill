@@ -12,7 +12,7 @@ from tidemill.connectors.registry import register
 from tidemill.events import Event, make_event_id
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Callable
+    from collections.abc import AsyncIterator, Callable, Iterator
 
     from fastapi import APIRouter
 
@@ -324,7 +324,11 @@ class StripeConnector(WebhookConnector):
                         payload={"external_id": sub["id"], "mrr_cents": mrr},
                     )
                 )
-            elif old_status == "trialing" and new_status in ("canceled", "unpaid"):
+            elif old_status == "trialing" and new_status in (
+                "canceled",
+                "unpaid",
+                "incomplete_expired",
+            ):
                 events.append(
                     self._make_event(
                         "subscription.trial_expired",
@@ -681,6 +685,9 @@ class StripeConnector(WebhookConnector):
                         payload={"external_id": sub.id, "prev_mrr_cents": mrr},
                     )
 
+                for trial_event in self._backfill_trial_events(sub_dict, customer_id, mrr):
+                    yield trial_event
+
         # 3. Invoices (no test_clock filter needed — invoices are visible globally)
         params = {"limit": 100}
         if created_filter:
@@ -745,6 +752,80 @@ class StripeConnector(WebhookConnector):
                 )
 
     # ── helpers ───────────────────────────────────────────────────────────
+
+    def _backfill_trial_events(
+        self,
+        sub: dict[str, Any],
+        customer_id: str,
+        mrr: int,
+    ) -> Iterator[Event]:
+        """Reconstruct trial lifecycle events from a subscription's current state.
+
+        Backfill sees only the present snapshot, so the sequence is inferred:
+        ``trial_started`` fires whenever ``trial_start`` is set; the terminal
+        event (``trial_converted`` or ``trial_expired``) is chosen from the
+        current status and, for ``canceled``/``unpaid``, whether ``ended_at``
+        preceded ``trial_end`` (canceled during trial vs. converted then
+        churned later).
+        """
+        trial_start = sub.get("trial_start")
+        if trial_start is None:
+            return
+
+        sub_id = str(sub.get("id", ""))
+        trial_end = sub.get("trial_end")
+        yield self._make_event(
+            "subscription.trial_started",
+            customer_id=customer_id,
+            external_id=sub_id,
+            occurred_at=datetime.fromtimestamp(trial_start, tz=UTC),
+            payload={
+                "external_id": sub_id,
+                "trial_start": _ts(trial_start),
+                "trial_end": _ts(trial_end),
+            },
+        )
+
+        trial_end_dt = datetime.fromtimestamp(trial_end, tz=UTC) if trial_end else None
+        status = sub.get("status")
+        ended_at = sub.get("ended_at")
+
+        if status == "active" and trial_end_dt:
+            yield self._make_event(
+                "subscription.trial_converted",
+                customer_id=customer_id,
+                external_id=sub_id,
+                occurred_at=trial_end_dt,
+                payload={"external_id": sub_id, "mrr_cents": mrr},
+            )
+        elif status == "incomplete_expired" and trial_end_dt:
+            yield self._make_event(
+                "subscription.trial_expired",
+                customer_id=customer_id,
+                external_id=sub_id,
+                occurred_at=trial_end_dt,
+                payload={"external_id": sub_id},
+            )
+        elif status in ("canceled", "unpaid"):
+            canceled_in_trial = (
+                ended_at is not None and trial_end is not None and ended_at < trial_end
+            )
+            if canceled_in_trial:
+                yield self._make_event(
+                    "subscription.trial_expired",
+                    customer_id=customer_id,
+                    external_id=sub_id,
+                    occurred_at=datetime.fromtimestamp(ended_at, tz=UTC),
+                    payload={"external_id": sub_id},
+                )
+            elif trial_end_dt:
+                yield self._make_event(
+                    "subscription.trial_converted",
+                    customer_id=customer_id,
+                    external_id=sub_id,
+                    occurred_at=trial_end_dt,
+                    payload={"external_id": sub_id, "mrr_cents": mrr},
+                )
 
     @staticmethod
     def _plan_id(sub: dict[str, Any]) -> str:

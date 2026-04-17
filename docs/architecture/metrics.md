@@ -648,22 +648,24 @@ WHERE s.mrr_base_cents > 0
 
 Simple LTV: `ARPU / logo_churn_rate` — delegates to MRR (via `MRRSnapshotCube`) and Churn metrics.
 
-Cohort LTV (joins invoice log with retention cohort table via `LtvInvoiceCube`):
-```sql
-SELECT rc.cohort_month,
-       COUNT(DISTINCT li.customer_id) AS customer_count,
-       SUM(li.amount_base_cents) AS total_revenue
-FROM metric_ltv_invoice li
-JOIN metric_retention_cohort rc
-    ON rc.source_id = li.source_id AND rc.customer_id = li.customer_id
-WHERE li.paid_at BETWEEN :start AND :end
-GROUP BY rc.cohort_month
-```
+Cohort LTV uses the same cohort definition as retention — *month of a
+customer's first ``new`` MRR movement* — so the denominator matches ARPU
+(both count customers with at least one active subscription, `MRR > 0`).
+Trials that never convert are excluded.  Computed in two cube queries and
+joined in Python:
+
+1. `cohort_by_customer` from `MRRMovementCube` filtered to `movement_type = 'new'`,
+   grouped by `customer_id` + month (take earliest month per customer).
+2. `revenue_by_customer` from `LtvInvoiceCube` filtered to `paid_at BETWEEN :start AND :end`,
+   grouped by `customer_id`.
+3. Group by cohort month: `customer_count = |cohort|`,
+   `total_revenue = SUM(invoices for cohort members)`.
 
 **Cubes:**
 
-- `LtvInvoiceCube` — measures: `total_revenue`, `total_revenue_original`, `invoice_count`, `customer_count`; dimensions: `source_id`, `currency`, `customer_country` (via customer join), `cohort_month` (via retention cohort join).
-- `MRRSnapshotCube` — used by ARPU for `mrr` and `customer_count` measures. This cross-metric cube dependency is why LTV declares `dependencies = ["mrr"]`.
+- `LtvInvoiceCube` — measures: `total_revenue`, `total_revenue_original`, `invoice_count`, `customer_count`; dimensions: `source_id`, `customer_id`, `currency`, `customer_country` (via customer join), `cohort_month` (via retention cohort join, still available but unused for cohort LTV).
+- `MRRMovementCube` — used by ARPU (`at` set) and Cohort LTV for movement-history queries.
+- `MRRSnapshotCube` — used by ARPU (`at=None`) for current-state reads.
 
 **API endpoints:** `GET /metrics/ltv` (simple), `GET /metrics/ltv/arpu`, `GET /metrics/ltv/cohort`
 
