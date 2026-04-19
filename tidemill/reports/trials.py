@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 import plotly.graph_objects as go
 
-from tidemill.reports._style import COLORS
+from tidemill.reports._style import COLORS, format_periods
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -31,22 +31,30 @@ def funnel(tm: TidemillClient, start: str, end: str) -> dict[str, Any]:
     return tm.trial_funnel(start, end)
 
 
-def timeline(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
-    """Fetch monthly trial metrics.
+def timeline(
+    tm: TidemillClient,
+    start: str,
+    end: str,
+    interval: str = "month",
+) -> pd.DataFrame:
+    """Fetch per-period trial metrics at the requested granularity.
 
     Args:
         tm: Tidemill API client.
         start: ISO date string for period start.
         end: ISO date string for period end.
+        interval: ``day``, ``week``, ``month``, ``quarter``, or ``year``.
 
     Returns:
         DataFrame with ``period``, ``started``, ``converted``,
         ``expired``, ``conversion_rate``.  Empty if no data.
     """
-    series = tm.trial_series(start, end, interval="month")
+    series = tm.trial_series(start, end, interval=interval)
     if not series:
         return pd.DataFrame()
-    return pd.DataFrame(series)
+    df = pd.DataFrame(series)
+    df.attrs["interval"] = interval
+    return df
 
 
 # ── style ────────────────────────────────────────────────────────────
@@ -142,7 +150,10 @@ def plot_funnel(data: dict[str, Any]) -> go.Figure:
 
 
 def plot_timeline(df: pd.DataFrame) -> go.Figure:
-    """Monthly trial outcomes (stacked bar) and conversion rate (line).
+    """Trial outcomes (stacked bar) and conversion rate (line) per period.
+
+    The x-axis granularity follows the ``interval`` stashed on
+    ``df.attrs`` by :func:`timeline` (defaults to ``month``).
 
     Args:
         df: DataFrame from :func:`timeline`.
@@ -152,13 +163,14 @@ def plot_timeline(df: pd.DataFrame) -> go.Figure:
     if len(df) == 0:
         return go.Figure().update_layout(title="No trial data")
 
-    period_labels = [str(p)[:7] if len(str(p)) > 7 else str(p) for p in df.period]
+    interval = df.attrs.get("interval", "month")
+    period_labels = format_periods(df.period, interval)
     pending = (df.started - df.converted - df.expired).clip(lower=0)
 
     fig = make_subplots(
         rows=2,
         cols=1,
-        subplot_titles=["Monthly Trial Outcomes", "Monthly Conversion Rate"],
+        subplot_titles=["Trial Outcomes", "Conversion Rate"],
         vertical_spacing=0.12,
     )
 

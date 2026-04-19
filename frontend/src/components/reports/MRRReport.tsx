@@ -6,7 +6,7 @@ import { MRRBreakdownChart } from '@/components/charts/MRRBreakdownChart'
 import { WaterfallChart } from '@/components/charts/WaterfallChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
 import { DimensionPicker } from '@/components/controls/DimensionPicker'
-import { formatCurrency } from '@/lib/formatters'
+import { formatCurrency, formatPeriod } from '@/lib/formatters'
 import { MRR_DIMENSIONS } from '@/lib/constants'
 import { useMemo, useState } from 'react'
 import type { WaterfallEntry } from '@/lib/types'
@@ -21,7 +21,7 @@ export function MRRReport() {
   const [dimensions, setDimensions] = useState<string[]>([])
 
   const { data: breakdown, isLoading: breakdownLoading } = useMRRBreakdown<Record<string, unknown>[]>({ start, end, dimensions })
-  const { data: waterfall, isLoading: waterfallLoading } = useMRRWaterfall<WaterfallEntry[]>({ start, end })
+  const { data: waterfall, isLoading: waterfallLoading } = useMRRWaterfall<WaterfallEntry[]>({ start, end, interval })
   const { data: currentMrr, isLoading: mrrLoading } = useMRR<number>({})
   const { data: currentArr, isLoading: arrLoading } = useARR<number>()
 
@@ -40,10 +40,12 @@ export function MRRReport() {
     let level = 0
     const all = sorted.map((row) => {
       level += row.amount_base / 100
-      return { date: row.period.slice(0, 10), mrr: level }
+      return { iso: row.period.slice(0, 10), mrr: level }
     })
-    return all.filter((pt) => pt.date >= start)
-  }, [mrrSeries, start])
+    return all
+      .filter((pt) => pt.iso >= start)
+      .map((pt) => ({ date: formatPeriod(pt.iso, interval), mrr: pt.mrr }))
+  }, [mrrSeries, start, interval])
 
   // Transform breakdown: API returns {movement_type, amount_base} in cents
   // Ensure all 5 movement types are present (including reactivation)
@@ -142,12 +144,12 @@ export function MRRReport() {
           name: 'MRR Waterfall',
           metric: 'mrr',
           endpoint: '/api/metrics/mrr/waterfall',
-          params: { start, end },
+          params: { start, end, interval },
           chartType: 'waterfall',
           timeRangeMode: 'fixed',
         }}
       >
-        <WaterfallChart data={waterfall ?? []} loading={waterfallLoading} />
+        <WaterfallChart data={waterfall ?? []} interval={interval} loading={waterfallLoading} />
       </ChartContainer>
     </div>
   )

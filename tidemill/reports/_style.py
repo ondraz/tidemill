@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import Any
+
+import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 
@@ -113,3 +116,47 @@ def setup() -> None:
     pio.templates["tidemill"] = tidemill_template
     pio.templates.default = "simple_white+tidemill"
     pio.renderers.default = "plotly_mimetype+notebook_connected"
+
+
+# ── Period axis formatting ──────────────────────────────────────────
+#
+# Every chart that plots a time series renders period labels in this
+# canonical style so axes stay consistent across reports.
+#
+#   day       → ``2025-09-15``
+#   week      → ``2025-W34`` (ISO week)
+#   month     → ``Sep 2025``
+#   quarter   → ``2025-Q3``
+#   year      → ``2025``
+
+
+def format_period(period: Any, granularity: str = "month") -> str:
+    """Format a period timestamp for chart axis labels.
+
+    Args:
+        period: Anything pandas can parse into a timestamp (ISO string,
+            ``datetime``, ``pd.Timestamp``, ``pd.Period``).
+        granularity: One of ``day``, ``week``, ``month``, ``quarter``,
+            ``year``.  Defaults to ``month``.
+
+    Returns:
+        A short human-readable label suitable for an x-axis tick.
+    """
+    ts = pd.Timestamp(period) if not isinstance(period, pd.Timestamp) else period
+    g = granularity.lower()
+    if g == "month":
+        return ts.strftime("%b %Y")
+    if g == "week":
+        iso = ts.isocalendar()
+        return f"{iso.year}-W{iso.week:02d}"
+    if g == "quarter":
+        q = (ts.month - 1) // 3 + 1
+        return f"{ts.year}-Q{q}"
+    if g == "year":
+        return ts.strftime("%Y")
+    return ts.strftime("%Y-%m-%d")
+
+
+def format_periods(periods: Any, granularity: str = "month") -> list[str]:
+    """Vectorised :func:`format_period` for a sequence of timestamps."""
+    return [format_period(p, granularity) for p in periods]

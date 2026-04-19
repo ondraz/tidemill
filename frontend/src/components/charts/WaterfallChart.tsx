@@ -10,18 +10,19 @@ import {
   Legend,
   ReferenceLine,
 } from 'recharts'
-import { formatCurrency, formatMonthYear } from '@/lib/formatters'
+import { formatCurrency, formatPeriod } from '@/lib/formatters'
 import { COLORS } from '@/lib/colors'
-import type { WaterfallEntry } from '@/lib/types'
+import type { Interval, WaterfallEntry } from '@/lib/types'
 
 interface WaterfallChartProps {
   data: WaterfallEntry[]
+  interval?: Interval
   loading?: boolean
 }
 
 const BAR_SIZE = 40
 
-export function WaterfallChart({ data, loading }: WaterfallChartProps) {
+export function WaterfallChart({ data, interval = 'month', loading }: WaterfallChartProps) {
   if (loading) {
     return <div className="h-64 flex items-center justify-center text-muted-foreground">Loading...</div>
   }
@@ -30,7 +31,7 @@ export function WaterfallChart({ data, loading }: WaterfallChartProps) {
   }
 
   const chartData = data.map((row) => ({
-    month: formatMonthYear(row.month + '-01'),
+    period: formatPeriod(String(row.period).slice(0, 10), interval),
     'Starting MRR': row.starting_mrr / 100,
     New: row.new / 100,
     Expansion: row.expansion / 100,
@@ -49,7 +50,7 @@ export function WaterfallChart({ data, loading }: WaterfallChartProps) {
         margin={{ top: 5, right: 20, bottom: 5, left: 20 }}
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+        <XAxis dataKey="period" tick={{ fontSize: 12 }} />
         <YAxis width={80} tickFormatter={formatCurrency} tick={{ fontSize: 12 }} />
         <ReferenceLine y={0} stroke="#000" strokeWidth={0.5} />
         <Tooltip formatter={(v) => formatCurrency(Number(v))} />

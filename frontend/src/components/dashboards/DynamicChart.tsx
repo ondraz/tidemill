@@ -4,7 +4,7 @@ import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { WaterfallChart } from '@/components/charts/WaterfallChart'
 import { CohortHeatmap } from '@/components/charts/CohortHeatmap'
 import { KPICard } from '@/components/charts/KPICard'
-import { formatCurrency, formatPercent } from '@/lib/formatters'
+import { formatCurrency, formatPercent, formatPeriod } from '@/lib/formatters'
 import { resolveRelativeRange } from '@/lib/constants'
 import type { ChartConfig, Interval, WaterfallEntry, CohortEntry, TimeSeriesPoint } from '@/lib/types'
 
@@ -43,25 +43,41 @@ export function DynamicChart({ config, inherited }: DynamicChartProps) {
     ? formatPercent
     : formatCurrency
 
+  // Re-label the x-axis in the canonical per-granularity format
+  // (Sep 2025, 2025-W34, 2025-Q3).  Data rows use ``date``/``period``
+  // as their raw ISO timestamp.
+  const withPeriodLabels = <T extends Record<string, unknown>>(rows: T[] | undefined): T[] => {
+    if (!rows || !interval) return rows ?? []
+    const key = 'date' in (rows[0] ?? {}) ? 'date' : 'period'
+    return rows.map((r) => {
+      const raw = r[key]
+      if (typeof raw !== 'string') return r
+      return { ...r, [key]: formatPeriod(raw, interval) }
+    })
+  }
+
   switch (config.chartType) {
     case 'line':
-    case 'area':
+    case 'area': {
+      const rows = withPeriodLabels((data as TimeSeriesPoint[]) ?? [])
       return (
         <TimeSeriesChart
-          data={(data as TimeSeriesPoint[]) ?? []}
-          dataKey={Object.keys((data as TimeSeriesPoint[])?.[0] ?? {}).find((k) => k !== 'date') ?? 'value'}
+          data={rows}
+          dataKey={Object.keys(rows[0] ?? {}).find((k) => k !== 'date') ?? 'value'}
           formatter={formatter}
           loading={isLoading}
         />
       )
+    }
     case 'bar':
     case 'stacked_bar': {
+      const rows = withPeriodLabels((data as Record<string, unknown>[]) ?? [])
       const bars = config.dimensions?.length
         ? config.dimensions
-        : [Object.keys((data as Record<string, unknown>[])?.[0] ?? {}).find((k) => k !== 'date') ?? 'value']
+        : [Object.keys(rows[0] ?? {}).find((k) => k !== 'date') ?? 'value']
       return (
         <BarBreakdownChart
-          data={(data as Record<string, unknown>[]) ?? []}
+          data={rows}
           bars={bars}
           formatter={formatter}
           loading={isLoading}
@@ -70,7 +86,13 @@ export function DynamicChart({ config, inherited }: DynamicChartProps) {
       )
     }
     case 'waterfall':
-      return <WaterfallChart data={(data as WaterfallEntry[]) ?? []} loading={isLoading} />
+      return (
+        <WaterfallChart
+          data={(data as WaterfallEntry[]) ?? []}
+          interval={interval}
+          loading={isLoading}
+        />
+      )
     case 'cohort_heatmap':
       return <CohortHeatmap data={(data as CohortEntry[]) ?? []} loading={isLoading} />
     case 'kpi':

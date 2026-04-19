@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 import plotly.graph_objects as go
 
-from tidemill.reports._style import COLORS
+from tidemill.reports._style import COLORS, format_periods
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -151,18 +151,22 @@ def timeline(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def monthly_lost_mrr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
-    """Fetch churned MRR per month from the MRR waterfall.
+def monthly_lost_mrr(
+    tm: TidemillClient, start: str, end: str, interval: str = "month"
+) -> pd.DataFrame:
+    """Fetch churned MRR per period from the MRR waterfall.
 
     Args:
         tm: Tidemill API client.
         start: ISO date string for period start.
         end: ISO date string for period end.
+        interval: Bucket size — ``day``, ``week``, ``month``, ``quarter``,
+            or ``year``.
 
     Returns:
-        DataFrame with ``month`` and ``churn_dollars``.
+        DataFrame with ``period`` and ``churn_dollars``.
     """
-    raw = tm.mrr_waterfall(start, end)
+    raw = tm.mrr_waterfall(start, end, interval=interval)
     df = pd.DataFrame(raw)
     df["churn_dollars"] = df["churn"].apply(lambda c: abs(c) / 100)
     return df
@@ -328,10 +332,11 @@ def plot_timeline(df: pd.DataFrame) -> go.Figure:
     Args:
         df: DataFrame from :func:`timeline`.
     """
+    x = format_periods(df.month, "month")
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=df.month,
+            x=x,
             y=df.logo_churn.apply(lambda v: v * 100 if v is not None else None),
             name="Logo Churn",
             mode="lines+markers+text",
@@ -343,7 +348,7 @@ def plot_timeline(df: pd.DataFrame) -> go.Figure:
     )
     fig.add_trace(
         go.Scatter(
-            x=df.month,
+            x=x,
             y=df.revenue_churn.apply(lambda v: v * 100 if v is not None else None),
             name="Revenue Churn",
             mode="lines+markers+text",
@@ -370,7 +375,7 @@ def plot_monthly_lost_mrr(df: pd.DataFrame) -> go.Figure:
     """
     fig = go.Figure(
         go.Bar(
-            x=df.month,
+            x=format_periods(df.period, "month"),
             y=df.churn_dollars,
             marker_color=COLORS["churn"],
             opacity=0.8,

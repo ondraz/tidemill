@@ -74,13 +74,13 @@ class TestMrrWaterfall:
 
         assert len(result) == 2
         # January: 0 starting → new 5000 cents
-        assert result[0]["month"] == "2026-01"
+        assert result[0]["period"] == "2026-01-01"
         assert result[0]["starting_mrr"] == 0
         assert result[0]["new"] == 5000.0
         assert result[0]["ending_mrr"] == 5000.0
 
         # February: 5000 starting → new 3000 cents
-        assert result[1]["month"] == "2026-02"
+        assert result[1]["period"] == "2026-02-01"
         assert result[1]["starting_mrr"] == 5000.0
         assert result[1]["new"] == 3000.0
         assert result[1]["ending_mrr"] == 8000.0
@@ -139,7 +139,7 @@ class TestMrrWaterfall:
 
         assert len(result) == 2
         row = result[0]
-        assert row["month"] == "2026-01"
+        assert row["period"] == "2026-01-01"
         assert row["new"] == 7000.0  # 5000 + 2000
         assert row["expansion"] == 4000.0
         assert row["churn"] == -2000.0

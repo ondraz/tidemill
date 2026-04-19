@@ -71,9 +71,9 @@ class TidemillClient:
         """MRR movements (new / expansion / contraction / churn) for a period."""
         return self.get("/api/metrics/mrr/breakdown", start=start, end=end)
 
-    def mrr_waterfall(self, start: str, end: str) -> list[dict[str, Any]]:
-        """Monthly MRR waterfall with starting/ending MRR and movements."""
-        return self.get("/api/metrics/mrr/waterfall", start=start, end=end)
+    def mrr_waterfall(self, start: str, end: str, interval: str = "month") -> list[dict[str, Any]]:
+        """MRR waterfall with starting/ending MRR and movements per period."""
+        return self.get("/api/metrics/mrr/waterfall", start=start, end=end, interval=interval)
 
     # ── Churn ────────────────────────────────────────────────────────
 

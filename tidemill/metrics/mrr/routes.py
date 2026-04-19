@@ -46,12 +46,17 @@ async def get_mrr_breakdown(
 async def get_mrr_waterfall(
     start: date = Query(...),
     end: date = Query(...),
+    interval: str = "month",
     dimensions: list[str] = Query(default=[]),
     filter: list[str] = Query(default=[]),
     granularity: str | None = None,
 ) -> Any:
     spec = parse_spec(dimensions, filter, granularity)
-    return await query_metric("mrr", {"query_type": "waterfall", "start": start, "end": end}, spec)
+    return await query_metric(
+        "mrr",
+        {"query_type": "waterfall", "start": start, "end": end, "interval": interval},
+        spec,
+    )
 
 
 @router.get("/metrics/arr")

@@ -7,33 +7,13 @@ import { KPICard } from '@/components/charts/KPICard'
 import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
-import { formatCurrency, formatPercent, formatMonthYear } from '@/lib/formatters'
+import { formatCurrency, formatPercent, formatMonthYear, formatPeriod } from '@/lib/formatters'
+import { periodStarts, periodEnd } from '@/lib/periods'
 import { COLORS } from '@/lib/colors'
 import type { CohortLTVEntry } from '@/lib/types'
 
-function monthStarts(start: string, end: string): string[] {
-  // `end` is the inclusive last day of the range.
-  const out: string[] = []
-  const s = new Date(start)
-  const e = new Date(end)
-  const cur = new Date(s.getFullYear(), s.getMonth(), 1)
-  while (cur <= e) {
-    out.push(
-      `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-01`,
-    )
-    cur.setMonth(cur.getMonth() + 1)
-  }
-  return out
-}
-
-function lastDayOfMonth(iso: string): string {
-  const [y, m] = iso.split('-').map(Number)
-  const lastDay = new Date(y, m, 0).getDate()
-  return `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
-}
-
 export function LTVReport() {
-  const { start, end } = useTimeRange({ range: 'last_1y' })
+  const { start, end, interval } = useTimeRange({ range: 'last_1y' })
 
   const { data: ltv, isLoading: ltvLoading } = useLTV<number | null>({ start, end })
   const { data: arpu, isLoading: arpuLoading } = useARPU<number | null>()
@@ -46,12 +26,13 @@ export function LTVReport() {
     return arpu / ltv
   }, [arpu, ltv])
 
-  // ARPU timeline: one ARPU + MRR call per month, measured at the last day
-  // of that month (closed-closed snapshot). Mirrors reports.ltv.arpu_timeline().
-  const months = useMemo(() => monthStarts(start, end), [start, end])
+  // ARPU timeline: one ARPU + MRR call per period, measured at the last day
+  // of that period (closed-closed snapshot). The interval selector drives
+  // the bucket size (week/month/quarter/year).
+  const periods = useMemo(() => periodStarts(start, end, interval), [start, end, interval])
   const arpuQueries = useQueries({
-    queries: months.flatMap((m) => {
-      const at = lastDayOfMonth(m)
+    queries: periods.flatMap((p) => {
+      const at = periodEnd(p, interval)
       return [
         {
           queryKey: ['metrics', 'arpu', { at }],
@@ -68,10 +49,10 @@ export function LTVReport() {
   })
 
   const arpuTimelineLoading = arpuQueries.some((q) => q.isLoading)
-  const arpuTimeline = months.map((m, i) => {
+  const arpuTimeline = periods.map((p, i) => {
     const arpuCents = arpuQueries[i * 2]?.data as number | null | undefined
     return {
-      date: formatMonthYear(m),
+      date: formatPeriod(p, interval),
       arpu: arpuCents != null ? arpuCents / 100 : 0,
     }
   })
@@ -105,12 +86,12 @@ export function LTVReport() {
       </div>
 
       <ChartContainer
-        title="Monthly ARPU"
+        title="ARPU"
         chartConfig={{
-          name: 'Monthly ARPU',
+          name: 'ARPU',
           metric: 'ltv',
           endpoint: '/api/metrics/ltv/arpu',
-          params: { start, end },
+          params: { start, end, interval },
           chartType: 'line',
           timeRangeMode: 'fixed',
         }}

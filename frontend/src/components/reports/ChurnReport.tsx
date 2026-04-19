@@ -11,49 +11,36 @@ import { fetchChurn } from '@/api/metrics'
 import { KPICard } from '@/components/charts/KPICard'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
-import { formatCurrency, formatPercent, formatMonthYear } from '@/lib/formatters'
+import { formatCurrency, formatPercent, formatPeriod } from '@/lib/formatters'
+import { periodStarts, periodEnd } from '@/lib/periods'
 import { COLORS } from '@/lib/colors'
 import type {
   ChurnCustomerDetail,
   ChurnRevenueEvent,
+  Interval,
   WaterfallEntry,
 } from '@/lib/types'
 
-function monthStarts(start: string, end: string): string[] {
-  // `end` is the inclusive last day of the range — iterate with `<=` so the
-  // final month's start is included when the range covers it.
-  const out: string[] = []
-  const s = new Date(start)
-  const e = new Date(end)
-  const cur = new Date(s.getFullYear(), s.getMonth(), 1)
-  while (cur <= e) {
-    out.push(
-      `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-01`,
-    )
-    cur.setMonth(cur.getMonth() + 1)
-  }
-  return out
-}
-
-function lastDayOfMonth(iso: string): string {
-  const [y, m] = iso.split('-').map(Number)
-  const lastDay = new Date(y, m, 0).getDate()
-  return `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
-}
-
-// Churn rates are meaningful per-month: they need customers active at
+// Churn rates are meaningful per-period: they need customers active at
 // period start, so a wide window collapses the denominator. Pick the last
-// month inside [start, end] as the rate window and report it closed-closed.
-function rateWindow(start: string, end: string): { rateStart: string; rateEnd: string } {
-  const months = monthStarts(start, end)
-  if (months.length === 0) return { rateStart: start, rateEnd: end }
-  const rateStart = months[months.length - 1]
-  return { rateStart, rateEnd: lastDayOfMonth(rateStart) }
+// period inside [start, end] as the rate window and report it closed-closed.
+function rateWindow(
+  start: string,
+  end: string,
+  interval: Interval,
+): { rateStart: string; rateEnd: string } {
+  const periods = periodStarts(start, end, interval)
+  if (periods.length === 0) return { rateStart: start, rateEnd: end }
+  const rateStart = periods[periods.length - 1]
+  return { rateStart, rateEnd: periodEnd(rateStart, interval) }
 }
 
 export function ChurnReport() {
-  const { start, end } = useTimeRange({ range: 'last_1y' })
-  const { rateStart, rateEnd } = useMemo(() => rateWindow(start, end), [start, end])
+  const { start, end, interval } = useTimeRange({ range: 'last_1y' })
+  const { rateStart, rateEnd } = useMemo(
+    () => rateWindow(start, end, interval),
+    [start, end, interval],
+  )
 
   const { data: logoRate, isLoading: logoRateLoading } = useChurn<number | null>({
     start: rateStart, end: rateEnd, type: 'logo',
@@ -67,23 +54,24 @@ export function ChurnReport() {
   const { data: revEvents } =
     useChurnRevenueEvents<ChurnRevenueEvent[]>({ start: rateStart, end: rateEnd })
   const { data: waterfall, isLoading: waterfallLoading } =
-    useMRRWaterfall<WaterfallEntry[]>({ start, end })
+    useMRRWaterfall<WaterfallEntry[]>({ start, end, interval })
 
-  // Monthly churn timeline — one API call per month for both logo + revenue.
-  // Each month is queried closed-closed [first-of-month, last-of-month].
-  const months = useMemo(() => monthStarts(start, end), [start, end])
+  // Churn timeline — one API call per period for both logo + revenue,
+  // each queried closed-closed [period-start, period-end]. The interval
+  // selector drives the bucket size (week/month/quarter/year).
+  const periods = useMemo(() => periodStarts(start, end, interval), [start, end, interval])
   const timelineQueries = useQueries({
-    queries: months.flatMap((m) => {
-      const monthEnd = lastDayOfMonth(m)
+    queries: periods.flatMap((p) => {
+      const pEnd = periodEnd(p, interval)
       return [
         {
-          queryKey: ['metrics', 'churn', { start: m, end: monthEnd, type: 'logo' }],
-          queryFn: () => fetchChurn<number | null>({ start: m, end: monthEnd, type: 'logo' }),
+          queryKey: ['metrics', 'churn', { start: p, end: pEnd, type: 'logo' }],
+          queryFn: () => fetchChurn<number | null>({ start: p, end: pEnd, type: 'logo' }),
           staleTime: 60_000,
         },
         {
-          queryKey: ['metrics', 'churn', { start: m, end: monthEnd, type: 'revenue' }],
-          queryFn: () => fetchChurn<number | null>({ start: m, end: monthEnd, type: 'revenue' }),
+          queryKey: ['metrics', 'churn', { start: p, end: pEnd, type: 'revenue' }],
+          queryFn: () => fetchChurn<number | null>({ start: p, end: pEnd, type: 'revenue' }),
           staleTime: 60_000,
         },
       ]
@@ -91,15 +79,15 @@ export function ChurnReport() {
   })
 
   const timelineLoading = timelineQueries.some((q) => q.isLoading)
-  const timelineData = months.map((m, i) => ({
-    date: formatMonthYear(m),
+  const timelineData = periods.map((p, i) => ({
+    date: formatPeriod(p, interval),
     logo: (timelineQueries[i * 2]?.data as number | null | undefined) ?? null,
     revenue: (timelineQueries[i * 2 + 1]?.data as number | null | undefined) ?? null,
   }))
 
-  // Monthly lost MRR — derived from waterfall churn column (cents → dollars, abs).
+  // Lost MRR per period — derived from waterfall churn column (cents → dollars, abs).
   const lostMrrData = (waterfall ?? []).map((row) => ({
-    date: formatMonthYear(row.month + '-01'),
+    date: formatPeriod(String(row.period).slice(0, 10), interval),
     'Lost MRR': Math.abs(row.churn) / 100,
   }))
 
@@ -122,7 +110,7 @@ export function ChurnReport() {
       <h2 className="text-lg font-semibold">Churn</h2>
 
       <div className="text-xs text-muted-foreground">
-        Rates measured over {formatMonthYear(rateStart)} ({rateStart} → {rateEnd}).
+        Rates measured over {formatPeriod(rateStart, interval)} ({rateStart} → {rateEnd}).
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -149,12 +137,12 @@ export function ChurnReport() {
       </div>
 
       <ChartContainer
-        title="Monthly Churn Rate"
+        title="Churn Rate"
         chartConfig={{
-          name: 'Monthly Churn Rate',
+          name: 'Churn Rate',
           metric: 'churn',
           endpoint: '/api/metrics/churn',
-          params: { start, end },
+          params: { start, end, interval },
           chartType: 'line',
           timeRangeMode: 'fixed',
         }}
@@ -163,12 +151,12 @@ export function ChurnReport() {
       </ChartContainer>
 
       <ChartContainer
-        title="Monthly Lost MRR"
+        title="Lost MRR"
         chartConfig={{
-          name: 'Monthly Lost MRR',
+          name: 'Lost MRR',
           metric: 'churn',
           endpoint: '/api/metrics/mrr/waterfall',
-          params: { start, end },
+          params: { start, end, interval },
           chartType: 'bar',
           timeRangeMode: 'fixed',
         }}

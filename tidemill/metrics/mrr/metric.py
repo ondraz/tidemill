@@ -14,9 +14,32 @@ from tidemill.metrics.registry import register
 if TYPE_CHECKING:
     from datetime import date
 
+    import pandas as pd
     from fastapi import APIRouter
 
     from tidemill.events import Event
+
+
+def _align_to_period_start(ts: pd.Timestamp, interval: str) -> pd.Timestamp:
+    """Snap a timestamp back to the start of the period it falls in.
+
+    Matches PostgreSQL's DATE_TRUNC semantics — weekly periods are
+    Monday-anchored (ISO week).
+    """
+    import pandas as pd
+
+    if interval == "day":
+        return ts.normalize()
+    if interval == "week":
+        return (ts - pd.Timedelta(days=ts.weekday())).normalize()
+    if interval == "month":
+        return pd.Timestamp(ts.year, ts.month, 1)
+    if interval == "quarter":
+        q = (ts.month - 1) // 3
+        return pd.Timestamp(ts.year, q * 3 + 1, 1)
+    if interval == "year":
+        return pd.Timestamp(ts.year, 1, 1)
+    return ts.normalize()
 
 
 @register
@@ -254,7 +277,12 @@ class MrrMetric(Metric):
             case "breakdown":
                 return await self._mrr_breakdown(params["start"], params["end"], spec)
             case "waterfall":
-                return await self._mrr_waterfall(params["start"], params["end"], spec)
+                return await self._mrr_waterfall(
+                    params["start"],
+                    params["end"],
+                    params.get("interval", "month"),
+                    spec,
+                )
             case "arr":
                 mrr = await self._current_mrr(params.get("at"), spec)
                 if isinstance(mrr, list):
@@ -329,31 +357,44 @@ class MrrMetric(Metric):
         self,
         start: date,
         end: date,
+        interval: str,
         spec: QuerySpec | None,
     ) -> list[dict[str, Any]]:
         import pandas as pd
 
-        # Date ranges are closed-closed ``[start, end]``. pandas' default
-        # (``inclusive="both"``) matches: month-starts are generated from
-        # ``start`` through ``end`` inclusive, so a range whose ``end`` is
-        # the last day of the final month naturally includes that month.
-        months = pd.date_range(start, end, freq="MS")
-        if len(months) < 2:
+        # Map analytics interval → pandas freq alias for period enumeration.
+        # These match PostgreSQL DATE_TRUNC so client-side period keys
+        # (from ``periodStarts``) line up with the grouping the query
+        # produces — the week anchor is Monday to match DATE_TRUNC('week').
+        freq_by_interval = {
+            "day": "D",
+            "week": "W-MON",
+            "month": "MS",
+            "quarter": "QS",
+            "year": "YS",
+        }
+        freq = freq_by_interval.get(interval, "MS")
+
+        # Align ``start`` to the period it falls in. ``pd.date_range`` with
+        # an anchored freq skips any partial opening period (e.g. MS from
+        # Jan 15 yields Feb 1, dropping January), so we snap start back to
+        # the period boundary before enumerating.
+        period_start = _align_to_period_start(pd.Timestamp(start), interval)
+        periods = pd.date_range(period_start, end, freq=freq, inclusive="both")
+        if len(periods) < 2:
             return []
 
-        # 1. Baseline MRR at start of range
         baseline = await self._current_mrr(start, spec)
         if isinstance(baseline, list):
             baseline = sum(r.get("mrr", 0) or 0 for r in baseline)
         baseline = baseline or 0
 
-        # 2. All movements in the range, grouped by month + movement_type
         mm = self.movement_model
         q = (
             mm.measures.amount
             + mm.dimension("movement_type")
             + mm.filter("occurred_at", "between", (start, end))
-            + mm.time_grain("occurred_at", "month")
+            + mm.time_grain("occurred_at", interval)
         )
         if spec:
             q = q + mm.apply_spec(spec)
@@ -362,26 +403,24 @@ class MrrMetric(Metric):
         result = await self.db.execute(stmt, params)
         rows = result.mappings().all()
 
-        # Index movements by (month, type)
-        movements_by_month: dict[str, dict[str, float]] = {}
+        movements_by_period: dict[str, dict[str, float]] = {}
         for r in rows:
-            month_key = r["period"].strftime("%Y-%m")
+            period_key = r["period"].strftime("%Y-%m-%d")
             mt = r["movement_type"]
-            movements_by_month.setdefault(month_key, {})[mt] = float(r["amount_base"])
+            movements_by_period.setdefault(period_key, {})[mt] = float(r["amount_base"])
         movement_types = ["new", "expansion", "contraction", "churn", "reactivation"]
 
-        # 3. Build waterfall
         waterfall = []
         ending_mrr = float(baseline)
-        for month in months:
-            month_key = month.strftime("%Y-%m")
-            mvmt = movements_by_month.get(month_key, {})
+        for period in periods:
+            period_key = period.strftime("%Y-%m-%d")
+            mvmt = movements_by_period.get(period_key, {})
             starting_mrr = ending_mrr
             net_change = sum(mvmt.get(mt, 0) for mt in movement_types)
             ending_mrr = starting_mrr + net_change
 
             entry: dict[str, Any] = {
-                "month": month_key,
+                "period": period_key,
                 "starting_mrr": round(starting_mrr, 2),
             }
             for mt in movement_types:

@@ -313,5 +313,13 @@ ChartMogul calls their metric **Annual Run Rate** (Annualized Run Rate), not Ann
 
 - **Money** is stored as integer cents (`BIGINT`). All amounts are dual-column: `*_cents` (original currency) and `*_base_cents` (converted to base currency at the daily FX rate). Aggregations use base currency by default; request the `currency` dimension for per-currency breakdowns.
 - **Dates** are `TIMESTAMPTZ` in the database (always UTC), `YYYY-MM-DD` in the API (resolved as UTC).
+- **Period axis labels** on every chart follow a single convention, driven by the time-series granularity:
+  - daily → `2025-09-15`
+  - weekly → `2025-W34` (ISO week)
+  - monthly → `Sep 2025`
+  - quarterly → `2025-Q3`
+  - yearly → `2025`
+
+  The Python helper is `tidemill.reports._style.format_period(period, granularity)`; the TypeScript equivalent is `formatPeriod(date, granularity)` in `frontend/src/lib/formatters.ts`.
 - **Churn events** are recorded when a subscription's status transitions to a terminal state. A paused subscription is treated as churned for MRR purposes and reactivated when resumed.
 - **Cohort assignment** is immutable — a customer's cohort is set on their first subscription and never changes, even after churn and reactivation.

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 import plotly.graph_objects as go
 
-from tidemill.reports._style import COLORS
+from tidemill.reports._style import COLORS, format_periods
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -170,10 +170,11 @@ def plot_nrr_grr(df: pd.DataFrame) -> go.Figure:
     Args:
         df: DataFrame from :func:`nrr_grr`.
     """
+    x = format_periods(df.month, "month")
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=df.month,
+            x=x,
             y=df.nrr.apply(lambda v: v * 100 if v is not None else None),
             name="NRR",
             mode="lines+markers+text",
@@ -185,7 +186,7 @@ def plot_nrr_grr(df: pd.DataFrame) -> go.Figure:
     )
     fig.add_trace(
         go.Scatter(
-            x=df.month,
+            x=x,
             y=df.grr.apply(lambda v: v * 100 if v is not None else None),
             name="GRR",
             mode="lines+markers+text",

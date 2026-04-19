@@ -74,7 +74,7 @@ export type RelativeRange =
   | 'last_6_full_months'
   | 'last_12_full_months'
 
-export type Interval = 'day' | 'week' | 'month' | 'year'
+export type Interval = 'day' | 'week' | 'month' | 'quarter' | 'year'
 
 export interface ChartConfig {
   name: string
@@ -100,7 +100,7 @@ export interface TimeSeriesPoint {
 }
 
 export interface WaterfallEntry {
-  month: string
+  period: string
   starting_mrr: number
   new: number
   expansion: number

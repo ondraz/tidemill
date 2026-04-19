@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 import plotly.graph_objects as go
 
-from tidemill.reports._style import COLORS
+from tidemill.reports._style import COLORS, format_periods
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -180,7 +180,7 @@ def plot_arpu_timeline(df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=valid.month,
+            x=format_periods(valid.month, "month"),
             y=valid.arpu_dollars,
             mode="lines+markers+text",
             fill="tozeroy",
@@ -216,9 +216,10 @@ def plot_cohort(df: pd.DataFrame) -> go.Figure:
         cols=2,
         subplot_titles=["Avg Revenue per Customer by Cohort", "Customers per Cohort"],
     )
+    cohort_labels = format_periods(df.cohort_month, "month")
     fig.add_trace(
         go.Bar(
-            x=df.cohort_month.astype(str),
+            x=cohort_labels,
             y=df.avg_dollars,
             marker_color=COLORS["arpu"],
             opacity=0.8,
@@ -231,7 +232,7 @@ def plot_cohort(df: pd.DataFrame) -> go.Figure:
     )
     fig.add_trace(
         go.Bar(
-            x=df.cohort_month.astype(str),
+            x=cohort_labels,
             y=df.customer_count,
             marker_color=COLORS["nrr"],
             opacity=0.8,

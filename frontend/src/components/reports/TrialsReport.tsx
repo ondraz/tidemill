@@ -4,7 +4,7 @@ import { KPICard } from '@/components/charts/KPICard'
 import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
-import { formatPercent, formatNumber } from '@/lib/formatters'
+import { formatPercent, formatNumber, formatPeriod } from '@/lib/formatters'
 import { COLORS } from '@/lib/colors'
 import type { TrialFunnel, TrialSeriesRow } from '@/lib/types'
 
@@ -19,12 +19,12 @@ export function TrialsReport() {
   const series = Array.isArray(rawSeries) ? rawSeries : []
 
   const conversionSeries = series.map((row) => ({
-    date: String(row.period ?? '').slice(0, 10),
+    date: formatPeriod(String(row.period ?? ''), interval),
     conversion_rate: row.conversion_rate,
   }))
 
   const outcomesSeries = series.map((row) => ({
-    date: String(row.period ?? '').slice(0, 10),
+    date: formatPeriod(String(row.period ?? ''), interval),
     Converted: row.converted,
     Expired: row.expired,
     Pending: Math.max(0, row.started - row.converted - row.expired),

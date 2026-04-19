@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 import plotly.graph_objects as go
 
-from tidemill.reports._style import COLORS
+from tidemill.reports._style import COLORS, format_periods
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -51,18 +51,21 @@ def breakdown(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     return df
 
 
-def waterfall(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
-    """Fetch monthly MRR waterfall.
+def waterfall(tm: TidemillClient, start: str, end: str, interval: str = "month") -> pd.DataFrame:
+    """Fetch the MRR waterfall, bucketed by the given interval.
 
     Args:
         tm: Tidemill API client.
         start: ISO date string for period start.
         end: ISO date string for period end.
+        interval: Bucket size — ``day``, ``week``, ``month``, ``quarter``,
+            or ``year``.
 
     Returns:
-        DataFrame with one row per month, amounts in dollars.
+        DataFrame with one row per period (``period`` column is the
+        inclusive start date of the bucket), amounts in dollars.
     """
-    raw = tm.mrr_waterfall(start, end)
+    raw = tm.mrr_waterfall(start, end, interval=interval)
     df = pd.DataFrame(raw)
     money_cols = [
         "starting_mrr",
@@ -254,18 +257,20 @@ def style_quick_ratio(data: dict[str, Any]) -> pd.io.formats.style.Styler:
     ).hide(axis="index")
 
 
-def trend(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
-    """Fetch ending MRR per month.
+def trend(tm: TidemillClient, start: str, end: str, interval: str = "month") -> pd.DataFrame:
+    """Fetch ending MRR per period.
 
     Args:
         tm: Tidemill API client.
         start: ISO date string for period start.
         end: ISO date string for period end.
+        interval: Bucket size — ``day``, ``week``, ``month``, ``quarter``,
+            or ``year``.
 
     Returns:
-        DataFrame with ``month`` and ``ending_mrr`` (dollars).
+        DataFrame with ``period`` and ``ending_mrr`` (dollars).
     """
-    raw = tm.mrr_waterfall(start, end)
+    raw = tm.mrr_waterfall(start, end, interval=interval)
     df = pd.DataFrame(raw)
     df["ending_mrr"] = df["ending_mrr"] / 100
     return df
@@ -300,7 +305,7 @@ def style_waterfall(df: pd.DataFrame) -> pd.io.formats.style.Styler:
         "net_change",
         "ending_mrr",
     ]
-    styled = df.set_index("month")[display_cols]
+    styled = df.set_index("period")[display_cols]
     return styled.style.format("${:,.2f}")
 
 
@@ -337,28 +342,23 @@ def plot_waterfall(df: pd.DataFrame) -> go.Figure:
     Args:
         df: DataFrame from :func:`waterfall`.
     """
-    dm = df.set_index("month")
+    dm = df.set_index("period")
+    x = format_periods(dm.index, "month")
 
     fig = go.Figure()
     fig.add_trace(
-        go.Bar(
-            name="Starting MRR", x=dm.index, y=dm.starting_mrr, marker_color=COLORS["starting_mrr"]
-        )
+        go.Bar(name="Starting MRR", x=x, y=dm.starting_mrr, marker_color=COLORS["starting_mrr"])
     )
     for col in ["new", "expansion", "reactivation"]:
         if dm[col].any():
-            fig.add_trace(
-                go.Bar(name=col.title(), x=dm.index, y=dm[col], marker_color=COLORS[col])
-            )
+            fig.add_trace(go.Bar(name=col.title(), x=x, y=dm[col], marker_color=COLORS[col]))
     for col in ["contraction", "churn"]:
         if dm[col].any():
-            fig.add_trace(
-                go.Bar(name=col.title(), x=dm.index, y=dm[col], marker_color=COLORS[col])
-            )
+            fig.add_trace(go.Bar(name=col.title(), x=x, y=dm[col], marker_color=COLORS[col]))
     fig.add_trace(
         go.Scatter(
             name="Ending MRR",
-            x=dm.index,
+            x=x,
             y=dm.ending_mrr,
             mode="lines+markers+text",
             line={"color": "black", "width": 2},
@@ -388,7 +388,7 @@ def plot_trend(df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=df.month,
+            x=format_periods(df.period, "month"),
             y=df.ending_mrr,
             mode="lines+markers+text",
             fill="tozeroy",
