@@ -22,10 +22,7 @@ class _TraceContextFilter(logging.Filter):
         return True
 
 
-def configure_logging(service_name: str) -> None:
-    """Configure the `tidemill` logger with a shared formatter."""
-    log_level = os.environ.get("TIDEMILL_LOG_LEVEL", "DEBUG").upper()
-
+def _make_handler() -> logging.Handler:
     from uvicorn.logging import DefaultFormatter
 
     handler = logging.StreamHandler()
@@ -38,13 +35,30 @@ def configure_logging(service_name: str) -> None:
         ),
     )
     handler.addFilter(_TraceContextFilter())
+    return handler
 
-    logger = logging.getLogger("tidemill")
-    logger.setLevel(getattr(logging, log_level, logging.DEBUG))
-    # Replace any previously installed handlers so re-invocation is idempotent.
-    for h in list(logger.handlers):
-        logger.removeHandler(h)
-    logger.addHandler(handler)
-    logger.propagate = False
 
-    logger.debug("Logging configured for service=%s", service_name)
+def configure_logging(service_name: str) -> None:
+    """Configure the `tidemill` logger with a shared formatter.
+
+    Also rewires uvicorn's loggers (``uvicorn``, ``uvicorn.access``,
+    ``uvicorn.error``) to use the same handler so request access logs
+    include trace_id/span_id like every other log line.
+    """
+    log_level = os.environ.get("TIDEMILL_LOG_LEVEL", "DEBUG").upper()
+    level = getattr(logging, log_level, logging.DEBUG)
+
+    def _install(name: str, lvl: int) -> None:
+        lg = logging.getLogger(name)
+        lg.setLevel(lvl)
+        for h in list(lg.handlers):
+            lg.removeHandler(h)
+        lg.addHandler(_make_handler())
+        lg.propagate = False
+
+    _install("tidemill", level)
+    _install("uvicorn", logging.INFO)
+    _install("uvicorn.error", logging.INFO)
+    _install("uvicorn.access", logging.INFO)
+
+    logging.getLogger("tidemill").debug("Logging configured for service=%s", service_name)

@@ -334,10 +334,18 @@ def log_sql(
                 raw = raw.replace(placeholder, str(value))
 
     tag = label or _caller_label()
-    pretty = sqlparse.format(raw, reindent=True, keyword_case="upper")
-    if _use_colors():
-        pretty = f"{_GREY}{pretty}{_RESET}"
-    logger.debug("[%s] Executing SQL:\n%s", tag, pretty)
+    # Collapse to a single line so the log record stays on one line — makes
+    # trace/span correlation in Loki reliable (each stdout line is a separate
+    # Loki entry). Structured fields (`sql`, `sql_label`) are attached via
+    # `extra` for future structured-logging consumers.
+    single_line = " ".join(sqlparse.format(raw, keyword_case="upper").split())
+    display = f"{_GREY}{single_line}{_RESET}" if _use_colors() else single_line
+    logger.debug(
+        "[%s] SQL: %s",
+        tag,
+        display,
+        extra={"sql": single_line, "sql_label": tag},
+    )
 
 
 def _apply_joins(

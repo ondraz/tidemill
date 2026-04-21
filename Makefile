@@ -94,11 +94,11 @@ dev-reset: ## Stop dev environment and delete volumes
 
 dev: ## Start full dev environment + API + worker + frontend (stops services on exit)
 	@$(MAKE) dev-up
-	@echo "Starting API on :8000 (logs: /tmp/tidemill-api-dev.log)..."
-	@uv run uvicorn tidemill.api.app:app --host 0.0.0.0 --port 8000 --reload > /tmp/tidemill-api-dev.log 2>&1 & echo $$! > /tmp/tidemill-api-dev.pid
-	@echo "Starting worker (logs: /tmp/tidemill-worker-dev.log)..."
-	@uv run python -m tidemill.worker > /tmp/tidemill-worker-dev.log 2>&1 & echo $$! > /tmp/tidemill-worker-dev.pid
-	@trap 'kill $$(cat /tmp/tidemill-api-dev.pid 2>/dev/null) $$(cat /tmp/tidemill-worker-dev.pid 2>/dev/null) 2>/dev/null || true; rm -f /tmp/tidemill-api-dev.pid /tmp/tidemill-worker-dev.pid; $(MAKE) -C "$(CURDIR)" dev-down' EXIT INT TERM; cd frontend && npm run dev
+	@echo "Starting API on :8000 (logs → Loki service=tidemill-api, file /tmp/tidemill-api-dev.log)..."
+	@( uv run uvicorn tidemill.api.app:app --host 0.0.0.0 --port 8000 --reload 2>&1 | ./scripts/ship-to-loki.py --service tidemill-api ) > /tmp/tidemill-api-dev.log 2>&1 & echo $$! > /tmp/tidemill-api-dev.pid
+	@echo "Starting worker (logs → Loki service=tidemill-worker, file /tmp/tidemill-worker-dev.log)..."
+	@( uv run python -m tidemill.worker 2>&1 | ./scripts/ship-to-loki.py --service tidemill-worker ) > /tmp/tidemill-worker-dev.log 2>&1 & echo $$! > /tmp/tidemill-worker-dev.pid
+	@trap 'pkill -f "uvicorn tidemill.api.app" 2>/dev/null; pkill -f "tidemill.worker" 2>/dev/null; pkill -f "ship-to-loki.py" 2>/dev/null; rm -f /tmp/tidemill-api-dev.pid /tmp/tidemill-worker-dev.pid; $(MAKE) -C "$(CURDIR)" dev-down' EXIT; cd frontend && npm run dev
 
 
 docs: ## Start MkDocs dev server on :8001
