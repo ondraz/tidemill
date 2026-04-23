@@ -70,8 +70,6 @@ def init_otel(service_name: str) -> None:
             OTLPSpanExporter,
         )
         from opentelemetry.instrumentation.aiokafka import AIOKafkaInstrumentor
-        from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
-        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
         from opentelemetry.sdk.metrics import MeterProvider
         from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
         from opentelemetry.sdk.resources import Resource
@@ -111,8 +109,6 @@ def init_otel(service_name: str) -> None:
     # Attach trace_id / span_id to every LogRecord without touching the formatter.
     _install_trace_log_factory(service_name)
 
-    SQLAlchemyInstrumentor().instrument()
-    AsyncPGInstrumentor().instrument()  # type: ignore[no-untyped-call]
     AIOKafkaInstrumentor().instrument()
 
     _initialized = True
@@ -122,6 +118,54 @@ def init_otel(service_name: str) -> None:
         cfg.exporter_endpoint,
         cfg.environment,
     )
+
+
+def instrument_sqlalchemy(engine: Any) -> None:
+    """Emit a span per SQL statement for *engine*.
+
+    Called after each async engine is created. Passes the underlying sync
+    engine because SQLAlchemyInstrumentor hooks ``before_cursor_execute`` on
+    the sync ``Engine`` — reliably capturing SELECT/INSERT/UPDATE with full
+    SQL text in ``db.statement``. When ``TIDEMILL_OTEL_CAPTURE_PARAMS`` is
+    enabled, bound parameter values are attached as ``db.statement.parameters``
+    — leave off in production to avoid leaking PII into traces.
+    """
+    cfg = OtelConfig()
+    if not cfg.enabled:
+        return
+    try:
+        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+    except ImportError:
+        return
+    SQLAlchemyInstrumentor().instrument(
+        engine=engine.sync_engine,
+        enable_commenter=True,
+    )
+    if cfg.capture_params:
+        _attach_param_listener(engine.sync_engine)
+
+
+def _attach_param_listener(sync_engine: Any) -> None:
+    """Add bound parameter values to the DB span as ``db.statement.parameters``.
+
+    Runs on ``after_cursor_execute`` so the span created by
+    SQLAlchemyInstrumentor is available on ``context._otel_span``.
+    """
+    from sqlalchemy import event
+
+    @event.listens_for(sync_engine, "before_cursor_execute")
+    def _before_cursor_execute(
+        conn: Any,  # noqa: ARG001
+        cursor: Any,  # noqa: ARG001
+        statement: str,  # noqa: ARG001
+        parameters: Any,
+        context: Any,
+        executemany: bool,  # noqa: ARG001
+    ) -> None:
+        span = getattr(context, "_otel_span", None)
+        if span is None or not span.is_recording():
+            return
+        span.set_attribute("db.statement.parameters", repr(parameters))
 
 
 def instrument_fastapi(app: object) -> None:

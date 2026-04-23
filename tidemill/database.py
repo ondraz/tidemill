@@ -18,7 +18,11 @@ def make_engine(url: str, **kwargs: Any) -> AsyncEngine:
     *url* should be a PostgreSQL connection string, e.g.
     ``postgresql+asyncpg://user:pass@host/db``.
     """
-    return create_async_engine(url, **kwargs)
+    engine = create_async_engine(url, **kwargs)
+    from tidemill.otel import instrument_sqlalchemy
+
+    instrument_sqlalchemy(engine)
+    return engine
 
 
 def make_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:

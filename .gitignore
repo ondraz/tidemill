@@ -225,3 +225,4 @@ subscriptions.code-workspace
 
 # Database backups
 deploy/backup/
+.claude/scheduled_tasks.lock

@@ -44,3 +44,7 @@ class OtelConfig:
         "http://otel-collector:4317",
     )
     environment: str = os.environ.get("TIDEMILL_ENV", "local")
+    capture_params: bool = os.environ.get(
+        "TIDEMILL_OTEL_CAPTURE_PARAMS",
+        "false",
+    ).lower() in ("true", "1", "yes")

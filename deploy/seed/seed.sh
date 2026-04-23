@@ -17,7 +17,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 COMPOSE_DIR="$ROOT/deploy/compose"
-COMPOSE="docker compose -f $COMPOSE_DIR/docker-compose.yml -f $COMPOSE_DIR/docker-compose.local.yml"
+COMPOSE="docker compose -f $COMPOSE_DIR/docker-compose.yml -f $COMPOSE_DIR/docker-compose.observability.yml -f $COMPOSE_DIR/docker-compose.local.yml"
 API="http://localhost:8000"
 SEED_CUSTOMERS="${SEED_CUSTOMERS:-19}"
 SEED_MONTHS="${SEED_MONTHS:-8}"
