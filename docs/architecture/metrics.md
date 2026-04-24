@@ -505,13 +505,17 @@ CREATE TABLE metric_churn_customer_state (
     UNIQUE(source_id, customer_id)
 );
 
--- Churn events for rate calculation
+-- Churn events for rate calculation. `cancel_reason` is copied from the
+-- originating subscription.canceled / subscription.churned payload so the
+-- event can be segmented by reason without re-joining the subscription
+-- table (sourced from Stripe's `cancellation_details.feedback`).
 CREATE TABLE metric_churn_event (
     id              UUID PRIMARY KEY,
     event_id        UUID NOT NULL UNIQUE,
     source_id       UUID NOT NULL,
     customer_id     TEXT NOT NULL,
-    churn_type      TEXT NOT NULL,   -- logo | revenue
+    churn_type      TEXT NOT NULL,   -- logo | revenue | canceled
+    cancel_reason   TEXT,            -- too_expensive | missing_features | …
     mrr_cents       BIGINT,          -- revenue lost (for revenue churn)
     occurred_at     TIMESTAMPTZ NOT NULL
 );

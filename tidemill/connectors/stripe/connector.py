@@ -199,6 +199,7 @@ class StripeConnector(WebhookConnector):
                     "name": cust.get("name"),
                     "email": cust.get("email"),
                     "currency": cust.get("currency"),
+                    "country": (cust.get("address") or {}).get("country"),
                     "metadata": cust.get("metadata", {}),
                 },
             )
@@ -360,6 +361,9 @@ class StripeConnector(WebhookConnector):
                             "mrr_cents": mrr,
                             "canceled_at": _ts(sub.get("canceled_at")),
                             "ends_at": _ts(sub.get("current_period_end")),
+                            "cancel_reason": (sub.get("cancellation_details") or {}).get(
+                                "feedback"
+                            ),
                         },
                     )
                 )
@@ -412,6 +416,7 @@ class StripeConnector(WebhookConnector):
                         "mrr_cents": mrr,
                         "canceled_at": _ts(sub.get("canceled_at")),
                         "ends_at": _ts(sub.get("current_period_end")),
+                        "cancel_reason": (sub.get("cancellation_details") or {}).get("feedback"),
                     },
                 )
             )
@@ -453,6 +458,7 @@ class StripeConnector(WebhookConnector):
                 payload={
                     "external_id": sub["id"],
                     "prev_mrr_cents": self._compute_mrr(sub),
+                    "cancel_reason": (sub.get("cancellation_details") or {}).get("feedback"),
                 },
             )
         ]
@@ -615,6 +621,7 @@ class StripeConnector(WebhookConnector):
             if clock_id:
                 params["test_clock"] = clock_id
             for cust in stripe.Customer.list(**params).auto_paging_iter():
+                address = dict(cust.address) if cust.address else {}
                 yield self._make_event(
                     "customer.created",
                     customer_id=str(cust.id),
@@ -625,6 +632,7 @@ class StripeConnector(WebhookConnector):
                         "name": cust.name,
                         "email": cust.email,
                         "currency": cust.currency,
+                        "country": address.get("country"),
                         "metadata": dict(cust.metadata or {}),
                     },
                 )

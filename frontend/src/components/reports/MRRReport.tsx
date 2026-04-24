@@ -3,6 +3,7 @@ import { useMRR, useMRRBreakdown, useMRRWaterfall, useARR } from '@/hooks/useMet
 import { KPICard } from '@/components/charts/KPICard'
 import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart'
 import { MRRBreakdownChart } from '@/components/charts/MRRBreakdownChart'
+import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { WaterfallChart } from '@/components/charts/WaterfallChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
 import { DimensionPicker } from '@/components/controls/DimensionPicker'
@@ -47,28 +48,65 @@ export function MRRReport() {
       .map((pt) => ({ date: formatPeriod(pt.iso, interval), mrr: pt.mrr }))
   }, [mrrSeries, start, interval])
 
-  // Transform breakdown: API returns {movement_type, amount_base} in cents
-  // Ensure all 5 movement types are present (including reactivation)
+  // Transform breakdown: API returns {movement_type, amount_base} in cents.
+  // When `dimensions` is set, each movement_type has one row per segment
+  // value (e.g. {movement_type, currency, amount_base}). We pivot to
+  // {type, <segA>: amount, <segB>: amount, ...} so the chart renders
+  // stacked bars per segment; without a dimension we collapse to a single
+  // Amount series so the chart looks the same as before.
   const MOVEMENT_TYPES = ['new', 'expansion', 'reactivation', 'contraction', 'churn'] as const
-  const breakdownMap = new Map(
-    (breakdown ?? []).map((row) => [
-      String(row.movement_type ?? '').toLowerCase(),
-      (Number(row.amount_base) || 0) / 100,
-    ])
-  )
-  const breakdownData = MOVEMENT_TYPES.map((type) => ({
-    type: type.replace(/^./, (c) => c.toUpperCase()),
-    Amount: breakdownMap.get(type) ?? 0,
-  }))
+  const dimKey = dimensions[0]
+  const { breakdownData, breakdownSegments, totalsByType } = useMemo(() => {
+    const typeLabel = (t: string) => t.replace(/^./, (c) => c.toUpperCase())
+    const totals = new Map<string, number>()
+
+    if (!dimKey) {
+      for (const row of breakdown ?? []) {
+        const t = String(row.movement_type ?? '').toLowerCase()
+        const amt = (Number(row.amount_base) || 0) / 100
+        totals.set(t, (totals.get(t) ?? 0) + amt)
+      }
+      const data = MOVEMENT_TYPES.map((type) => ({
+        type: typeLabel(type),
+        Amount: totals.get(type) ?? 0,
+      }))
+      return { breakdownData: data, breakdownSegments: [] as string[], totalsByType: totals }
+    }
+
+    // Segment mode: pivot rows into one entry per movement_type with
+    // columns keyed by segment value (null → "Unknown").
+    const perType = new Map<string, Map<string, number>>()
+    const segments = new Set<string>()
+    for (const row of breakdown ?? []) {
+      const t = String(row.movement_type ?? '').toLowerCase()
+      const seg = row[dimKey] == null ? 'Unknown' : String(row[dimKey])
+      const amt = (Number(row.amount_base) || 0) / 100
+      segments.add(seg)
+      totals.set(t, (totals.get(t) ?? 0) + amt)
+      if (!perType.has(t)) perType.set(t, new Map())
+      perType.get(t)!.set(seg, (perType.get(t)!.get(seg) ?? 0) + amt)
+    }
+    const segmentKeys = [...segments].sort()
+    const data = MOVEMENT_TYPES.map((type) => {
+      const row: Record<string, unknown> = { type: typeLabel(type) }
+      for (const seg of segmentKeys) {
+        row[seg] = perType.get(type)?.get(seg) ?? 0
+      }
+      return row
+    })
+    return { breakdownData: data, breakdownSegments: segmentKeys, totalsByType: totals }
+  }, [breakdown, dimKey])
 
   // Quick Ratio = (new + expansion + reactivation) / |churn + contraction|.
+  // Uses aggregated totals so it matches the headline MRR regardless of
+  // whether segmentation is active.
   const gains =
-    (breakdownMap.get('new') ?? 0) +
-    (breakdownMap.get('expansion') ?? 0) +
-    (breakdownMap.get('reactivation') ?? 0)
+    (totalsByType.get('new') ?? 0) +
+    (totalsByType.get('expansion') ?? 0) +
+    (totalsByType.get('reactivation') ?? 0)
   const losses =
-    Math.abs(breakdownMap.get('churn') ?? 0) +
-    Math.abs(breakdownMap.get('contraction') ?? 0)
+    Math.abs(totalsByType.get('churn') ?? 0) +
+    Math.abs(totalsByType.get('contraction') ?? 0)
   const quickRatio = losses > 0 ? gains / losses : null
 
   return (
@@ -81,6 +119,7 @@ export function MRRReport() {
         available={MRR_DIMENSIONS}
         selected={dimensions}
         onChange={setDimensions}
+        single
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -122,20 +161,31 @@ export function MRRReport() {
       </ChartContainer>
 
       <ChartContainer
-        title="MRR Breakdown"
+        title={dimKey ? `MRR Breakdown by ${dimKey}` : 'MRR Breakdown'}
         chartConfig={{
           name: 'MRR Breakdown',
           metric: 'mrr',
           endpoint: '/api/metrics/mrr/breakdown',
-          params: { start, end },
+          params: { start, end, ...(dimKey ? { dimensions: [dimKey] } : {}) },
           chartType: 'bar',
           timeRangeMode: 'fixed',
         }}
       >
-        <MRRBreakdownChart
-          data={breakdownData}
-          loading={breakdownLoading}
-        />
+        {dimKey ? (
+          <BarBreakdownChart
+            data={breakdownData}
+            bars={breakdownSegments}
+            xKey="type"
+            formatter={formatCurrency}
+            loading={breakdownLoading}
+            stacked
+          />
+        ) : (
+          <MRRBreakdownChart
+            data={breakdownData as Array<{ type: string; Amount: number }>}
+            loading={breakdownLoading}
+          />
+        )}
       </ChartContainer>
 
       <ChartContainer

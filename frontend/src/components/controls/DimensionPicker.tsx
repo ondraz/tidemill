@@ -2,12 +2,19 @@ interface DimensionPickerProps {
   available: string[]
   selected: string[]
   onChange: (dims: string[]) => void
+  // When true, selecting a dim replaces any prior selection (radio-style).
+  // Charts that pivot on a single dim use this; multi-dim selection only
+  // makes sense for raw table views.
+  single?: boolean
 }
 
-export function DimensionPicker({ available, selected, onChange }: DimensionPickerProps) {
+export function DimensionPicker({ available, selected, onChange, single }: DimensionPickerProps) {
+  if (available.length === 0) return null
   const toggle = (dim: string) => {
     if (selected.includes(dim)) {
       onChange(selected.filter((d) => d !== dim))
+    } else if (single) {
+      onChange([dim])
     } else {
       onChange([...selected, dim])
     }

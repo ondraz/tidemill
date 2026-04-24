@@ -171,9 +171,9 @@ class ChurnMetric(Metric):
                         text(
                             "INSERT INTO metric_churn_event"
                             " (id, event_id, source_id, customer_id,"
-                            "  churn_type, mrr_cents, occurred_at)"
+                            "  churn_type, cancel_reason, mrr_cents, occurred_at)"
                             " VALUES (:id, :eid, :src, :cid,"
-                            "  'logo', :mrr, :now)"
+                            "  'logo', :reason, :mrr, :now)"
                             " ON CONFLICT (event_id) DO NOTHING"
                         ),
                         {
@@ -181,6 +181,7 @@ class ChurnMetric(Metric):
                             "eid": event.id + ":logo",
                             "src": event.source_id,
                             "cid": event.customer_id,
+                            "reason": p.get("cancel_reason"),
                             "mrr": p.get("prev_mrr_cents", 0),
                             "now": event.occurred_at,
                         },
@@ -190,9 +191,9 @@ class ChurnMetric(Metric):
                     text(
                         "INSERT INTO metric_churn_event"
                         " (id, event_id, source_id, customer_id,"
-                        "  churn_type, mrr_cents, occurred_at)"
+                        "  churn_type, cancel_reason, mrr_cents, occurred_at)"
                         " VALUES (:id, :eid, :src, :cid,"
-                        "  'revenue', :mrr, :now)"
+                        "  'revenue', :reason, :mrr, :now)"
                         " ON CONFLICT (event_id) DO NOTHING"
                     ),
                     {
@@ -200,6 +201,7 @@ class ChurnMetric(Metric):
                         "eid": event.id + ":revenue",
                         "src": event.source_id,
                         "cid": event.customer_id,
+                        "reason": p.get("cancel_reason"),
                         "mrr": p.get("prev_mrr_cents", 0),
                         "now": event.occurred_at,
                     },

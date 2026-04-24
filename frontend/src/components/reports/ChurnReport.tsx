@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { useTimeRange } from '@/hooks/useTimeRange'
 import {
@@ -11,9 +11,11 @@ import { fetchChurn } from '@/api/metrics'
 import { KPICard } from '@/components/charts/KPICard'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
+import { DimensionPicker } from '@/components/controls/DimensionPicker'
 import { formatCurrency, formatPercent, formatPeriod } from '@/lib/formatters'
 import { periodStarts, periodEnd } from '@/lib/periods'
 import { COLORS } from '@/lib/colors'
+import { CHURN_DIMENSIONS } from '@/lib/constants'
 import type {
   ChurnCustomerDetail,
   ChurnRevenueEvent,
@@ -37,6 +39,8 @@ function rateWindow(
 
 export function ChurnReport() {
   const { start, end, interval } = useTimeRange({ range: 'last_1y' })
+  const [dimensions, setDimensions] = useState<string[]>([])
+  const dimKey = dimensions[0]
   const { rateStart, rateEnd } = useMemo(
     () => rateWindow(start, end, interval),
     [start, end, interval],
@@ -48,6 +52,25 @@ export function ChurnReport() {
   const { data: revRate, isLoading: revRateLoading } = useChurn<number | null>({
     start: rateStart, end: rateEnd, type: 'revenue',
   })
+
+  // Segmented lost-revenue breakdown over the full window. The churn
+  // endpoint emits `[{<dim>: value, revenue_lost: cents}, ...]` when
+  // ``dimensions`` is passed; `revenue_lost` is stored negative in
+  // movements, so we take abs when charting.
+  type ChurnSegmentRow = Record<string, unknown> & { revenue_lost?: number | null }
+  const { data: segmentData, isLoading: segmentLoading } = useChurn<ChurnSegmentRow[]>({
+    start,
+    end,
+    type: 'revenue',
+    ...(dimKey ? { dimensions: [dimKey] } : {}),
+  })
+  const segmentChart = useMemo(() => {
+    if (!dimKey || !Array.isArray(segmentData)) return []
+    return segmentData.map((row) => ({
+      segment: row[dimKey] == null ? 'Unknown' : String(row[dimKey]),
+      'Lost MRR': Math.abs(Number(row.revenue_lost) || 0) / 100,
+    }))
+  }, [segmentData, dimKey])
 
   const { data: detail, isLoading: detailLoading } =
     useChurnCustomers<ChurnCustomerDetail[]>({ start: rateStart, end: rateEnd })
@@ -109,6 +132,13 @@ export function ChurnReport() {
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Churn</h2>
 
+      <DimensionPicker
+        available={CHURN_DIMENSIONS}
+        selected={dimensions}
+        onChange={setDimensions}
+        single
+      />
+
       <div className="text-xs text-muted-foreground">
         Rates measured over {formatPeriod(rateStart, interval)} ({rateStart} → {rateEnd}).
       </div>
@@ -168,6 +198,28 @@ export function ChurnReport() {
           loading={waterfallLoading}
         />
       </ChartContainer>
+
+      {dimKey && (
+        <ChartContainer
+          title={`Lost Revenue by ${dimKey}`}
+          chartConfig={{
+            name: `Lost Revenue by ${dimKey}`,
+            metric: 'churn',
+            endpoint: '/api/metrics/churn',
+            params: { start, end, type: 'revenue', dimensions: [dimKey] },
+            chartType: 'bar',
+            timeRangeMode: 'fixed',
+          }}
+        >
+          <BarBreakdownChart
+            data={segmentChart}
+            bars={['Lost MRR']}
+            xKey="segment"
+            formatter={formatCurrency}
+            loading={segmentLoading}
+          />
+        </ChartContainer>
+      )}
 
       <ChartContainer title="Customer Detail (active at start)">
         <CustomerDetailTable detail={detail ?? []} loading={detailLoading} />

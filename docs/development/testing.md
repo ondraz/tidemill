@@ -20,7 +20,7 @@ make seed   # requires STRIPE_API_KEY
 1. **Cleans up** — deletes existing test clocks and their resources, stops any running stack
 2. **Starts the full stack** in Docker (PostgreSQL + Redpanda + API + Worker) using `docker-compose.local.yml`
 3. **Starts `stripe listen`** to forward webhook events to the API
-4. **Runs the seed script** (`deploy/seed/stripe_seed.py`) — creates customers, subscriptions, and advances time through 6 months of billing cycles
+4. **Runs the seed script** (`deploy/seed/stripe_seed.py`) — creates customers, subscriptions, and advances time through 18 months of billing cycles
 5. **Validates results** — checks that sources, metrics, and MRR are populated
 6. **Stops the stack** — the seeded data remains in PostgreSQL volumes
 
@@ -30,12 +30,35 @@ After seeding, use `make dev` to restart the infrastructure for local developmen
 
 ```bash
 cd deploy/seed
-STRIPE_API_KEY=sk_test_... python stripe_seed.py                  # full seed (15 customers, 6 months)
+STRIPE_API_KEY=sk_test_... python stripe_seed.py                  # full seed (19 customers, 18 months)
 STRIPE_API_KEY=sk_test_... python stripe_seed.py --customers 5    # fewer customers
-STRIPE_API_KEY=sk_test_... python stripe_seed.py --months 3       # shorter history
+STRIPE_API_KEY=sk_test_... python stripe_seed.py --months 6       # shorter history
 STRIPE_API_KEY=sk_test_... python stripe_seed.py --cleanup        # delete all seed clocks
 STRIPE_API_KEY=sk_test_... python stripe_seed.py --cleanup CLOCK_ID  # delete specific clock
 ```
+
+### Dimension Variety
+
+The seed rotates values across several fields so dashboards have visible
+breakdowns on a fresh install:
+
+- **`customer.country`** — cycles through `US`, `GB`, `DE`, `FR`, `CA`, `AU`
+  (written to `address.country`; Stripe's `customer.created` webhook carries
+  it, the connector forwards it as `payload.country`, and the state consumer
+  persists it in `customer.country`).
+- **`currency`** — Starter-tier base prices and Enterprise monthly prices
+  have `usd` / `eur` / `gbp` variants. Subscriptions rotate through them.
+  Metered tiers stay USD-only because Stripe billing meters are
+  single-currency.
+- **`cancel_reason`** — every cancel operation passes
+  `cancellation_details.feedback` (`too_expensive`, `missing_features`,
+  `switched_service`, `customer_service`, `unused`, `low_quality`, `other`);
+  the connector forwards it so it surfaces on `metric_churn_event.cancel_reason`.
+
+Plan/product dimensions (`plan_interval`, `plan_name`, `product_name`, …)
+are declared on the cubes but are not populated yet — the Stripe connector
+does not emit `plan.*` / `product.*` events, so `subscription.plan_id`
+stays NULL and joins through `plan` return empty.
 
 ## Running Tests
 
@@ -78,7 +101,7 @@ All plans use usage-based billing via Stripe Billing Meters (`analytical_query` 
 
 ## Customer Archetypes
 
-The seed script creates 15 customers by default across these archetypes:
+The seed script creates 19 customers by default across these archetypes:
 
 | Archetype                | Plan         | Billing | Behavior                                  | Queries/mo |
 |--------------------------|--------------|---------|-------------------------------------------|------------|
@@ -97,7 +120,7 @@ The seed script creates 15 customers by default across these archetypes:
 
 ### Monthly Trial Additions
 
-Beyond the initial 15 customers, the script adds **2-5 new trial customers each month** (except the last month). Some convert to Starter and some churn, producing realistic month-over-month growth patterns.
+Beyond the initial 19 customers, the script adds **2-5 new trial customers each month** (except the last month). Some convert to Starter and some churn, producing realistic month-over-month growth patterns.
 
 ### Cleanup
 

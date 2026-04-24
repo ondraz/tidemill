@@ -95,10 +95,10 @@ cohorts = await engine.query("retention", {"query_type": "cohort_matrix",
 
 # With dimensions and filters via QuerySpec
 spec = QuerySpec(
-    dimensions=["plan_interval"],
-    filters={"plan_interval": {"in": ["yearly"]}, "customer_country": "US"},
+    dimensions=["customer_country"],
+    filters={"currency": "usd"},
 )
-enterprise_mrr = await engine.query("mrr", {"query_type": "current"}, spec=spec)
+mrr_by_country = await engine.query("mrr", {"query_type": "current"}, spec=spec)
 
 # Synchronous — no I/O
 print(engine.available_metrics())
@@ -186,11 +186,11 @@ All metric endpoints share a common `QuerySpec` contract built from three query-
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `dimensions` | `string[]` | GROUP BY dimensions — names declared in the metric's Cube (e.g. `plan_interval`, `customer_country`, `currency`) |
-| `filter` | `string[]` | Repeated `key=value` filters, e.g. `filter=customer_country=US&filter=plan_interval=monthly` |
+| `dimensions` | `string[]` | GROUP BY dimensions — names declared in the metric's Cube (e.g. `customer_country`, `currency`, `churn_type`, `cancel_reason`) |
+| `filter` | `string[]` | Repeated `key=value` filters, e.g. `filter=customer_country=US&filter=currency=usd` |
 | `granularity` | `string` | Time bucketing for series queries — `day`, `week`, `month`, `quarter`, or `year` |
 
-Invalid dimension/filter names raise a `400` with the list of available options for that metric's cube.
+Invalid dimension/filter names raise a `400` with the list of available options for that metric's cube. Dimensions that reach through the `plan` / `product` joins (`plan_interval`, `plan_name`, `product_name`, `billing_scheme`, `collection_method`) are declared on the MRR cubes but will return no rows until the Stripe connector ingests `plan.*` / `product.*` events (see `docs/architecture/connectors.md`).
 
 When `start` and `end` are provided, the endpoint returns a time series. Otherwise it returns a single value.
 

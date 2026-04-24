@@ -62,12 +62,14 @@ async def _handle_customer(session: AsyncSession, event: Event) -> None:
             await session.execute(
                 text(
                     "INSERT INTO customer"
-                    " (id, source_id, external_id, name, email,"
+                    " (id, source_id, external_id, name, email, country,"
                     " currency, metadata_, created_at, updated_at)"
-                    " VALUES (:id, :src, :eid, :name, :email, :currency, :meta, :now, :now)"
+                    " VALUES (:id, :src, :eid, :name, :email, :country,"
+                    "  :currency, :meta, :now, :now)"
                     " ON CONFLICT ON CONSTRAINT uq_customer_source DO UPDATE SET"
                     "  name = COALESCE(EXCLUDED.name, customer.name),"
                     "  email = COALESCE(EXCLUDED.email, customer.email),"
+                    "  country = COALESCE(EXCLUDED.country, customer.country),"
                     "  currency = COALESCE(EXCLUDED.currency, customer.currency),"
                     "  metadata_ = COALESCE(EXCLUDED.metadata_, customer.metadata_),"
                     "  updated_at = EXCLUDED.updated_at"
@@ -78,6 +80,7 @@ async def _handle_customer(session: AsyncSession, event: Event) -> None:
                     "eid": p["external_id"],
                     "name": p.get("name"),
                     "email": p.get("email"),
+                    "country": p.get("country"),
                     "currency": p.get("currency"),
                     "meta": json.dumps(p.get("metadata", {})),
                     "now": event.occurred_at,

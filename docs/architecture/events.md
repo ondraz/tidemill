@@ -36,7 +36,7 @@ class Event:
 
 | Type | Trigger | Payload |
 |------|---------|---------|
-| `customer.created` | New customer in billing system | `{external_id, name, email, currency, metadata}` |
+| `customer.created` | New customer in billing system | `{external_id, name, email, currency, country, metadata}` |
 | `customer.updated` | Customer details changed | `{external_id, changed_fields}` |
 | `customer.deleted` | Customer removed | `{external_id}` |
 
@@ -49,8 +49,8 @@ The most important events for metric computation.
 | `subscription.created` | New subscription | `{external_id, customer_external_id, plan_external_id, status, mrr_cents, quantity, started_at, trial_start, trial_end, current_period_start, current_period_end}` |
 | `subscription.activated` | Trial → active, or pending → active | `{external_id, mrr_cents}` |
 | `subscription.changed` | Plan or quantity changed | `{external_id, prev_plan_external_id, new_plan_external_id, prev_mrr_cents, new_mrr_cents, prev_quantity, new_quantity}` |
-| `subscription.canceled` | Subscription set to cancel at period end | `{external_id, mrr_cents, canceled_at, ends_at}` |
-| `subscription.churned` | Subscription ended (no longer active) | `{external_id, prev_mrr_cents}` |
+| `subscription.canceled` | Subscription set to cancel at period end | `{external_id, mrr_cents, canceled_at, ends_at, cancel_reason}` |
+| `subscription.churned` | Subscription ended (no longer active) | `{external_id, prev_mrr_cents, cancel_reason}` |
 | `subscription.reactivated` | Previously churned customer re-subscribes | `{external_id, mrr_cents}` |
 | `subscription.trial_started` | Free trial begins | `{external_id, trial_start, trial_end}` |
 | `subscription.trial_converted` | Trial → paid | `{external_id, mrr_cents}` |

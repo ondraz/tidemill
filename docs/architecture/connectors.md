@@ -144,12 +144,12 @@ Stripe is the primary connector. It uses the webhook/Kafka ingestion architectur
 
 | Stripe Webhook | Internal Event(s) | Notes |
 |---------------|-------------------|-------|
-| `customer.created` | `customer.created` | Direct mapping |
+| `customer.created` | `customer.created` | Copies `address.country` onto the payload so segmentation by country works out of the box |
 | `customer.updated` | `customer.updated` | |
 | `customer.deleted` | `customer.deleted` | |
 | `customer.subscription.created` | `subscription.created`, optionally `subscription.trial_started` | If `status=trialing`, also emit trial event |
 | `customer.subscription.updated` | Depends on what changed (see below) | Most complex translation |
-| `customer.subscription.deleted` | `subscription.churned` | |
+| `customer.subscription.deleted` | `subscription.churned` | Forwards `cancellation_details.feedback` as `cancel_reason` |
 | `customer.subscription.trial_will_end` | (ignored, handled via status change) | |
 | `invoice.created` | `invoice.created` | |
 | `invoice.paid` | `invoice.paid` | |

@@ -77,6 +77,17 @@ Key properties:
 - **Lazy joins** — only dimensions/filters that are actually used trigger their joins. A query with no plan dimensions never joins the `plan` table.
 - **Introspection** — the model can list its available dimensions and measures at runtime, enabling API validation and documentation generation.
 
+!!! note "Plan/product dimensions require plan ingestion"
+    The MRR cubes declare `plan_id`, `plan_name`, `plan_interval`,
+    `billing_scheme`, `usage_type`, and `product_name`, but these join
+    through the `plan` (and `product`) table. The Stripe connector
+    currently does **not** emit `plan.*` / `product.*` events, so
+    `subscription.plan_id` is NULL for Stripe-sourced data and any query
+    that references those dimensions returns zero rows. They will start
+    populating once plan/product ingestion lands — the cube declarations
+    are correct in advance. Same-database connectors (Lago, Kill Bill)
+    that query the billing engine's own plan tables are not affected.
+
 ```python
 MRRSnapshotCube.available_dimensions()
 # ['billing_scheme', 'cancel_at_period_end', 'collection_method', 'currency',
@@ -332,7 +343,7 @@ class ChurnEventCube(Cube):
         source_id = Dim("ce.source_id")
         customer_id = Dim("ce.customer_id")
         churn_type = Dim("ce.churn_type")
-        cancel_reason = Dim("ce.cancel_reason")               # from cancellation_details.reason
+        cancel_reason = Dim("ce.cancel_reason")               # from cancellation_details.feedback; populated on logo, revenue, and canceled rows
         customer_name = Dim("c.name", join="customer", label="customer_name")
         customer_country = Dim("c.country", join="customer", label="customer_country")
         # Scopes churn events to customers active at period start

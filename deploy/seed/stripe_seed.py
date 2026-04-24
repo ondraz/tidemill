@@ -2,7 +2,7 @@
 """Seed Stripe test mode with realistic subscription data using Test Clocks.
 
 Creates customers across usage-based and flat-fee plans, advances time through
-6 months of billing cycles, reports metered usage, and simulates churn,
+18 months of billing cycles, reports metered usage, and simulates churn,
 reactivation, upgrades, and failed payments — generating the full set of webhook
 events our connectors need to handle.
 
@@ -17,10 +17,16 @@ Prerequisites:
     export STRIPE_API_KEY=sk_test_...
 
 Usage:
-    python stripe_seed.py                  # full seed (19 customers, 6 months)
+    python stripe_seed.py                  # full seed (19 customers, 18 months)
     python stripe_seed.py --customers 5    # fewer customers
     python stripe_seed.py --months 3       # shorter history
     python stripe_seed.py --cleanup CLOCK_ID
+
+Customer rows are created with rotating ``address.country`` (US, GB, DE,
+FR, CA, AU) and a subset of subscriptions bills in EUR or GBP so the
+default last-1y dashboards have visible segmentation by country and
+currency. Cancellations pass a rotating ``cancellation_details.feedback``
+so ``cancel_reason`` segmentation also has variance.
 """
 
 from __future__ import annotations
@@ -35,6 +41,22 @@ from datetime import UTC, datetime, timedelta
 import stripe
 
 METER_EVENT_NAME = "analytical_query"
+
+# Rotated deterministically across customers so dashboards have visible
+# breakdowns by customer_country and currency on a fresh seed. Stripe
+# binds currency to the price, not the customer, so multi-currency
+# subscriptions need parallel price sets (see ``create_plans``).
+COUNTRIES = ["US", "GB", "DE", "FR", "CA", "AU"]
+CURRENCIES = ["usd", "eur", "gbp"]
+CANCEL_FEEDBACKS = [
+    "too_expensive",
+    "missing_features",
+    "switched_service",
+    "customer_service",
+    "unused",
+    "low_quality",
+    "other",
+]
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -107,6 +129,8 @@ def create_plans() -> dict:
     print(f"  Meter:        {meter.id} (event={METER_EVENT_NAME})")
 
     # ── Starter: $20/mo base + $1/query metered ─────────────────────────
+    # Metered prices stay USD-only (Stripe meters are single-currency); we
+    # add EUR/GBP flat-fee variants for currency segmentation.
     starter_prod = stripe.Product.create(
         name="Starter",
         metadata={"tier": "starter"},
@@ -125,10 +149,26 @@ def create_plans() -> dict:
         recurring={"interval": "month", "meter": meter.id, "usage_type": "metered"},
         nickname="Starter — $1/query",
     )
+    starter_base_eur = stripe.Price.create(
+        product=starter_prod.id,
+        unit_amount=1900,  # ~€19/mo
+        currency="eur",
+        recurring={"interval": "month"},
+        nickname="Starter — €19/mo base",
+    )
+    starter_base_gbp = stripe.Price.create(
+        product=starter_prod.id,
+        unit_amount=1600,  # ~£16/mo
+        currency="gbp",
+        recurring={"interval": "month"},
+        nickname="Starter — £16/mo base",
+    )
     result["Starter"] = {
         "product": starter_prod,
         "base_monthly": starter_base,
         "metered_monthly": starter_metered,
+        "base_monthly_eur": starter_base_eur,
+        "base_monthly_gbp": starter_base_gbp,
     }
     print(
         f"  Starter:      $20/mo + $1/query (base={starter_base.id}, metered={starter_metered.id})"
@@ -205,19 +245,48 @@ def create_plans() -> dict:
         recurring={"interval": "year"},
         nickname="Enterprise — $2,490/yr",
     )
+    ent_monthly_eur = stripe.Price.create(
+        product=ent_prod.id,
+        unit_amount=229000,  # ~€229/mo
+        currency="eur",
+        recurring={"interval": "month"},
+        nickname="Enterprise — €229/mo",
+    )
+    ent_monthly_gbp = stripe.Price.create(
+        product=ent_prod.id,
+        unit_amount=199000,  # ~£199/mo
+        currency="gbp",
+        recurring={"interval": "month"},
+        nickname="Enterprise — £199/mo",
+    )
     result["Enterprise"] = {
         "product": ent_prod,
         "monthly": ent_monthly,
         "annual": ent_annual,
+        "monthly_eur": ent_monthly_eur,
+        "monthly_gbp": ent_monthly_gbp,
     }
-    print("  Enterprise:   $249/mo | $2,490/yr (flat)")
+    print("  Enterprise:   $249/mo | $2,490/yr (flat) + €229/mo / £199/mo")
 
     return result
 
 
-def subscription_items(plans: dict, plan: str, billing: str) -> list[dict]:
-    """Return the list of price items for a new subscription."""
+def subscription_items(
+    plans: dict,
+    plan: str,
+    billing: str,
+    currency: str = "usd",
+) -> list[dict]:
+    """Return the list of price items for a new subscription.
+
+    Non-USD currencies are supported only on flat-fee plans (Starter base
+    and Enterprise monthly); anything requiring the metered price falls
+    back to USD since Stripe meters are single-currency.
+    """
     if plan in ("Starter", "trial"):
+        if currency in ("eur", "gbp") and plan == "Starter":
+            # Flat-fee only — no metered overage outside USD.
+            return [{"price": plans["Starter"][f"base_monthly_{currency}"].id}]
         return [
             {"price": plans["Starter"]["base_monthly"].id},
             {"price": plans["Starter"]["metered_monthly"].id},
@@ -229,6 +298,8 @@ def subscription_items(plans: dict, plan: str, billing: str) -> list[dict]:
             {"price": plans["Professional"][f"metered_{suffix}"].id},
         ]
     if plan == "Enterprise":
+        if currency in ("eur", "gbp") and billing != "year":
+            return [{"price": plans["Enterprise"][f"monthly_{currency}"].id}]
         key = "annual" if billing == "year" else "monthly"
         return [{"price": plans["Enterprise"][key].id}]
     raise ValueError(f"Unknown plan: {plan}")
@@ -260,13 +331,23 @@ def create_customer(
     clock_id: str,
     *,
     failing_card: bool = False,
+    country: str | None = None,
 ) -> stripe.Customer:
-    """Create a customer attached to the test clock."""
+    """Create a customer attached to the test clock.
+
+    *country* is written to ``address.country`` so the Stripe connector
+    (which reads ``customer.address.country``) sets ``customer.country``
+    in Tidemill. Defaults to a deterministic rotation through ``COUNTRIES``
+    when ``None``.
+    """
+    if country is None:
+        country = COUNTRIES[index % len(COUNTRIES)]
     customer = stripe.Customer.create(
         name=name,
         email=f"seed-{index}@test.example.com",
+        address={"country": country},
         test_clock=clock_id,
-        metadata={"seed": "true", "archetype": name},
+        metadata={"seed": "true", "archetype": name, "country": country},
     )
 
     # Attach a card that declines on charge (4000000000000341) for fail_payment,
@@ -336,7 +417,12 @@ def seed(num_customers: int, num_months: int) -> str:
         failing = action == "fail_payment"
         customer = create_customer(f"{name} #{i + 1}", i, clocks[-1].id, failing_card=failing)
 
-        items = subscription_items(plans, plan, billing)
+        # Rotate currency only for plans that have non-USD price variants
+        # (Starter flat-fee and Enterprise monthly); everything else
+        # stays USD so the metered tiers stay valid.
+        eligible = plan == "Starter" or (plan == "Enterprise" and billing != "year")
+        currency = CURRENCIES[i % len(CURRENCIES)] if eligible else "usd"
+        items = subscription_items(plans, plan, billing, currency)
 
         trial_end = None
         if plan == "trial":
@@ -355,6 +441,7 @@ def seed(num_customers: int, num_months: int) -> str:
                 "action": action,
                 "plan": plan,
                 "billing": billing,
+                "currency": currency,
                 "base_usage": base_usage,
                 "active": True,
                 "change_month": change_month,
@@ -379,7 +466,10 @@ def seed(num_customers: int, num_months: int) -> str:
         if month == 0:
             for entry in entries:
                 if entry["action"] == "trial_expire":
-                    stripe.Subscription.cancel(entry["subscription"].id)
+                    stripe.Subscription.cancel(
+                        entry["subscription"].id,
+                        cancellation_details={"feedback": "unused"},
+                    )
                     entry["active"] = False
                     print(f"  → Cancelled trial for {entry['customer'].name}")
 
@@ -392,8 +482,13 @@ def seed(num_customers: int, num_months: int) -> str:
             cust = entry["customer"]
 
             if action == "churn":
-                stripe.Subscription.modify(sub.id, cancel_at_period_end=True)
-                print(f"  → Marked {cust.name} for cancellation")
+                feedback = CANCEL_FEEDBACKS[entries.index(entry) % len(CANCEL_FEEDBACKS)]
+                stripe.Subscription.modify(
+                    sub.id,
+                    cancel_at_period_end=True,
+                    cancellation_details={"feedback": feedback},
+                )
+                print(f"  → Marked {cust.name} for cancellation (feedback={feedback})")
 
             elif action == "upgrade":
                 # Starter → Professional monthly
@@ -434,7 +529,11 @@ def seed(num_customers: int, num_months: int) -> str:
 
             elif action == "churn_reactivate":
                 # Immediate cancel so the customer is clearly gone until reactivation
-                stripe.Subscription.cancel(sub.id)
+                feedback = CANCEL_FEEDBACKS[entries.index(entry) % len(CANCEL_FEEDBACKS)]
+                stripe.Subscription.cancel(
+                    sub.id,
+                    cancellation_details={"feedback": feedback},
+                )
                 entry["active"] = False
                 print(f"  → Cancelled {cust.name} (reactivates month {entry['reactivate_month']})")
 
@@ -443,7 +542,9 @@ def seed(num_customers: int, num_months: int) -> str:
             if entry.get("reactivate_month") != month or entry["active"]:
                 continue
             cust = entry["customer"]
-            items = subscription_items(plans, entry["plan"], entry["billing"])
+            items = subscription_items(
+                plans, entry["plan"], entry["billing"], entry.get("currency", "usd")
+            )
             new_sub = stripe.Subscription.create(
                 customer=cust.id,
                 items=items,
@@ -460,7 +561,11 @@ def seed(num_customers: int, num_months: int) -> str:
                     entry["base_usage"] = random.randint(15, 60)
                     print(f"  → Trial converted: {entry['customer'].name}")
                 elif entry["action"] == "trial_monthly_churn":
-                    stripe.Subscription.cancel(entry["subscription"].id)
+                    feedback = CANCEL_FEEDBACKS[entries.index(entry) % len(CANCEL_FEEDBACKS)]
+                    stripe.Subscription.cancel(
+                        entry["subscription"].id,
+                        cancellation_details={"feedback": feedback},
+                    )
                     entry["active"] = False
                     print(f"  → Trial churned: {entry['customer'].name}")
 
@@ -581,7 +686,7 @@ def main() -> None:
     parser.add_argument(
         "--customers", type=int, default=19, help="Number of customers (default: 19)"
     )
-    parser.add_argument("--months", type=int, default=6, help="Months of history (default: 6)")
+    parser.add_argument("--months", type=int, default=18, help="Months of history (default: 18)")
     parser.add_argument(
         "--cleanup",
         nargs="?",
