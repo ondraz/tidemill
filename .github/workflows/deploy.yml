@@ -22,10 +22,13 @@ jobs:
 
       - name: Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no root@tidemill <<'EOF'
+          ssh -o StrictHostKeyChecking=no root@tidemill 'bash -s' <<EOF
+            set -euxo pipefail
+            git config --global --add safe.directory /opt/tidemill
             cd /opt/tidemill
-            git fetch --tags
+            git fetch --tags --force
             git checkout ${{ github.ref_name }}
+            git rev-parse HEAD
             docker compose -f deploy/compose/docker-compose.yml build
             docker compose -f deploy/compose/docker-compose.yml up -d
           EOF
