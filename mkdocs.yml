@@ -1,0 +1,94 @@
+site_name: Tidemill
+site_url: https://ondraz.github.io/tidemill/
+repo_url: https://github.com/ondraz/tidemill
+repo_name: ondraz/tidemill
+
+docs_dir: .
+site_dir: ../site
+
+theme:
+  name: material
+  logo: assets/icon-color.svg
+  favicon: assets/favicon.svg
+  palette:
+    - scheme: default
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocs-jupyter
+  - toggle-sidebar:
+      toggle_button: all
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - toc:
+      permalink: true
+
+extra_css:
+  - stylesheets/plotly.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Definitions: definitions.md
+  - Palette: palette.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Events: architecture/events.md
+      - Database: architecture/database.md
+      - Connectors: architecture/connectors.md
+      - Cubes & Query Algebra: architecture/cubes.md
+      - Query Algebra Examples: architecture/example-queries.ipynb
+      - Metrics: architecture/metrics.md
+      - Segmentation: architecture/segments.md
+      - API: architecture/api.md
+      - Reports: architecture/reports.md
+  - Development:
+      - Development: development/development.md
+      - Testing: development/testing.md  
+      - Deployment: development/deployment.md
+  - Research:
+      - Market Overview: research/market-overview.md
+      - Business Models: research/business-models.md
+      - Pricing & Billing: research/pricing-and-billing.md
+      - Billing Engines: research/billing-engines.md
+      - Analytics Tools: research/analytics-tools.md
+      - Competitive Matrix: research/competitive-matrix.md
+      - Product Positioning: research/product-positioning.md
+  - Notebooks:
+      - MRR: notebooks/01_mrr.ipynb
+      - Churn: notebooks/02_churn.ipynb
+      - Retention: notebooks/03_retention.ipynb
+      - LTV: notebooks/04_ltv.ipynb
+      - Trials: notebooks/05_trials.ipynb

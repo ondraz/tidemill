@@ -1,0 +1,2328 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/architecture/database/">
+      
+      
+        <link rel="prev" href="../events/">
+      
+      
+        <link rel="next" href="../connectors/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Database - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#database" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Database
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-postgresql-not-clickhouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why PostgreSQL (not ClickHouse)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schema-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema Ownership
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#entity-relationship-diagram-core-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entity-Relationship Diagram (Core Tables)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fx-rates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Rates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metric-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metric Tables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#segments-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segments &amp; Attributes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indexes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-topologies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment Topologies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment Topologies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#separate-database-stripe-primary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Separate Database (Stripe) — Primary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#same-database-lagokill-bill-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Same-Database (Lago/Kill Bill) — Alternative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lago-schema-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lago Schema References
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#money-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Money Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Money Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dual-column-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dual-Column Convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-rates-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Rates Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#base-currency-conversion-at-ingest-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Base-Currency Conversion at Ingest Time
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggregation-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aggregation Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-postgresql-not-clickhouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why PostgreSQL (not ClickHouse)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schema-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema Ownership
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#entity-relationship-diagram-core-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entity-Relationship Diagram (Core Tables)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fx-rates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Rates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metric-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metric Tables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#segments-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segments &amp; Attributes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indexes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-topologies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment Topologies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment Topologies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#separate-database-stripe-primary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Separate Database (Stripe) — Primary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#same-database-lagokill-bill-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Same-Database (Lago/Kill Bill) — Alternative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lago-schema-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lago Schema References
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#money-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Money Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Money Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dual-column-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dual-Column Convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-rates-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Rates Table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#base-currency-conversion-at-ingest-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Base-Currency Conversion at Ingest Time
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggregation-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aggregation Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="database">Database<a class="headerlink" href="#database" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Core schema, ER diagram, and rationale for PostgreSQL.
+Last updated: March 2026</p>
+</blockquote>
+<h2 id="why-postgresql-not-clickhouse">Why PostgreSQL (not ClickHouse)<a class="headerlink" href="#why-postgresql-not-clickhouse" title="Permanent link">&para;</a></h2>
+<p>ClickHouse excels at columnar analytics over billions of rows. But subscription analytics has different characteristics:</p>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Subscription Analytics</th>
+<th>Implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data volume</td>
+<td>Thousands-low millions of rows</td>
+<td>PostgreSQL handles this comfortably</td>
+</tr>
+<tr>
+<td>Write pattern</td>
+<td>Frequent upserts from event processing</td>
+<td>PostgreSQL's MVCC handles upserts natively; ClickHouse has eventual consistency with ReplacingMergeTree</td>
+</tr>
+<tr>
+<td>Relationships</td>
+<td>Deep: customer -&gt; subscription -&gt; invoice -&gt; line items -&gt; payments</td>
+<td>PostgreSQL enforces referential integrity; ClickHouse has no foreign keys</td>
+</tr>
+<tr>
+<td>Query pattern</td>
+<td>JOINs across 4-5 tables for metric computation</td>
+<td>PostgreSQL's query planner is built for this; ClickHouse JOINs are limited</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>Self-hosted simplicity matters</td>
+<td>PostgreSQL is the most widely deployed database; ClickHouse needs more operational expertise</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decision:</strong> PostgreSQL as the single database. If a user later needs to feed a data warehouse, the metrics package can export to any target.</p>
+<h2 id="schema-ownership">Schema Ownership<a class="headerlink" href="#schema-ownership" title="Permanent link">&para;</a></h2>
+<p>The database has two categories of tables:</p>
+<ol>
+<li><strong>Core tables</strong> — managed by the framework. Store current state of billing entities and the event log. Defined below.</li>
+<li><strong>Metric tables</strong> — each <a href="../metrics/">metric</a> owns its own tables (prefixed <code>metric_</code>). Created by the metric's <code>register_tables()</code> method. See individual metric docs in <a href="../metrics/">Metrics</a>.</li>
+</ol>
+<p>This separation means adding a new metric never touches core schema.</p>
+<h2 id="entity-relationship-diagram-core-tables">Entity-Relationship Diagram (Core Tables)<a class="headerlink" href="#entity-relationship-diagram-core-tables" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>erDiagram
+    connector_source ||--o{ customer : syncs
+    connector_source ||--o{ product : syncs
+    connector_source ||--o{ plan : syncs
+    connector_source ||--o{ subscription : syncs
+    connector_source ||--o{ invoice : syncs
+    connector_source ||--o{ payment : syncs
+    connector_source ||--o{ event_log : produces
+
+    customer ||--o{ subscription : has
+    customer ||--o{ invoice : receives
+    customer ||--o{ payment : makes
+
+    product ||--o{ plan : has
+    plan ||--o{ subscription : defines
+    plan ||--o{ plan_charge : contains
+
+    subscription ||--o{ invoice : generates
+
+    invoice ||--o{ invoice_line_item : contains
+    invoice ||--o{ payment : settled_by
+
+    plan_charge }o--|| billable_metric : prices
+
+    connector_source {
+        uuid id PK
+        text type "stripe | lago | killbill"
+        text name
+        jsonb config "api keys, URLs, secrets"
+        timestamptz last_synced_at
+        timestamptz created_at
+    }
+
+    event_log {
+        uuid id PK
+        uuid source_id FK
+        text type "subscription.created, etc"
+        text customer_id "partition key"
+        jsonb payload
+        timestamptz occurred_at
+        timestamptz published_at
+    }
+
+    customer {
+        uuid id PK
+        uuid source_id FK
+        text external_id "ID in billing system"
+        text name
+        text email
+        text country "ISO 3166-1 alpha-2"
+        text currency "ISO 4217"
+        jsonb metadata
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    product {
+        uuid id PK
+        uuid source_id FK
+        text external_id "Stripe product ID"
+        text name
+        text description
+        boolean active
+        jsonb metadata
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    plan {
+        uuid id PK
+        uuid source_id FK
+        text external_id "Stripe price/plan ID"
+        uuid product_id FK
+        text name
+        text interval "month | year | week | day"
+        int interval_count "1 = monthly, 3 = quarterly, etc."
+        bigint amount_cents
+        text currency
+        text billing_scheme "per_unit | tiered"
+        text usage_type "licensed | metered"
+        int trial_period_days
+        jsonb metadata
+        boolean active
+        timestamptz created_at
+    }
+
+    plan_charge {
+        uuid id PK
+        uuid plan_id FK
+        uuid billable_metric_id FK
+        text charge_model "standard | tiered | volume | package | percentage"
+        jsonb properties "tiers, rates, etc"
+        timestamptz created_at
+    }
+
+    billable_metric {
+        uuid id PK
+        uuid source_id FK
+        text code "api_calls | storage_gb | tokens"
+        text name
+        text aggregation_type "count | sum | max | unique_count"
+        text field_name "property to aggregate"
+        timestamptz created_at
+    }
+
+    subscription {
+        uuid id PK
+        uuid source_id FK
+        text external_id
+        uuid customer_id FK
+        uuid plan_id FK
+        text status "active | canceled | past_due | trialing | paused"
+        bigint mrr_cents "current MRR in original currency"
+        bigint mrr_base_cents "MRR in base currency (at rate on started_at)"
+        text currency "ISO 4217"
+        int quantity
+        text collection_method "charge_automatically | send_invoice"
+        boolean cancel_at_period_end "pending cancellation flag"
+        text cancel_reason "cancellation_details.reason from Stripe"
+        text cancel_feedback "cancellation_details.feedback from Stripe"
+        timestamptz started_at
+        timestamptz trial_start
+        timestamptz trial_end
+        timestamptz canceled_at
+        timestamptz ended_at
+        timestamptz current_period_start
+        timestamptz current_period_end
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    invoice {
+        uuid id PK
+        uuid source_id FK
+        text external_id
+        uuid customer_id FK
+        uuid subscription_id FK
+        text status "draft | finalized | paid | void | uncollectible"
+        text currency "ISO 4217"
+        bigint subtotal_cents
+        bigint subtotal_base_cents
+        bigint tax_cents
+        bigint tax_base_cents
+        bigint total_cents
+        bigint total_base_cents
+        timestamptz period_start
+        timestamptz period_end
+        timestamptz issued_at
+        timestamptz paid_at
+        timestamptz voided_at
+        timestamptz created_at
+    }
+
+    invoice_line_item {
+        uuid id PK
+        uuid invoice_id FK
+        uuid subscription_id FK
+        text type "subscription | usage | addon | proration | tax | credit | adjustment"
+        text description
+        bigint amount_cents
+        bigint amount_base_cents
+        text currency
+        decimal quantity
+        timestamptz period_start
+        timestamptz period_end
+    }
+
+    payment {
+        uuid id PK
+        uuid source_id FK
+        text external_id
+        uuid invoice_id FK
+        uuid customer_id FK
+        text status "pending | succeeded | failed | refunded"
+        bigint amount_cents
+        bigint amount_base_cents
+        text currency "ISO 4217"
+        text payment_method_type "card | bank_transfer | wallet"
+        text failure_reason
+        int attempt_count
+        timestamptz succeeded_at
+        timestamptz failed_at
+        timestamptz refunded_at
+        timestamptz created_at
+    }</code></pre>
+<h2 id="fx-rates">FX Rates<a class="headerlink" href="#fx-rates" title="Permanent link">&para;</a></h2>
+<p>The <code>fx_rate</code> table stores official daily exchange rates used to populate <code>*_base_cents</code> columns at ingest time. See <a href="#money-handling">Money Handling</a> below.</p>
+<h2 id="metric-tables">Metric Tables<a class="headerlink" href="#metric-tables" title="Permanent link">&para;</a></h2>
+<p>Each metric creates its own tables, prefixed with <code>metric_</code>. Monetary columns in metric tables follow the same dual-column convention (<code>*_cents</code> + <code>*_base_cents</code>). These are documented in <a href="../metrics/">Metrics</a>. Summary:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Tables</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MRR</td>
+<td><code>metric_mrr_snapshot</code>, <code>metric_mrr_movement</code></td>
+<td>Current MRR per subscription, MRR change log</td>
+</tr>
+<tr>
+<td>Churn</td>
+<td><code>metric_churn_customer_state</code>, <code>metric_churn_event</code></td>
+<td>Customer activity tracking, churn events</td>
+</tr>
+<tr>
+<td>Retention</td>
+<td><code>metric_retention_cohort</code>, <code>metric_retention_activity</code></td>
+<td>Cohort membership, monthly activity</td>
+</tr>
+<tr>
+<td>LTV</td>
+<td><code>metric_ltv_customer_revenue</code></td>
+<td>Cumulative revenue per customer</td>
+</tr>
+<tr>
+<td>Trials</td>
+<td><code>metric_trial</code>, <code>metric_trial_event</code></td>
+<td>Per-trial outcome (cohort queries); append-only lifecycle log</td>
+</tr>
+</tbody>
+</table>
+<h2 id="segments-attributes">Segments &amp; Attributes<a class="headerlink" href="#segments-attributes" title="Permanent link">&para;</a></h2>
+<p>Workspace-scoped tables powering the <a href="../segments/">segmentation layer</a>. Shared with the dashboard/chart tables in <code>models_auth.py</code> so the application schema stays in one SQLAlchemy <code>metadata</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>attribute_definition</code></td>
+<td>Schema registry — <code>key</code>, <code>label</code>, <code>type</code> (<code>string | number | boolean | timestamp</code>), <code>source</code> (<code>stripe | csv | api | computed</code>)</td>
+</tr>
+<tr>
+<td><code>customer_attribute</code></td>
+<td>EAV value rows — one per <code>(source_id, customer_id, key)</code>. Only the <code>value_*</code> column matching the declared type is populated. Index <code>(key, source_id, customer_id)</code> matches the typical segment read pattern (filter attribute first, then intersect to customers)</td>
+</tr>
+<tr>
+<td><code>segment</code></td>
+<td>Saved segment definitions — JSON <code>SegmentDef</code> stored in <code>definition</code>, <code>created_by</code> captures auditing (workspace-shared — no per-user filter)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="event-log">Event Log<a class="headerlink" href="#event-log" title="Permanent link">&para;</a></h2>
+<p>The <code>event_log</code> table is a permanent archive of all <a href="../events/">internal events</a>. It serves two purposes:</p>
+<ol>
+<li><strong>Replay source</strong> — when Kafka retention expires or when bootstrapping a new deployment</li>
+<li><strong>Audit trail</strong> — full history of every billing system change</li>
+</ol>
+<p>Events are append-only. The table is never updated or deleted from.</p>
+<h2 id="indexes">Indexes<a class="headerlink" href="#indexes" title="Permanent link">&para;</a></h2>
+<p>Key indexes beyond primary keys:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Unique billing system IDs</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">UNIQUE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_customer_source</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">customer</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">external_id</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">UNIQUE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_subscription_source</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">subscription</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">external_id</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">UNIQUE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_invoice_source</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">invoice</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">external_id</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">UNIQUE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_payment_source</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">payment</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">external_id</span><span class="p">);</span>
+
+<span class="c1">-- Event log queries</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_event_log_type_time</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">event_log</span><span class="p">(</span><span class="k">type</span><span class="p">,</span><span class="w"> </span><span class="n">occurred_at</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_event_log_customer</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">event_log</span><span class="p">(</span><span class="n">customer_id</span><span class="p">,</span><span class="w"> </span><span class="n">occurred_at</span><span class="p">);</span>
+
+<span class="c1">-- State queries</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_subscription_status</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">subscription</span><span class="p">(</span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">customer_id</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_invoice_period</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">invoice</span><span class="p">(</span><span class="n">period_start</span><span class="p">,</span><span class="w"> </span><span class="n">period_end</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_payment_status</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">payment</span><span class="p">(</span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">created_at</span><span class="p">);</span>
+
+<span class="c1">-- Cohort queries</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_customer_created</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">customer</span><span class="p">(</span><span class="n">created_at</span><span class="p">);</span>
+</code></pre></div>
+<h2 id="deployment-topologies">Deployment Topologies<a class="headerlink" href="#deployment-topologies" title="Permanent link">&para;</a></h2>
+<p>The database architecture depends on which <a href="../connectors/">connector mode</a> is used.</p>
+<h3 id="separate-database-stripe-primary">Separate Database (Stripe) — Primary<a class="headerlink" href="#separate-database-stripe-primary" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>┌─────────────────┐     ┌─────────────────┐
+│  Kafka/Redpanda │     │   PostgreSQL     │
+│  (event bus)    │────►│  (analytics)     │
+│                 │     │                  │
+└─────────────────┘     │  core tables     │
+                        │  metric_* tables │
+                        └─────────────────┘
+</code></pre></div>
+<p>For Stripe (and any webhook-based connector), the analytics engine owns its own PostgreSQL and Kafka/Redpanda. Webhooks are ingested through Kafka, processed into core tables and metric tables. This is the primary deployment topology.</p>
+<h3 id="same-database-lagokill-bill-alternative">Same-Database (Lago/Kill Bill) — Alternative<a class="headerlink" href="#same-database-lagokill-bill-alternative" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────┐
+│              PostgreSQL                      │
+│                                             │
+│  ┌─────────────────┐  ┌──────────────────┐  │
+│  │ Lago/Kill Bill   │  │ Analytics        │  │
+│  │ tables           │  │ metric_* tables  │  │
+│  │ (billing-owned)  │  │ (analytics-owned)│  │
+│  └─────────────────┘  └──────────────────┘  │
+│                                             │
+│  Billing engine and analytics share the     │
+│  same PostgreSQL instance. Analytics        │
+│  reads billing tables, writes metric_*.     │
+└─────────────────────────────────────────────┘
+</code></pre></div>
+<p>For open-source billing engines (Lago, Kill Bill) that expose their PostgreSQL, the analytics engine can create its <code>metric_*</code> tables in a separate schema within the same database. No Kafka, no data copying, no sync lag.</p>
+<p><strong>Alternative:</strong> analytics connects to Lago's PostgreSQL as read-only and maintains its own PostgreSQL for <code>metric_*</code> tables. More isolation, slightly more operational complexity.</p>
+<h3 id="lago-schema-references">Lago Schema References<a class="headerlink" href="#lago-schema-references" title="Permanent link">&para;</a></h3>
+<p>When using same-database mode with Lago, the analytics engine queries these Lago-owned tables (read-only):</p>
+<table>
+<thead>
+<tr>
+<th>Lago Table</th>
+<th>Key Columns</th>
+<th>Analytics Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subscriptions</code></td>
+<td><code>id</code>, <code>customer_id</code>, <code>plan_id</code>, <code>status</code>, <code>started_at</code>, <code>terminated_at</code></td>
+<td>Active subscription state</td>
+</tr>
+<tr>
+<td><code>fees</code></td>
+<td><code>subscription_id</code>, <code>amount_cents</code>, <code>fee_type</code>, <code>created_at</code></td>
+<td>MRR source of truth (fee-type separation)</td>
+</tr>
+<tr>
+<td><code>invoices</code></td>
+<td><code>id</code>, <code>customer_id</code>, <code>status</code>, <code>total_amount_cents</code></td>
+<td>Revenue tracking</td>
+</tr>
+<tr>
+<td><code>customers</code></td>
+<td><code>id</code>, <code>external_id</code>, <code>name</code>, <code>email</code></td>
+<td>Customer records</td>
+</tr>
+<tr>
+<td><code>plans</code></td>
+<td><code>id</code>, <code>name</code>, <code>interval</code>, <code>amount_cents</code></td>
+<td>Plan definitions</td>
+</tr>
+<tr>
+<td><code>charges</code></td>
+<td><code>id</code>, <code>plan_id</code>, <code>charge_model</code>, <code>properties</code></td>
+<td>Usage-based pricing</td>
+</tr>
+</tbody>
+</table>
+<p>The analytics engine never writes to Lago tables.</p>
+<h2 id="money-handling">Money Handling<a class="headerlink" href="#money-handling" title="Permanent link">&para;</a></h2>
+<h3 id="dual-column-convention">Dual-Column Convention<a class="headerlink" href="#dual-column-convention" title="Permanent link">&para;</a></h3>
+<p>Every monetary column is stored twice:</p>
+<ol>
+<li><strong>Original currency</strong> (<code>*_cents BIGINT</code>, <code>currency TEXT</code>) — exact value from the billing system, no rounding</li>
+<li><strong>Base-currency equivalent</strong> (<code>*_base_cents BIGINT</code>) — converted at the official daily FX rate on the date the amount was recorded</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Example: invoice totals</span>
+<span class="n">total_cents</span><span class="w">       </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">   </span><span class="c1">-- e.g. 4999 (EUR)</span>
+<span class="n">currency</span><span class="w">          </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">     </span><span class="c1">-- &#39;EUR&#39;</span>
+<span class="n">total_base_cents</span><span class="w">   </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">   </span><span class="c1">-- e.g. 5399 (base currency at that day&#39;s rate)</span>
+</code></pre></div>
+<p>This allows:
+- <strong>Exact per-customer records</strong> in original currency (for invoices, statements)
+- <strong>Fast cross-currency aggregations</strong> in base currency without joining the FX rate table at query time</p>
+<p>If the transaction currency matches the configured base currency, both columns hold the same value.</p>
+<h3 id="fx-rates-table">FX Rates Table<a class="headerlink" href="#fx-rates-table" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">fx_rate</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">           </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">gen_random_uuid</span><span class="p">(),</span>
+<span class="w">    </span><span class="nb">date</span><span class="w">         </span><span class="nb">DATE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">from_currency</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">   </span><span class="c1">-- ISO 4217, e.g. &#39;EUR&#39;</span>
+<span class="w">    </span><span class="n">to_currency</span><span class="w">   </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">   </span><span class="c1">-- matches BASE_CURRENCY (e.g. &#39;USD&#39;, &#39;EUR&#39;)</span>
+<span class="w">    </span><span class="n">rate</span><span class="w">          </span><span class="nb">NUMERIC</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">  </span><span class="c1">-- e.g. 1 EUR = 1.0798 USD</span>
+<span class="w">    </span><span class="k">source</span><span class="w">        </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">   </span><span class="c1">-- &#39;ecb&#39; | &#39;openexchangerates&#39; | &#39;manual&#39;</span>
+<span class="w">    </span><span class="k">UNIQUE</span><span class="p">(</span><span class="nb">date</span><span class="p">,</span><span class="w"> </span><span class="n">from_currency</span><span class="p">,</span><span class="w"> </span><span class="n">to_currency</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_fx_rate_lookup</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">fx_rate</span><span class="p">(</span><span class="n">from_currency</span><span class="p">,</span><span class="w"> </span><span class="n">to_currency</span><span class="p">,</span><span class="w"> </span><span class="nb">date</span><span class="w"> </span><span class="k">DESC</span><span class="p">);</span>
+</code></pre></div>
+<p>Rates are fetched once daily (e.g., from ECB or Open Exchange Rates) and stored here. The analytics engine uses <code>fx_rate</code> to populate <code>*_base_cents</code> when ingesting events or polling Lago.</p>
+<h3 id="base-currency-conversion-at-ingest-time">Base-Currency Conversion at Ingest Time<a class="headerlink" href="#base-currency-conversion-at-ingest-time" title="Permanent link">&para;</a></h3>
+<p>The base currency is set once at deployment via the <code>BASE_CURRENCY</code> environment variable (default: <code>USD</code>). All <code>*_base_cents</code> columns are converted to this currency at ingest time.</p>
+<p>Database access is always async via SQLAlchemy's <code>AsyncSession</code> / <code>AsyncEngine</code>. The FX lookup follows the same pattern:</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">to_base_cents</span><span class="p">(</span><span class="n">amount_cents</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">currency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">on_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+                        <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">,</span> <span class="n">base_currency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;USD&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">currency</span> <span class="o">==</span> <span class="n">base_currency</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">amount_cents</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">text</span><span class="p">(</span><span class="s2">&quot;SELECT rate FROM fx_rate WHERE from_currency = :c AND to_currency = :base&quot;</span>
+             <span class="s2">&quot; AND date &lt;= :d ORDER BY date DESC LIMIT 1&quot;</span><span class="p">),</span>
+        <span class="p">{</span><span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="n">currency</span><span class="p">,</span> <span class="s2">&quot;base&quot;</span><span class="p">:</span> <span class="n">base_currency</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span> <span class="n">on_date</span><span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No FX rate for </span><span class="si">{</span><span class="n">currency</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">base_currency</span><span class="si">}</span><span class="s2"> on or before </span><span class="si">{</span><span class="n">on_date</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">amount_cents</span> <span class="o">*</span> <span class="n">rate</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="aggregation-pattern">Aggregation Pattern<a class="headerlink" href="#aggregation-pattern" title="Permanent link">&para;</a></h3>
+<p>Use <code>*_base_cents</code> for totals (MRR, ARR, revenue) and <code>currency</code> + <code>*_cents</code> for per-customer display:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Fast: no runtime FX join needed</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">100</span><span class="p">.</span><span class="mi">0</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="c1">-- Per-customer breakdown in original currency</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">customer_id</span><span class="p">,</span><span class="w"> </span><span class="n">currency</span><span class="p">,</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">mrr_cents</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">100</span><span class="p">.</span><span class="mi">0</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">mrr_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">customer_id</span><span class="p">,</span><span class="w"> </span><span class="n">currency</span><span class="p">;</span>
+</code></pre></div>
+<h3 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>mrr_cents = 4999</code> in EUR, <code>mrr_base_cents = 5399</code> means 53.99/month in base currency at that day's rate</li>
+<li>Annual plan at 599/year: <code>mrr_cents = 59900 / 12 = 4991</code> (integer division, rounds down)</li>
+<li>Historical base-currency values are frozen at the rate on the date of the event — they do not retroactively update when FX rates change</li>
+<li>The base currency is set once at deployment time via <code>BASE_CURRENCY</code> and should not be changed after data has been ingested</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

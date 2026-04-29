@@ -1,0 +1,2930 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/architecture/metrics/">
+      
+      
+        <link rel="prev" href="../example-queries/">
+      
+      
+        <link rel="next" href="../segments/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Metrics - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#metrics" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Metrics
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dual-mode-computation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dual-Mode Computation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metric-transparency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metric Transparency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#base-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Base Class
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lifecycle">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ingestion-mode-stripe-primary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ingestion Mode (Stripe) — Primary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replay-backfill-ingestion-mode-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replay / Backfill (Ingestion Mode Only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#same-database-mode-lagokill-bill-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Same-Database Mode (Lago/Kill Bill) — Alternative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Built-in Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mrr-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR (P0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn (P0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention (P0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ltv-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LTV (P1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trials-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trials (P1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metricsengine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MetricsEngine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MetricsEngine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#segmentation-queryspec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segmentation (QuerySpec)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Segmentation (QuerySpec)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Dimensions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-mode-return-shape-ratio-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare-mode return shape (ratio metrics)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return Shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cubes-query-algebra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cubes &amp; Query Algebra
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dual-mode-computation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dual-Mode Computation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metric-transparency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metric Transparency
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#base-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Base Class
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lifecycle">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ingestion-mode-stripe-primary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ingestion Mode (Stripe) — Primary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replay-backfill-ingestion-mode-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replay / Backfill (Ingestion Mode Only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#same-database-mode-lagokill-bill-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Same-Database Mode (Lago/Kill Bill) — Alternative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Built-in Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mrr-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR (P0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn (P0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention-p0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention (P0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ltv-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LTV (P1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trials-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trials (P1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metricsengine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MetricsEngine
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MetricsEngine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#segmentation-queryspec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segmentation (QuerySpec)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Segmentation (QuerySpec)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Dimensions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-mode-return-shape-ratio-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare-mode return shape (ratio metrics)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return Shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cubes-query-algebra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cubes &amp; Query Algebra
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="metrics">Metrics<a class="headerlink" href="#metrics" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Each metric manages its own tables, registration, and computation.
+Last updated: March 2026</p>
+</blockquote>
+<h2 id="design">Design<a class="headerlink" href="#design" title="Permanent link">&para;</a></h2>
+<p>Each metric is self-contained. A metric:</p>
+<ol>
+<li><strong>Declares its database tables</strong> — the metric owns its schema, created on registration</li>
+<li><strong>Registers itself</strong> — declares a name, its query interface, and (optionally) the events it subscribes to</li>
+<li><strong>Computes results</strong> — either by querying billing tables directly (same-database mode) or by consuming events from Kafka (ingestion mode)</li>
+<li><strong>Exposes queries</strong> — the <code>MetricsEngine</code> delegates queries to the appropriate metric</li>
+</ol>
+<p>This means adding a new metric requires zero changes to existing code. Write a metric class, register it, done.</p>
+<h3 id="dual-mode-computation">Dual-Mode Computation<a class="headerlink" href="#dual-mode-computation" title="Permanent link">&para;</a></h3>
+<p>Metrics support two computation modes, matching the <a href="../overview/">dual architecture</a>:</p>
+<ul>
+<li><strong>Event-driven mode</strong> (ingestion) — the metric consumes events from Kafka and maintains its own materialized tables. This is the primary mode, used with Stripe and any webhook-based connector.</li>
+<li><strong>Direct-query mode</strong> (same-database) — the metric queries billing tables via the <code>DatabaseConnector</code> at query time. Used with Lago/Kill Bill. No Kafka, no event processing. Lower priority.</li>
+</ul>
+<p>Metrics must support at least one mode. The same metric can support both — using event-driven processing by default and falling back to direct queries when a <code>DatabaseConnector</code> is available.</p>
+<h3 id="metric-transparency">Metric Transparency<a class="headerlink" href="#metric-transparency" title="Permanent link">&para;</a></h3>
+<p>Every metric must document its computation methodology:</p>
+<ul>
+<li><strong>Formula</strong> — the mathematical definition</li>
+<li><strong>SQL</strong> — the actual query used to compute the metric</li>
+<li><strong>Assumptions</strong> — what counts as "active", how partial months are handled, etc.</li>
+<li><strong>Edge cases</strong> — how the metric behaves with zero customers, mid-month changes, etc.</li>
+</ul>
+<p>This transparency is the project's core differentiator. Metric definitions are code: reviewable, forkable, contributable. No black boxes.</p>
+<h2 id="base-class">Base Class<a class="headerlink" href="#base-class" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetaData</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">tidemill.metrics.query</span><span class="w"> </span><span class="kn">import</span> <span class="n">Cube</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tidemill.segments.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SegmentDef</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuerySpec</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Declarative query specification resolved against a metric&#39;s Cube.</span>
+
+<span class="sd">    Dimensions and filters reference names defined in the model (e.g., &quot;plan_interval&quot;,</span>
+<span class="sd">    &quot;customer_country&quot;). The model validates them and compiles to SQL via fragment</span>
+<span class="sd">    composition. See [Cubes &amp; Query Algebra](cubes.md) and [Segmentation](segments.md).</span>
+
+<span class="sd">    Return shape:</span>
+<span class="sd">    - dimensions set → list of dicts, one row per group</span>
+<span class="sd">    - compare set   → list of dicts, one row per `segment_id` (ratio metrics</span>
+<span class="sd">                      return per-segment numerator/denominator pairs already</span>
+<span class="sd">                      divided — see &quot;Compare-mode return shape&quot; below)</span>
+<span class="sd">    - otherwise     → scalar or time series</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Dimensions to group by (names from model.Dimensions)</span>
+    <span class="c1">#   &quot;plan_id&quot;          — one row per plan</span>
+    <span class="c1">#   &quot;plan_interval&quot;    — one row per billing interval (monthly/yearly/...)</span>
+    <span class="c1">#   &quot;customer_country&quot; — one row per country</span>
+    <span class="c1">#   &quot;source_id&quot;        — one row per billing source</span>
+    <span class="c1">#   &quot;currency&quot;         — one row per currency (uses *_cents, not base-currency aggregate)</span>
+    <span class="c1">#   &quot;cohort_month&quot;     — retention-specific: one row per cohort</span>
+    <span class="c1">#   Computed dims from MRR cubes: &quot;mrr_band&quot;, &quot;arr_band&quot;, &quot;tenure_months&quot;,</span>
+    <span class="c1">#   &quot;cohort_month&quot; (CASE WHEN / DATE_TRUNC expressions)</span>
+    <span class="n">dimensions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># Filters: dimension_name → value (equality) or {op: value} for other operators</span>
+    <span class="c1">#   {&quot;customer_country&quot;: &quot;US&quot;}                    — equality</span>
+    <span class="c1">#   {&quot;plan_interval&quot;: {&quot;in&quot;: [&quot;monthly&quot;, &quot;yearly&quot;]}} — IN list</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="c1"># Time bucketing</span>
+    <span class="n">granularity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>        <span class="c1"># day | week | month | quarter | year</span>
+    <span class="n">time_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Segmentation — see segments.md for the AST + compilation model</span>
+    <span class="c1">#   segment  — a parsed SegmentDef applied as a universe filter (AND&#39;d</span>
+    <span class="c1">#              into every row, narrows the rowset for the whole query)</span>
+    <span class="c1">#   compare  — list of (segment_id, SegmentDef) pairs; compile() emits a</span>
+    <span class="c1">#              CROSS JOIN over a VALUES list of segment_ids and a compound</span>
+    <span class="c1">#              OR predicate so each row is tagged with every branch it</span>
+    <span class="c1">#              matches (overlapping segments produce duplicate rows, by</span>
+    <span class="c1">#              design)</span>
+    <span class="n">segment</span><span class="p">:</span> <span class="n">SegmentDef</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">compare</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SegmentDef</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Metric</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for metrics.</span>
+
+<span class="sd">    All I/O methods are async — metrics use SQLAlchemy AsyncSession for database</span>
+<span class="sd">    access and await connector calls. The engine and consumers are fully async.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Metric identifier, e.g. &#39;mrr&#39;, &#39;churn&#39;.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Names of other metrics this metric depends on.</span>
+<span class="sd">        The engine ensures all dependencies are registered and initialized</span>
+<span class="sd">        before this metric is started.</span>
+
+<span class="sd">        Example: QuickRatioMetric depends on MRR data, so it declares [&#39;mrr&#39;].</span>
+<span class="sd">        The engine injects the MRR metric instance so this metric can query its tables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">event_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Event types this metric subscribes to (ingestion mode).</span>
+<span class="sd">        Return empty list if metric only supports direct-query mode.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">primary_cube</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Cube</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The cube exposed as this metric&#39;s filter / group-by surface.</span>
+
+<span class="sd">        Used by the discovery endpoint (`GET /api/metrics/{name}/fields`)</span>
+<span class="sd">        and the segment validator so generic routers don&#39;t have to</span>
+<span class="sd">        hard-code which cube belongs to which metric. Defaults to</span>
+<span class="sd">        `self.model`. Metrics with multiple cubes (e.g. churn — event +</span>
+<span class="sd">        state) override to pick the one that carries the richest</span>
+<span class="sd">        end-user filter set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">MetaData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define SQLAlchemy tables owned by this metric.</span>
+<span class="sd">        Synchronous — called once at startup before the event loop runs.&quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process a single event (ingestion mode). Must be idempotent.</span>
+<span class="sd">        Called by the async Kafka consumer for each matching event.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This metric does not support event-driven mode&quot;</span><span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Answer a metric query.</span>
+
+<span class="sd">        params: query-type-specific parameters (at, start, end, interval, ...)</span>
+<span class="sd">        spec:   optional QuerySpec with dimensions and filters. Names reference</span>
+<span class="sd">                the metric&#39;s Cube. All built-in metrics support this.</span>
+
+<span class="sd">        Async — issues SQL via AsyncSession or awaits DatabaseConnector methods.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span>
+</code></pre></div>
+<h2 id="registry">Registry<a class="headerlink" href="#registry" title="Permanent link">&para;</a></h2>
+<p>Metrics register themselves via a decorator:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">tidemill.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">register</span>
+
+<span class="nd">@register</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MrrMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;mrr&quot;</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[]</span>   <span class="c1"># no dependencies</span>
+    <span class="n">event_types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;subscription.created&quot;</span><span class="p">,</span> <span class="s2">&quot;subscription.activated&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;subscription.changed&quot;</span><span class="p">,</span> <span class="s2">&quot;subscription.canceled&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;subscription.churned&quot;</span><span class="p">,</span> <span class="s2">&quot;subscription.reactivated&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;subscription.paused&quot;</span><span class="p">,</span> <span class="s2">&quot;subscription.resumed&quot;</span><span class="p">]</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector</span><span class="p">:</span>  <span class="c1"># same-database mode (Lago/Kill Bill)</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_direct</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="c1"># Ingestion mode (Stripe) — primary path</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_materialized</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+
+
+<span class="nd">@register</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RetentionMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;retention&quot;</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mrr&quot;</span><span class="p">]</span>   <span class="c1"># engine injects mrr metric at startup</span>
+    <span class="n">event_types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;subscription.created&quot;</span><span class="p">,</span> <span class="s2">&quot;subscription.activated&quot;</span><span class="p">,</span>
+                   <span class="s2">&quot;subscription.churned&quot;</span><span class="p">,</span> <span class="s2">&quot;subscription.reactivated&quot;</span><span class="p">]</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># NRR / GRR query metric_mrr_movement directly; cohort matrix reads</span>
+        <span class="c1"># metric_retention_cohort + metric_retention_activity.</span>
+        <span class="o">...</span>
+</code></pre></div>
+<p>The Quick Ratio is <strong>not</strong> a registered metric — it is a pure derivation from MRR movements. It lives in the reports layer as <code>tidemill.reports.mrr.quick_ratio(tm, start, end)</code> and in the summary endpoint's post-processing.</p>
+<p>At startup, the engine:</p>
+<ol>
+<li>Discovers all registered metrics</li>
+<li><strong>Resolves dependency order</strong> — topological sort of the dependency graph; raises on cycles</li>
+<li>Initializes metrics in dependency order; injects resolved instances</li>
+<li>Calls <code>register_tables()</code> on each — tables are added to the SQLAlchemy metadata</li>
+<li>Runs Alembic migrations (or <code>metadata.create_all()</code> in dev)</li>
+<li><strong>Ingestion mode only:</strong> starts a Kafka consumer per metric (consumer group: <code>tidemill.metric.{name}</code>)</li>
+</ol>
+<h2 id="lifecycle">Lifecycle<a class="headerlink" href="#lifecycle" title="Permanent link">&para;</a></h2>
+<h3 id="ingestion-mode-stripe-primary">Ingestion Mode (Stripe) — Primary<a class="headerlink" href="#ingestion-mode-stripe-primary" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Startup                     Runtime                        Query
+   │                            │                             │
+   │  register_tables()         │  Kafka event arrives        │  GET /api/metrics/mrr
+   │  create tables if needed   │  ──────────────────►        │  ─────────────────►
+   │  seek to last offset       │  handle_event(event)        │  metric.query(params)
+   │                            │  update metric tables       │  → SQL against metric_* tables
+   │                            │  commit offset              │  return result
+</code></pre></div>
+<h3 id="replay-backfill-ingestion-mode-only">Replay / Backfill (Ingestion Mode Only)<a class="headerlink" href="#replay-backfill-ingestion-mode-only" title="Permanent link">&para;</a></h3>
+<p>When a new metric is added to an existing deployment:</p>
+<ol>
+<li>Metric tables are created (empty)</li>
+<li>Consumer group is new, so Kafka offset starts at the beginning (or reads from <code>event_log</code>)</li>
+<li>All historical events are replayed through <code>handle_event()</code></li>
+<li>Metric catches up to head and starts processing live events</li>
+</ol>
+<p>To recompute a metric from scratch: reset the consumer group offset to 0 and truncate the metric's tables.</p>
+<h3 id="same-database-mode-lagokill-bill-alternative">Same-Database Mode (Lago/Kill Bill) — Alternative<a class="headerlink" href="#same-database-mode-lagokill-bill-alternative" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Startup                        Query
+   │                             │
+   │  register_tables()          │  GET /api/metrics/mrr
+   │  create tables if needed    │  ─────────────────►
+   │                             │  connector.get_mrr_cents()
+   │                             │  → SQL against billing tables
+   │                             │  return result
+</code></pre></div>
+<p>No Kafka, no event processing. The database connector queries billing tables at request time.</p>
+<h2 id="priority">Priority<a class="headerlink" href="#priority" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Priority</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MRR</td>
+<td><strong>P0</strong></td>
+<td>MRR, ARR, net new MRR breakdown</td>
+</tr>
+<tr>
+<td>Churn</td>
+<td><strong>P0</strong></td>
+<td>Logo churn, revenue churn, net revenue churn</td>
+</tr>
+<tr>
+<td>Retention</td>
+<td><strong>P0</strong></td>
+<td>Monthly cohorts, NRR, GRR</td>
+</tr>
+<tr>
+<td>LTV</td>
+<td>P1</td>
+<td>LTV, ARPU, cohort LTV</td>
+</tr>
+<tr>
+<td>Trials</td>
+<td>P1</td>
+<td>Trial conversion rate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="built-in-metrics">Built-in Metrics<a class="headerlink" href="#built-in-metrics" title="Permanent link">&para;</a></h2>
+<h3 id="mrr-p0">MRR (P0)<a class="headerlink" href="#mrr-p0" title="Permanent link">&para;</a></h3>
+<p><strong>Subscribes to (ingestion mode):</strong> <code>subscription.created</code>, <code>subscription.activated</code>, <code>subscription.changed</code>, <code>subscription.canceled</code>, <code>subscription.churned</code>, <code>subscription.reactivated</code>, <code>subscription.paused</code>, <code>subscription.resumed</code></p>
+<p><strong>Direct queries (same-database mode):</strong> <code>DatabaseConnector.get_mrr_cents()</code>, <code>DatabaseConnector.get_subscription_changes()</code></p>
+<p><strong>Tables:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Running MRR snapshot, updated on every subscription event</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">              </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">       </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">     </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subscription_id</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">mrr_cents</span><span class="w">       </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">         </span><span class="c1">-- current MRR in original currency</span>
+<span class="w">    </span><span class="n">mrr_base_cents</span><span class="w">   </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">         </span><span class="c1">-- MRR in base currency (at rate on snapshot_at)</span>
+<span class="w">    </span><span class="n">currency</span><span class="w">        </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">           </span><span class="c1">-- ISO 4217</span>
+<span class="w">    </span><span class="n">snapshot_at</span><span class="w">     </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">    </span><span class="c1">-- when this state took effect</span>
+<span class="w">    </span><span class="k">UNIQUE</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">subscription_id</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="c1">-- MRR movements (append-only log for breakdown queries)</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_mrr_movement</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">              </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_id</span><span class="w">        </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">UNIQUE</span><span class="p">,</span><span class="w">    </span><span class="c1">-- idempotency: one movement per event</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">       </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">     </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subscription_id</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">movement_type</span><span class="w">   </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">           </span><span class="c1">-- new | expansion | contraction | churn | reactivation</span>
+<span class="w">    </span><span class="n">amount_cents</span><span class="w">    </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">         </span><span class="c1">-- signed, original currency</span>
+<span class="w">    </span><span class="n">amount_base_cents</span><span class="w"> </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">        </span><span class="c1">-- signed, base currency at rate on occurred_at</span>
+<span class="w">    </span><span class="n">currency</span><span class="w">        </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">occurred_at</span><span class="w">     </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">);</span>
+</code></pre></div>
+<p><strong>Event handling:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">match</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s2">&quot;subscription.created&quot;</span><span class="p">:</span>
+            <span class="c1"># Snapshot only — &quot;new&quot; movement deferred to subscription.activated</span>
+            <span class="c1"># to avoid double-counting trials that later convert.</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upsert_snapshot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_cents&quot;</span><span class="p">],</span>
+                                        <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_base_cents&quot;</span><span class="p">])</span>
+
+        <span class="k">case</span> <span class="s2">&quot;subscription.activated&quot;</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upsert_snapshot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_cents&quot;</span><span class="p">],</span>
+                                        <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_base_cents&quot;</span><span class="p">])</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append_movement</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_cents&quot;</span><span class="p">],</span>
+                                        <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_base_cents&quot;</span><span class="p">])</span>
+
+        <span class="k">case</span> <span class="s2">&quot;subscription.changed&quot;</span><span class="p">:</span>
+            <span class="n">prev</span><span class="p">,</span> <span class="n">prev_usd</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;prev_mrr_cents&quot;</span><span class="p">],</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;prev_mrr_base_cents&quot;</span><span class="p">]</span>
+            <span class="n">new</span><span class="p">,</span>  <span class="n">new_usd</span>  <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;new_mrr_cents&quot;</span><span class="p">],</span>  <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;new_mrr_base_cents&quot;</span><span class="p">]</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upsert_snapshot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">new_usd</span><span class="p">)</span>
+            <span class="n">delta</span><span class="p">,</span> <span class="n">delta_usd</span> <span class="o">=</span> <span class="n">new</span> <span class="o">-</span> <span class="n">prev</span><span class="p">,</span> <span class="n">new_usd</span> <span class="o">-</span> <span class="n">prev_usd</span>
+            <span class="n">kind</span> <span class="o">=</span> <span class="s2">&quot;expansion&quot;</span> <span class="k">if</span> <span class="n">delta</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;contraction&quot;</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append_movement</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">delta_usd</span><span class="p">)</span>
+
+        <span class="k">case</span> <span class="s2">&quot;subscription.churned&quot;</span><span class="p">:</span>
+            <span class="n">prev</span><span class="p">,</span> <span class="n">prev_usd</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;prev_mrr_cents&quot;</span><span class="p">],</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;prev_mrr_base_cents&quot;</span><span class="p">]</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upsert_snapshot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append_movement</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;churn&quot;</span><span class="p">,</span> <span class="o">-</span><span class="n">prev</span><span class="p">,</span> <span class="o">-</span><span class="n">prev_usd</span><span class="p">)</span>
+
+        <span class="k">case</span> <span class="s2">&quot;subscription.reactivated&quot;</span><span class="p">:</span>
+            <span class="n">mrr</span><span class="p">,</span> <span class="n">mrr_base</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_cents&quot;</span><span class="p">],</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_base_cents&quot;</span><span class="p">]</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upsert_snapshot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">mrr</span><span class="p">,</span> <span class="n">mrr_base</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append_movement</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;reactivation&quot;</span><span class="p">,</span> <span class="n">mrr</span><span class="p">,</span> <span class="n">mrr_base</span><span class="p">)</span>
+
+        <span class="k">case</span> <span class="s2">&quot;subscription.paused&quot;</span><span class="p">:</span>
+            <span class="n">mrr</span><span class="p">,</span> <span class="n">mrr_base</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_cents&quot;</span><span class="p">],</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_base_cents&quot;</span><span class="p">]</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upsert_snapshot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append_movement</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;churn&quot;</span><span class="p">,</span> <span class="o">-</span><span class="n">mrr</span><span class="p">,</span> <span class="o">-</span><span class="n">mrr_base</span><span class="p">)</span>
+
+        <span class="k">case</span> <span class="s2">&quot;subscription.resumed&quot;</span><span class="p">:</span>
+            <span class="n">mrr</span><span class="p">,</span> <span class="n">mrr_base</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_cents&quot;</span><span class="p">],</span> <span class="n">event</span><span class="o">.</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;mrr_base_cents&quot;</span><span class="p">]</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upsert_snapshot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">mrr</span><span class="p">,</span> <span class="n">mrr_base</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append_movement</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;reactivation&quot;</span><span class="p">,</span> <span class="n">mrr</span><span class="p">,</span> <span class="n">mrr_base</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Queries (dual-mode):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">match</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_type&quot;</span><span class="p">):</span>
+        <span class="k">case</span> <span class="s2">&quot;current&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector</span><span class="p">:</span>
+                <span class="c1"># Same-database mode: query billing tables directly</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">get_mrr_base_cents</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;at&quot;</span><span class="p">))</span>
+            <span class="c1"># Ingestion mode (primary): query materialized metric_mrr_snapshot</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_mrr</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;at&quot;</span><span class="p">),</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mrr_series</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">],</span>
+                                          <span class="n">params</span><span class="p">[</span><span class="s2">&quot;interval&quot;</span><span class="p">],</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;breakdown&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mrr_breakdown</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">],</span> <span class="n">spec</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;arr&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">({</span><span class="o">**</span><span class="n">params</span><span class="p">,</span> <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;current&quot;</span><span class="p">},</span> <span class="n">spec</span><span class="p">)</span> <span class="o">*</span> <span class="mi">12</span>
+</code></pre></div>
+<p><strong>Query building with cubes and fragment composition:</strong></p>
+<p>Each MRR query method composes <code>QueryFragment</code> objects from <code>MRRSnapshotCube</code> or <code>MRRMovementCube</code>. The model declares available joins, measures, and dimensions; fragments carry the required joins automatically. See <a href="../cubes/">Cubes &amp; Query Algebra</a> for the full approach.</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_current_mrr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Use original-currency measure when caller groups by currency</span>
+    <span class="n">use_original</span> <span class="o">=</span> <span class="n">spec</span> <span class="ow">and</span> <span class="s2">&quot;currency&quot;</span> <span class="ow">in</span> <span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">or</span> <span class="p">[])</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>  <span class="c1"># MRRSnapshotCube</span>
+    <span class="n">measure</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr_original</span> <span class="k">if</span> <span class="n">use_original</span> <span class="k">else</span> <span class="n">m</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span>
+
+    <span class="c1"># Base: always-present fragments</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">measure</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Time filter</span>
+    <span class="k">if</span> <span class="n">at</span><span class="p">:</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;snapshot_at&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="n">at</span><span class="p">)</span>
+
+    <span class="c1"># Apply user-requested dimensions, filters, segment (universe filter),</span>
+    <span class="c1"># and compare (per-branch slicing) from spec.  build_spec_fragment is</span>
+    <span class="c1"># the single bridge between QuerySpec and Cube — see</span>
+    <span class="c1"># tidemill/segments/compiler.py.</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="k">await</span> <span class="n">build_spec_fragment</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+
+    <span class="n">stmt</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">mappings</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Scalar when no dimensions and no compare, list of dicts otherwise.</span>
+    <span class="n">has_compare</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">spec</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">compare</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">spec</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_compare</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;mrr&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">rows</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">]</span>
+</code></pre></div>
+<p><strong>Example: SQL generated for <code>_current_mrr</code> with various specs</strong></p>
+<p>No spec — plain aggregate:
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+</code></pre></div></p>
+<p><code>QuerySpec(filters={"plan_interval": {"in": ["yearly"]}})</code> — filter only, no dimensions:
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">subscription</span><span class="w"> </span><span class="n">sub</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">subscription_id</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">plan</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="nb">interval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="p">(:</span><span class="n">plan_interval</span><span class="p">)</span>
+</code></pre></div></p>
+<p><code>QuerySpec(dimensions=["plan_interval", "customer_country"])</code> — dimensional cut:
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="nb">interval</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">plan_interval</span><span class="p">,</span>
+<span class="w">       </span><span class="k">c</span><span class="p">.</span><span class="n">country</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">customer_country</span><span class="p">,</span>
+<span class="w">       </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">subscription</span><span class="w"> </span><span class="n">sub</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">subscription_id</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">plan</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">customer</span><span class="w"> </span><span class="k">c</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">customer_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="nb">interval</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">country</span>
+</code></pre></div></p>
+<p><code>QuerySpec(filters={"customer_country": {"in": ["US", "DE"]}}, dimensions=["plan_id"])</code> — filter + dimension:
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span><span class="p">,</span>
+<span class="w">       </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">subscription</span><span class="w"> </span><span class="n">sub</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">subscription_id</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">customer</span><span class="w"> </span><span class="k">c</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">customer_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">country</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">ANY</span><span class="p">(:</span><span class="n">customer_country</span><span class="p">)</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span>
+</code></pre></div></p>
+<p><strong>Breakdown query with fragment composition:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mrr_breakdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="n">mm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">movement_model</span>  <span class="c1"># MRRMovementCube</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">amount</span>
+        <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;movement_type&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;occurred_at&quot;</span><span class="p">,</span> <span class="s2">&quot;between&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+    <span class="p">)</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="k">await</span> <span class="n">build_spec_fragment</span><span class="p">(</span><span class="n">mm</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+
+    <span class="n">stmt</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">mm</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">mappings</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
+</code></pre></div>
+<p><strong>Example: breakdown SQL with <code>QuerySpec(dimensions=["plan_id"])</code>:</strong>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">movement_type</span><span class="p">,</span>
+<span class="w">       </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span><span class="p">,</span>
+<span class="w">       </span><span class="k">SUM</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">amount_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">amount_base</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_movement</span><span class="w"> </span><span class="n">m</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">subscription</span><span class="w"> </span><span class="n">sub</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">subscription_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">occurred_at</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="p">:</span><span class="k">start</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">:</span><span class="k">end</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">movement_type</span><span class="p">,</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span>
+</code></pre></div></p>
+<p><strong>Waterfall query — monthly MRR bridge:</strong></p>
+<p>The waterfall builds a month-by-month bridge from starting MRR to ending MRR. It combines a baseline snapshot query with movement aggregation:</p>
+<ol>
+<li><strong>Baseline</strong> — query <code>metric_mrr_snapshot</code> for total MRR at the start of the range (same as <code>_current_mrr(start)</code>)</li>
+<li><strong>Movements</strong> — query <code>metric_mrr_movement</code> grouped by <code>date_trunc('month', occurred_at)</code> and <code>movement_type</code></li>
+<li><strong>Accumulate</strong> — walk months in order; each month's <code>starting_mrr</code> = previous month's <code>ending_mrr</code>, <code>ending_mrr</code> = <code>starting_mrr</code> + sum of movements</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mrr_waterfall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="n">months</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">)</span>
+    <span class="n">baseline</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_mrr</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>    <span class="c1"># step 1</span>
+
+    <span class="n">mm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">movement_model</span>  <span class="c1"># MRRMovementCube</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="p">(</span>                                               <span class="c1"># step 2</span>
+        <span class="n">mm</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">amount</span>
+        <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;movement_type&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;occurred_at&quot;</span><span class="p">,</span> <span class="s2">&quot;between&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+        <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">time_grain</span><span class="p">(</span><span class="s2">&quot;occurred_at&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># ...execute and index by (month, movement_type)...</span>
+
+    <span class="n">waterfall</span> <span class="o">=</span> <span class="p">[]</span>                                      <span class="c1"># step 3</span>
+    <span class="n">ending_mrr</span> <span class="o">=</span> <span class="n">baseline</span>
+    <span class="k">for</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">months</span><span class="p">:</span>
+        <span class="n">starting_mrr</span> <span class="o">=</span> <span class="n">ending_mrr</span>
+        <span class="n">net_change</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">movements</span> <span class="k">for</span> <span class="n">this</span> <span class="n">month</span><span class="p">)</span>
+        <span class="n">ending_mrr</span> <span class="o">=</span> <span class="n">starting_mrr</span> <span class="o">+</span> <span class="n">net_change</span>
+        <span class="n">waterfall</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">month</span><span class="p">,</span> <span class="n">starting_mrr</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">expansion</span><span class="p">,</span>
+                          <span class="n">contraction</span><span class="p">,</span> <span class="n">churn</span><span class="p">,</span> <span class="n">reactivation</span><span class="p">,</span>
+                          <span class="n">net_change</span><span class="p">,</span> <span class="n">ending_mrr</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">waterfall</span>
+</code></pre></div>
+<p>The movement query SQL (step 2):</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">date_trunc</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">occurred_at</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">period</span><span class="p">,</span>
+<span class="w">       </span><span class="n">m</span><span class="p">.</span><span class="n">movement_type</span><span class="p">,</span>
+<span class="w">       </span><span class="k">SUM</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">amount_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">amount_base</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_movement</span><span class="w"> </span><span class="n">m</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">occurred_at</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="p">:</span><span class="k">start</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">:</span><span class="k">end</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">period</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">movement_type</span>
+</code></pre></div>
+<p>Months with no movements appear with all-zero changes and MRR carried forward from the previous month.</p>
+<h3 id="churn-p0">Churn (P0)<a class="headerlink" href="#churn-p0" title="Permanent link">&para;</a></h3>
+<p><strong>Subscribes to (ingestion mode):</strong> <code>subscription.churned</code>, <code>subscription.canceled</code>, <code>subscription.created</code>, <code>subscription.activated</code>, <code>subscription.reactivated</code></p>
+<p><strong>Metrics:</strong> Logo churn rate, revenue churn rate, net revenue churn rate</p>
+<p><strong>Tables:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Tracks which customers are active at any point in time</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_churn_customer_state</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">                  </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">           </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">         </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">active_subscriptions</span><span class="w"> </span><span class="nb">INT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">first_active_at</span><span class="w">     </span><span class="n">TIMESTAMPTZ</span><span class="p">,</span>
+<span class="w">    </span><span class="n">churned_at</span><span class="w">          </span><span class="n">TIMESTAMPTZ</span><span class="p">,</span>
+<span class="w">    </span><span class="k">UNIQUE</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">customer_id</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="c1">-- Churn events for rate calculation. `cancel_reason` is copied from the</span>
+<span class="c1">-- originating subscription.canceled / subscription.churned payload so the</span>
+<span class="c1">-- event can be segmented by reason without re-joining the subscription</span>
+<span class="c1">-- table (sourced from Stripe&#39;s `cancellation_details.feedback`).</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_churn_event</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">              </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_id</span><span class="w">        </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">UNIQUE</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">       </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">     </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">churn_type</span><span class="w">      </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">   </span><span class="c1">-- logo | revenue | canceled</span>
+<span class="w">    </span><span class="n">cancel_reason</span><span class="w">   </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">            </span><span class="c1">-- too_expensive | missing_features | …</span>
+<span class="w">    </span><span class="n">mrr_cents</span><span class="w">       </span><span class="nb">BIGINT</span><span class="p">,</span><span class="w">          </span><span class="c1">-- revenue lost (for revenue churn)</span>
+<span class="w">    </span><span class="n">occurred_at</span><span class="w">     </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">);</span>
+</code></pre></div>
+<p><strong>Queries:</strong></p>
+<p>Logo churn rate:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Customers who churned in period / customers active at period start</span>
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">metric_churn_event</span>
+<span class="w">     </span><span class="k">WHERE</span><span class="w"> </span><span class="n">churn_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;logo&#39;</span>
+<span class="w">       </span><span class="k">AND</span><span class="w"> </span><span class="n">occurred_at</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="p">:</span><span class="k">start</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">:</span><span class="k">end</span><span class="p">)::</span><span class="nb">float</span>
+<span class="w">    </span><span class="o">/</span>
+<span class="w">    </span><span class="k">NULLIF</span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">metric_churn_customer_state</span>
+<span class="w">            </span><span class="k">WHERE</span><span class="w"> </span><span class="n">first_active_at</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">:</span><span class="k">start</span>
+<span class="w">              </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">churned_at</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">OR</span><span class="w"> </span><span class="n">churned_at</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="p">:</span><span class="k">start</span><span class="p">)),</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">AS</span><span class="w"> </span><span class="n">logo_churn_rate</span>
+</code></pre></div>
+<p>Revenue churn rate (computed in base currency for cross-currency correctness):</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span>
+<span class="w">    </span><span class="k">ABS</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">movement_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;churn&#39;</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">amount_base_cents</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">END</span><span class="p">))::</span><span class="nb">float</span>
+<span class="w">    </span><span class="o">/</span>
+<span class="w">    </span><span class="k">NULLIF</span><span class="p">((</span><span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">snapshot_at</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">:</span><span class="k">start</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">AS</span><span class="w"> </span><span class="n">revenue_churn_rate</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_movement</span><span class="w"> </span><span class="n">m</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">occurred_at</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="p">:</span><span class="k">start</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">:</span><span class="k">end</span>
+</code></pre></div>
+<h3 id="retention-p0">Retention (P0)<a class="headerlink" href="#retention-p0" title="Permanent link">&para;</a></h3>
+<p><strong>Subscribes to (ingestion mode):</strong> <code>subscription.created</code>, <code>subscription.activated</code>, <code>subscription.churned</code>, <code>subscription.reactivated</code>, <code>customer.created</code></p>
+<p><strong>Tables:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Cohort membership (immutable once set)</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_retention_cohort</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">              </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">       </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">     </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">cohort_month</span><span class="w">    </span><span class="nb">DATE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">          </span><span class="c1">-- month of first subscription</span>
+<span class="w">    </span><span class="k">UNIQUE</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">customer_id</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="c1">-- Monthly activity (one row per customer per active month)</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_retention_activity</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">              </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">       </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">     </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">active_month</span><span class="w">    </span><span class="nb">DATE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="k">UNIQUE</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">customer_id</span><span class="p">,</span><span class="w"> </span><span class="n">active_month</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p><strong>Query — cohort retention matrix:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span>
+<span class="w">    </span><span class="k">c</span><span class="p">.</span><span class="n">cohort_month</span><span class="p">,</span>
+<span class="w">    </span><span class="n">a</span><span class="p">.</span><span class="n">active_month</span><span class="p">,</span>
+<span class="w">    </span><span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">customer_id</span><span class="p">)::</span><span class="nb">float</span>
+<span class="w">        </span><span class="o">/</span><span class="w"> </span><span class="k">NULLIF</span><span class="p">(</span><span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">customer_id</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">retention_rate</span><span class="p">,</span>
+<span class="w">    </span><span class="k">EXTRACT</span><span class="p">(</span><span class="k">MONTH</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">age</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">active_month</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">cohort_month</span><span class="p">))::</span><span class="nb">int</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">months_since</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_retention_cohort</span><span class="w"> </span><span class="k">c</span>
+<span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">metric_retention_activity</span><span class="w"> </span><span class="n">a</span>
+<span class="w">    </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">customer_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">customer_id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">source_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">cohort_month</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="p">:</span><span class="k">start</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">:</span><span class="k">end</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">cohort_month</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">active_month</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">cohort_month</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">active_month</span>
+</code></pre></div>
+<p><strong>Net Revenue Retention (NRR) and Gross Revenue Retention (GRR):</strong></p>
+<p>These query the MRR metric's movement table:</p>
+<div class="highlight"><pre><span></span><code>NRR = (start_mrr + expansion - contraction - churn) / start_mrr
+GRR = (start_mrr - contraction - churn) / start_mrr
+</code></pre></div>
+<h3 id="ltv-p1">LTV (P1)<a class="headerlink" href="#ltv-p1" title="Permanent link">&para;</a></h3>
+<p><strong>Subscribes to (ingestion mode):</strong> <code>invoice.paid</code></p>
+<p><strong>Dependencies:</strong> <code>mrr</code> (ARPU queries MRR snapshot), <code>churn</code> (simple LTV uses logo churn rate)</p>
+<p><strong>Tables:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Append-only log of paid invoices (idempotent via event_id)</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_ltv_invoice</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">                </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_id</span><span class="w">          </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">UNIQUE</span><span class="p">,</span><span class="w">   </span><span class="c1">-- idempotency key</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">         </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">       </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">amount_cents</span><span class="w">      </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">        </span><span class="c1">-- original currency</span>
+<span class="w">    </span><span class="n">amount_base_cents</span><span class="w"> </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">        </span><span class="c1">-- base currency at FX rate on paid_at</span>
+<span class="w">    </span><span class="n">currency</span><span class="w">          </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">           </span><span class="c1">-- ISO 4217</span>
+<span class="w">    </span><span class="n">paid_at</span><span class="w">           </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">);</span>
+</code></pre></div>
+<p><strong>Event handling:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># invoice.paid → insert with ON CONFLICT (event_id) DO NOTHING</span>
+    <span class="c1"># Amount converted to base currency via FX module</span>
+</code></pre></div>
+<p><strong>Queries:</strong></p>
+<p>ARPU (queries via <code>MRRSnapshotCube</code> — the <code>customer_count</code> measure on that cube exists for this purpose):
+<div class="highlight"><pre><span></span><code><span class="n">sm</span> <span class="o">=</span> <span class="n">MRRSnapshotCube</span>
+<span class="n">q</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">sm</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span>
+    <span class="o">+</span> <span class="n">sm</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">customer_count</span>
+    <span class="o">+</span> <span class="n">sm</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">if</span> <span class="n">at</span><span class="p">:</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="n">sm</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;snapshot_at&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="n">at</span><span class="p">)</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="k">await</span> <span class="n">build_spec_fragment</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span><span class="p">,</span>
+<span class="w">       </span><span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">customer_id</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">customer_count</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">s</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+</code></pre></div></p>
+<p>Simple LTV: <code>ARPU / logo_churn_rate</code> — delegates to MRR (via <code>MRRSnapshotCube</code>) and Churn metrics.</p>
+<p>Cohort LTV uses the same cohort definition as retention — <em>month of a
+customer's first <code>new</code> MRR movement</em> — so the denominator matches ARPU
+(both count customers with at least one active subscription, <code>MRR &gt; 0</code>).
+Trials that never convert are excluded.  Computed in two cube queries and
+joined in Python:</p>
+<ol>
+<li><code>cohort_by_customer</code> from <code>MRRMovementCube</code> filtered to <code>movement_type = 'new'</code>,
+   grouped by <code>customer_id</code> + month (take earliest month per customer).</li>
+<li><code>revenue_by_customer</code> from <code>LtvInvoiceCube</code> filtered to <code>paid_at BETWEEN :start AND :end</code>,
+   grouped by <code>customer_id</code>.</li>
+<li>Group by cohort month: <code>customer_count = |cohort|</code>,
+   <code>total_revenue = SUM(invoices for cohort members)</code>.</li>
+</ol>
+<p><strong>Cubes:</strong></p>
+<ul>
+<li><code>LtvInvoiceCube</code> — measures: <code>total_revenue</code>, <code>total_revenue_original</code>, <code>invoice_count</code>, <code>customer_count</code>; dimensions: <code>source_id</code>, <code>customer_id</code>, <code>currency</code>, <code>customer_country</code> (via customer join), <code>cohort_month</code> (via retention cohort join, still available but unused for cohort LTV).</li>
+<li><code>MRRMovementCube</code> — used by ARPU (<code>at</code> set) and Cohort LTV for movement-history queries.</li>
+<li><code>MRRSnapshotCube</code> — used by ARPU (<code>at=None</code>) for current-state reads.</li>
+</ul>
+<p><strong>API endpoints:</strong> <code>GET /metrics/ltv</code> (simple), <code>GET /metrics/ltv/arpu</code>, <code>GET /metrics/ltv/cohort</code></p>
+<h3 id="trials-p1">Trials (P1)<a class="headerlink" href="#trials-p1" title="Permanent link">&para;</a></h3>
+<p><strong>Subscribes to (ingestion mode):</strong> <code>subscription.trial_started</code>, <code>subscription.trial_converted</code>, <code>subscription.trial_expired</code></p>
+<p>Trial metrics are <strong>cohort-based</strong>: a trial is attributed to the period of its <code>started_at</code>, and its converted/expired outcome rolls up to the same cohort regardless of when the outcome event arrives.  Late conversions retroactively update the cohort's rate.</p>
+<p><strong>Tables:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- Append-only lifecycle log (audit / idempotent via event_id)</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_trial_event</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">              </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_id</span><span class="w">        </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">UNIQUE</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">       </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">     </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subscription_id</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_type</span><span class="w">      </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">       </span><span class="c1">-- started | converted | expired</span>
+<span class="w">    </span><span class="n">occurred_at</span><span class="w">     </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">);</span>
+
+<span class="c1">-- One row per trial.  Cohort queries aggregate over this table.</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">metric_trial</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">              </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">       </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w">     </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">subscription_id</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">started_at</span><span class="w">      </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">converted_at</span><span class="w">    </span><span class="n">TIMESTAMPTZ</span><span class="p">,</span>
+<span class="w">    </span><span class="n">expired_at</span><span class="w">      </span><span class="n">TIMESTAMPTZ</span><span class="p">,</span>
+<span class="w">    </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">uq_trial_sub</span><span class="w"> </span><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span><span class="w"> </span><span class="n">subscription_id</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p><strong>Event handling:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># subscription.trial_started   → upsert started_at (LEAST of existing/new)</span>
+<span class="c1"># subscription.trial_converted → upsert converted_at (COALESCE — set once)</span>
+<span class="c1"># subscription.trial_expired   → upsert expired_at   (COALESCE — set once)</span>
+<span class="c1"># Each event is also appended to metric_trial_event (ON CONFLICT event_id DO NOTHING).</span>
+<span class="c1"># Out-of-order events are safe: a converted/expired arriving before started</span>
+<span class="c1"># inserts a placeholder row; the later started event corrects started_at.</span>
+</code></pre></div>
+<p><strong>Queries:</strong></p>
+<p>Funnel — a single aggregate over <code>metric_trial</code> filtered by <code>started_at</code>:
+<div class="highlight"><pre><span></span><code><span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">started_count</span>      <span class="c1"># COUNT(*)</span>
+   <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">converted_count</span>    <span class="c1"># COUNT(converted_at) — non-null</span>
+   <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">expired_count</span>      <span class="c1"># COUNT(expired_at) — non-null</span>
+   <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;started_at&quot;</span><span class="p">,</span> <span class="s2">&quot;between&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)))</span>
+</code></pre></div></p>
+<p>Conversion rate — <code>converted / started</code> from the funnel result.</p>
+<p>Series — same aggregate with <code>time_grain("started_at", interval)</code> → one row per cohort month.</p>
+<p><strong>Cube:</strong> <code>TrialCube</code> — source <code>metric_trial</code>; measures: <code>started_count</code>, <code>converted_count</code>, <code>expired_count</code>, <code>customer_count</code>; dimensions: <code>source_id</code>, <code>customer_country</code> (via customer join); time dimensions: <code>started_at</code>, <code>converted_at</code>, <code>expired_at</code>.</p>
+<p><strong>API endpoints:</strong> <code>GET /metrics/trials</code> (conversion rate), <code>GET /metrics/trials/series</code>, <code>GET /metrics/trials/funnel</code></p>
+<h2 id="metricsengine">MetricsEngine<a class="headerlink" href="#metricsengine" title="Permanent link">&para;</a></h2>
+<p>The engine dynamically discovers and delegates to metrics. It has no hardcoded metric methods — every metric is reached through the registry.</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MetricsEngine</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Metric</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="c1"># Auto-discover all @register metrics if none provided</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">metrics</span> <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">discover_metrics</span><span class="p">()</span>
+        <span class="c1"># Resolve dependency order (topological sort); raises on cycles or missing deps</span>
+        <span class="n">ordered</span> <span class="o">=</span> <span class="n">resolve_dependencies</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="c1"># Initialize in order, injecting resolved instances</span>
+        <span class="c1"># (synchronous — no I/O, just wiring)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Metric</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">:</span>
+            <span class="n">deps</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">dependencies</span><span class="p">}</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span> <span class="n">deps</span><span class="o">=</span><span class="n">deps</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Route a query to the named metric. Works for any registered metric —</span>
+<span class="sd">        built-in or custom — without engine changes.</span>
+
+<span class="sd">        spec is validated against the metric&#39;s Cube inside the metric&#39;s query</span>
+<span class="sd">        methods. Invalid dimension/filter names raise ValueError with available</span>
+<span class="sd">        options.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No metric registered for &#39;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;Available: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">available_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return names of all registered metrics. Synchronous.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">)</span>
+</code></pre></div>
+<p>Same-database mode (Lago / Kill Bill) is reached by passing a <code>DatabaseConnector</code> into the specific metric's constructor or <code>init()</code> — not via the engine. Each metric decides how to dispatch between ingestion-mode reads (SQL against <code>metric_*</code> tables) and direct-query mode (via its connector).</p>
+<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">engine</span> <span class="o">=</span> <span class="n">MetricsEngine</span><span class="p">(</span><span class="n">db</span><span class="o">=</span><span class="n">async_session</span><span class="p">)</span>
+
+<span class="c1"># Any registered metric, any params — always awaited</span>
+<span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;mrr&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;current&quot;</span><span class="p">})</span>
+<span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;mrr&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;series&quot;</span><span class="p">,</span> <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="n">date</span><span class="p">(</span><span class="mi">2025</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="n">date</span><span class="p">(</span><span class="mi">2025</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">31</span><span class="p">),</span> <span class="s2">&quot;interval&quot;</span><span class="p">:</span> <span class="s2">&quot;month&quot;</span><span class="p">})</span>
+<span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;churn&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="n">date</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="n">date</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">28</span><span class="p">),</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;revenue&quot;</span><span class="p">})</span>
+
+<span class="c1"># With dimensions and filters via QuerySpec</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">QuerySpec</span><span class="p">(</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">,</span> <span class="s2">&quot;customer_country&quot;</span><span class="p">],</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;customer_country&quot;</span><span class="p">:</span> <span class="s2">&quot;US&quot;</span><span class="p">},</span>
+    <span class="n">granularity</span><span class="o">=</span><span class="s2">&quot;month&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;mrr&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;current&quot;</span><span class="p">},</span> <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+
+<span class="c1"># Per-currency breakdown (uses original-currency amounts)</span>
+<span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;mrr&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;current&quot;</span><span class="p">},</span>
+                   <span class="n">spec</span><span class="o">=</span><span class="n">QuerySpec</span><span class="p">(</span><span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;currency&quot;</span><span class="p">]))</span>
+
+<span class="c1"># Synchronous — no I/O</span>
+<span class="n">engine</span><span class="o">.</span><span class="n">available_metrics</span><span class="p">()</span>
+<span class="c1"># [&#39;churn&#39;, &#39;ltv&#39;, &#39;mrr&#39;, &#39;retention&#39;, &#39;trials&#39;]</span>
+</code></pre></div>
+<p>The same <code>engine.query()</code> call is used from FastAPI, CLI, and Jupyter. The HTTP API maps URL path segments to metric names, query parameters to <code>params</code>, and dimension/filter parameters to <code>QuerySpec</code>.</p>
+<h2 id="segmentation-queryspec">Segmentation (QuerySpec)<a class="headerlink" href="#segmentation-queryspec" title="Permanent link">&para;</a></h2>
+<p><code>QuerySpec</code> carries four orthogonal slicing concerns:</p>
+<ol>
+<li><strong>Filters</strong> — restrict which rows are included (<code>filters</code> dict → WHERE clauses)</li>
+<li><strong>Dimensional cuts</strong> — split the result by named dimensions (<code>dimensions</code> list → GROUP BY)</li>
+<li><strong>Segment</strong> — universe filter from a saved <code>SegmentDef</code> (AND'd into every row)</li>
+<li><strong>Compare</strong> — list of <code>(segment_id, SegmentDef)</code> pairs producing one tagged row per matching branch (CROSS JOIN VALUES + compound OR)</li>
+</ol>
+<p>All four reference dimension names defined in the metric's <a href="../cubes/">Cube</a>, or attribute keys / static joins routed through the <a href="../segments/">segment compiler</a>. Every metric's <code>query()</code> calls <code>await build_spec_fragment(cube, spec, self.db)</code> exactly once; that helper folds all four concerns into the QueryFragment.</p>
+<h3 id="available-dimensions">Available Dimensions<a class="headerlink" href="#available-dimensions" title="Permanent link">&para;</a></h3>
+<p>Each metric's cube declares which dimensions are available. Common dimensions across metric models:</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Column</th>
+<th>Join required</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>source_id</code></td>
+<td>fact table <code>source_id</code></td>
+<td>none</td>
+<td>Multi-source deployments</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>fact table <code>currency</code></td>
+<td>none</td>
+<td>Per-currency amounts (uses <code>*_cents</code>)</td>
+</tr>
+<tr>
+<td><code>plan_id</code></td>
+<td><code>sub.plan_id</code></td>
+<td>subscription</td>
+<td>MRR per plan</td>
+</tr>
+<tr>
+<td><code>plan_interval</code></td>
+<td><code>p.interval</code></td>
+<td>subscription → plan</td>
+<td>Monthly vs. annual</td>
+</tr>
+<tr>
+<td><code>customer_country</code></td>
+<td><code>c.country</code></td>
+<td>customer</td>
+<td>Churn rate by country</td>
+</tr>
+<tr>
+<td><code>movement_type</code></td>
+<td><code>m.movement_type</code></td>
+<td>none (MRR movement only)</td>
+<td>MRR breakdown</td>
+</tr>
+<tr>
+<td><code>cohort_month</code></td>
+<td><code>rc.cohort_month</code></td>
+<td>none (retention only)</td>
+<td>Cohort matrix</td>
+</tr>
+<tr>
+<td><code>mrr_band</code> / <code>arr_band</code></td>
+<td>CASE expression on <code>mrr_base_cents</code></td>
+<td>customer (for <code>c.created_at</code>)</td>
+<td>Bucketed segmentation</td>
+</tr>
+<tr>
+<td><code>tenure_months</code></td>
+<td><code>AGE(now, c.created_at)</code></td>
+<td>customer</td>
+<td>Age cohorts</td>
+</tr>
+</tbody>
+</table>
+<p>Computed dimensions (<code>mrr_band</code>, <code>arr_band</code>, <code>tenure_months</code>, <code>cohort_month</code> on the MRR/Churn cubes; <code>customer_created_month</code> on <code>LtvInvoiceCube</code>) are SQL expressions on <code>Dim.column</code> — they appear in the <code>/fields</code> discovery endpoint alongside regular dimensions.</p>
+<p>Multiple dimensions can be combined: <code>dimensions=["plan_interval", "customer_country"]</code> gives MRR for each interval × country combination.</p>
+<h3 id="compare-mode-return-shape-ratio-metrics">Compare-mode return shape (ratio metrics)<a class="headerlink" href="#compare-mode-return-shape-ratio-metrics" title="Permanent link">&para;</a></h3>
+<p>For aggregate metrics (MRR, MRR breakdown, MRR series), compare mode returns one row per <code>segment_id</code> with the metric's measures duplicated per branch — straight from the SQL.</p>
+<p>For <strong>ratio metrics</strong> (logo / revenue churn rate, NRR / GRR, ARPU, simple LTV, trial conversion rate), the numerator and denominator are separate sub-queries — each one runs through <code>build_spec_fragment</code> so both pick up the same compare payload, then the metric divides per <code>segment_id</code> in Python and returns a list:</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;segment_id&quot;</span><span class="p">:</span> <span class="s2">&quot;seg_a&quot;</span><span class="p">,</span> <span class="s2">&quot;logo_churn_rate&quot;</span><span class="p">:</span> <span class="mf">0.038</span><span class="p">,</span> <span class="s2">&quot;churn_count&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;active_at_start&quot;</span><span class="p">:</span> <span class="mi">320</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;segment_id&quot;</span><span class="p">:</span> <span class="s2">&quot;seg_b&quot;</span><span class="p">,</span> <span class="s2">&quot;logo_churn_rate&quot;</span><span class="p">:</span> <span class="mf">0.057</span><span class="p">,</span> <span class="s2">&quot;churn_count&quot;</span><span class="p">:</span>  <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;active_at_start&quot;</span><span class="p">:</span> <span class="mi">140</span><span class="p">},</span>
+<span class="p">]</span>
+</code></pre></div>
+<p><code>tidemill/metrics/churn/metric.py</code> is the reference — <code>_logo_churn</code>, <code>_revenue_churn</code>, <code>_active_at_start_count</code>, and <code>_mrr_at_start_per_segment</code> all accept the spec and return per-segment dicts when compare is set. The same pattern is used in <code>LtvMetric._historical_arpu</code>, <code>RetentionMetric._revenue_retention</code>, and <code>TrialsMetric._funnel</code>.</p>
+<p><strong>Cohort-matrix caveat.</strong> Per-segment retention matrices would be a 4-D result (cohort × active month × customer × segment); the chart can't consume it today. <code>RetentionMetric._cohort_matrix</code> and <code>LtvMetric._cohort_ltv</code> strip <code>compare</code> (via <code>_filter_only(spec)</code>) and treat compare like a plain segment list — the matrix renders the union of customers matching any branch.</p>
+<h3 id="return-shape">Return Shape<a class="headerlink" href="#return-shape" title="Permanent link">&para;</a></h3>
+<p><strong>With dimensions:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># engine.query(&quot;mrr&quot;, {&quot;query_type&quot;: &quot;current&quot;}, spec=QuerySpec(dimensions=[&quot;plan_id&quot;]))</span>
+<span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;plan_id&quot;</span><span class="p">:</span> <span class="s2">&quot;plan_starter&quot;</span><span class="p">,</span>      <span class="s2">&quot;mrr&quot;</span><span class="p">:</span> <span class="mf">2900.00</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;plan_id&quot;</span><span class="p">:</span> <span class="s2">&quot;plan_professional&quot;</span><span class="p">,</span> <span class="s2">&quot;mrr&quot;</span><span class="p">:</span> <span class="mf">6320.00</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;plan_id&quot;</span><span class="p">:</span> <span class="s2">&quot;plan_enterprise&quot;</span><span class="p">,</span>   <span class="s2">&quot;mrr&quot;</span><span class="p">:</span> <span class="mf">3230.00</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="c1"># dimensions=[&quot;plan_interval&quot;, &quot;customer_country&quot;]</span>
+<span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">:</span> <span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="s2">&quot;customer_country&quot;</span><span class="p">:</span> <span class="s2">&quot;US&quot;</span><span class="p">,</span> <span class="s2">&quot;mrr&quot;</span><span class="p">:</span> <span class="mf">4100.00</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">:</span> <span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="s2">&quot;customer_country&quot;</span><span class="p">:</span> <span class="s2">&quot;DE&quot;</span><span class="p">,</span> <span class="s2">&quot;mrr&quot;</span><span class="p">:</span>  <span class="mf">980.00</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">:</span> <span class="s2">&quot;yearly&quot;</span><span class="p">,</span>  <span class="s2">&quot;customer_country&quot;</span><span class="p">:</span> <span class="s2">&quot;US&quot;</span><span class="p">,</span> <span class="s2">&quot;mrr&quot;</span><span class="p">:</span> <span class="mf">5200.00</span><span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</code></pre></div>
+<p><strong>Without dimensions:</strong> scalar or time-series as usual.</p>
+<h3 id="cubes-query-algebra">Cubes &amp; Query Algebra<a class="headerlink" href="#cubes-query-algebra" title="Permanent link">&para;</a></h3>
+<p>All metrics build their SQL through cubes and composable query fragments (<code>tidemill/metrics/query.py</code>). Each metric declares a <code>Cube</code> that defines the available joins, measures, and dimensions for its fact table. Query methods compose immutable <code>QueryFragment</code> objects — each fragment carries column expressions, filters, and required joins. The compiler resolves joins in dependency order and emits a SQLAlchemy <code>Select</code>.</p>
+<p>See <strong><a href="../cubes/">Cubes &amp; Query Algebra</a></strong> for the full approach: model definitions, fragment algebra, compilation pipeline, and concrete models for all metric tables.</p>
+<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
+<p>The <code>dependencies</code> property declares which other metrics must be initialized before this one. The engine performs a topological sort and injects resolved instances.</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@register</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RetentionMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;retention&quot;</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mrr&quot;</span><span class="p">]</span>   <span class="c1"># NRR/GRR queries metric_mrr_movement</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">connector</span><span class="p">,</span> <span class="n">deps</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mrr</span> <span class="o">=</span> <span class="n">deps</span><span class="p">[</span><span class="s2">&quot;mrr&quot;</span><span class="p">]</span>   <span class="c1"># injected MRR metric instance</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Can await self.mrr.query(...) or query metric_mrr_movement directly</span>
+        <span class="o">...</span>
+
+
+<span class="nd">@register</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LtvMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ltv&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">LtvInvoiceCube</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mrr&quot;</span><span class="p">,</span> <span class="s2">&quot;churn&quot;</span><span class="p">]</span>     <span class="c1"># ARPU reads MRR snapshot; simple LTV uses churn rate</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">deps</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mrr</span> <span class="o">=</span> <span class="n">deps</span><span class="p">[</span><span class="s2">&quot;mrr&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">churn</span> <span class="o">=</span> <span class="n">deps</span><span class="p">[</span><span class="s2">&quot;churn&quot;</span><span class="p">]</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># ARPU: queries MRRSnapshotCube (mrr + customer_count measures).</span>
+        <span class="c1"># Simple LTV: ARPU / logo_churn_rate — delegates to churn metric.</span>
+        <span class="c1"># Cohort LTV: MRRMovementCube for cohort assignment + LtvInvoiceCube for revenue.</span>
+        <span class="o">...</span>
+</code></pre></div>
+<p>Dependency graph for built-in metrics:</p>
+<div class="highlight"><pre><span></span><code>mrr ──────────────────► retention (NRR/GRR query MRRSnapshotCube + MRRMovementCube)
+  └──────────────────► ltv (ARPU queries MRRSnapshotCube.mrr + .customer_count)
+churn ─────────────────► ltv (simple LTV = ARPU / logo churn rate)
+</code></pre></div>
+<p>Trials has no dependencies — it only processes its own events.</p>
+<p>Quick Ratio is <strong>not</strong> a registered metric. It's a post-processing derivation over MRR movements, exposed via <code>tidemill.reports.mrr.quick_ratio</code> and surfaced in the <code>/api/metrics/summary</code> response.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

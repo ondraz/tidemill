@@ -1,0 +1,6 @@
+/* Force Plotly charts to fit within the mkdocs content area */
+.jp-OutputArea-output .plotly-graph-div,
+.jp-OutputArea-output .js-plotly-plot {
+  width: 100% !important;
+  max-width: 100% !important;
+}

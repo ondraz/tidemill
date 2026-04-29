@@ -1,0 +1,2880 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/architecture/reports/">
+      
+      
+        <link rel="prev" href="../api/">
+      
+      
+        <link rel="next" href="../../development/development/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Reports - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#reports" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reports
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreports-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports (package)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportsclient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.client
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportsmrr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.mrr
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.mrr">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportschurn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.churn
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.churn">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportsretention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.retention
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.retention">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportsltv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.ltv
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.ltv">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportstrials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.trials
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.trials">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#styling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Styling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Styling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#colour-palette" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colour palette
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plotly-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plotly template
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notebooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notebooks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreports-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports (package)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportsclient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.client
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportsmrr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.mrr
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.mrr">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportschurn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.churn
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.churn">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportsretention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.retention
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.retention">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportsltv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.ltv
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.ltv">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tidemillreportstrials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tidemill.reports.trials
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tidemill.reports.trials">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-functions_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#style-functions_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chart-functions_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chart functions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#styling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Styling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Styling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#colour-palette" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colour palette
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plotly-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plotly template
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notebooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notebooks
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="reports">Reports<a class="headerlink" href="#reports" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Pre-built charts, styled tables, and analytics for every Tidemill metric.
+Last updated: April 2026</p>
+</blockquote>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p><code>tidemill.reports</code> provides Plotly charts and pandas Styler tables for subscription analytics. Each metric has its own submodule (<code>mrr</code>, <code>churn</code>, <code>retention</code>, <code>ltv</code>, <code>trials</code>) following a consistent three-layer pattern:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Naming convention</th>
+<th>Returns</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Data</strong></td>
+<td><code>waterfall()</code>, <code>timeline()</code>, …</td>
+<td><code>DataFrame</code> or <code>dict</code></td>
+<td>Fetch from API, convert cents to dollars</td>
+</tr>
+<tr>
+<td><strong>Style</strong></td>
+<td><code>style_waterfall()</code>, …</td>
+<td><code>pd.io.formats.style.Styler</code></td>
+<td>Rich table display in Jupyter</td>
+</tr>
+<tr>
+<td><strong>Chart</strong></td>
+<td><code>plot_waterfall()</code>, …</td>
+<td><code>plotly.graph_objects.Figure</code></td>
+<td>Interactive Plotly visualisation</td>
+</tr>
+</tbody>
+</table>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">tidemill</span><span class="w"> </span><span class="kn">import</span> <span class="n">reports</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tidemill.reports.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">TidemillClient</span>
+
+<span class="n">reports</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>                  <span class="c1"># activate Tidemill Plotly template</span>
+<span class="n">tm</span> <span class="o">=</span> <span class="n">TidemillClient</span><span class="p">()</span>            <span class="c1"># reads TIDEMILL_API env var</span>
+
+<span class="c1"># Data → style → chart (each layer is independent)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">reports</span><span class="o">.</span><span class="n">mrr</span><span class="o">.</span><span class="n">waterfall</span><span class="p">(</span><span class="n">tm</span><span class="p">,</span> <span class="s2">&quot;2025-09-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2026-04-30&quot;</span><span class="p">)</span>
+<span class="n">reports</span><span class="o">.</span><span class="n">mrr</span><span class="o">.</span><span class="n">style_waterfall</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>   <span class="c1"># styled table</span>
+<span class="n">reports</span><span class="o">.</span><span class="n">mrr</span><span class="o">.</span><span class="n">plot_waterfall</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>    <span class="c1"># Plotly figure</span>
+</code></pre></div>
+<h2 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TIDEMILL_API</code></td>
+<td><code>http://localhost:8000</code></td>
+<td>Tidemill REST API base URL</td>
+</tr>
+<tr>
+<td><code>TIDEMILL_API_KEY</code></td>
+<td><em>(empty)</em></td>
+<td>Bearer token (omit if auth disabled)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="module-reference">Module reference<a class="headerlink" href="#module-reference" title="Permanent link">&para;</a></h2>
+<h3 id="tidemillreports-package"><code>tidemill.reports</code> (package)<a class="headerlink" href="#tidemillreports-package" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">tidemill</span><span class="w"> </span><span class="kn">import</span> <span class="n">reports</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tidemill.reports</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">TidemillClient</span><span class="p">,</span> <span class="n">mrr</span><span class="p">,</span> <span class="n">churn</span><span class="p">,</span> <span class="n">retention</span><span class="p">,</span> <span class="n">ltv</span><span class="p">,</span> <span class="n">trials</span>
+</code></pre></div>
+<p><code>setup()</code> registers and activates the Tidemill Plotly template (<code>simple_white+tidemill</code>). Call it once at the top of a notebook or script.</p>
+<hr />
+<h3 id="tidemillreportsclient"><code>tidemill.reports.client</code><a class="headerlink" href="#tidemillreportsclient" title="Permanent link">&para;</a></h3>
+<p><code>TidemillClient</code> — thin wrapper around the Tidemill REST API. Every metric endpoint has a typed convenience method:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get(path, **params)</code></td>
+<td>Generic GET — parsed JSON</td>
+</tr>
+<tr>
+<td><code>mrr(at=None)</code></td>
+<td>MRR in cents</td>
+</tr>
+<tr>
+<td><code>arr(at=None)</code></td>
+<td>ARR in cents</td>
+</tr>
+<tr>
+<td><code>mrr_breakdown(start, end)</code></td>
+<td>List of movement dicts</td>
+</tr>
+<tr>
+<td><code>mrr_waterfall(start, end)</code></td>
+<td>List of monthly waterfall dicts</td>
+</tr>
+<tr>
+<td><code>churn(start, end, type="logo")</code></td>
+<td>Churn rate (float or None)</td>
+</tr>
+<tr>
+<td><code>churn_customers(start, end)</code></td>
+<td>Per-customer churn detail</td>
+</tr>
+<tr>
+<td><code>churn_revenue_events(start, end)</code></td>
+<td>Per-customer revenue-churn events for active-at-start customers</td>
+</tr>
+<tr>
+<td><code>retention(start, end, **kw)</code></td>
+<td>Cohort retention data (pass <code>query_type="nrr"</code> / <code>"grr"</code> / <code>"cohort_matrix"</code>)</td>
+</tr>
+<tr>
+<td><code>cohort_matrix(start, end)</code></td>
+<td>Cohort matrix rows — one per (<code>cohort_month</code>, <code>active_month</code>)</td>
+</tr>
+<tr>
+<td><code>ltv(start, end)</code></td>
+<td>Simple LTV in cents</td>
+</tr>
+<tr>
+<td><code>arpu(at=None)</code></td>
+<td>ARPU in cents</td>
+</tr>
+<tr>
+<td><code>cohort_ltv(start, end)</code></td>
+<td>Per-cohort LTV breakdown</td>
+</tr>
+<tr>
+<td><code>trial_rate(start, end)</code></td>
+<td>Trial conversion rate</td>
+</tr>
+<tr>
+<td><code>trial_funnel(start, end)</code></td>
+<td>Funnel dict</td>
+</tr>
+<tr>
+<td><code>trial_series(start, end, interval)</code></td>
+<td>Time-series list</td>
+</tr>
+<tr>
+<td><code>sources()</code></td>
+<td>Connected billing sources</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="tidemillreportsmrr"><code>tidemill.reports.mrr</code><a class="headerlink" href="#tidemillreportsmrr" title="Permanent link">&para;</a></h3>
+<p>MRR snapshot, breakdown, quick ratio, waterfall, per-customer movement log, and trend.</p>
+<h4 id="data-functions">Data functions<a class="headerlink" href="#data-functions" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>snapshot(tm, at=None)</code></td>
+<td><code>TidemillClient</code>, optional ISO date</td>
+<td><code>dict</code> with <code>mrr</code>, <code>arr</code> (dollars)</td>
+</tr>
+<tr>
+<td><code>breakdown(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with <code>movement_type</code>, <code>amount_base</code>, <code>amount</code></td>
+</tr>
+<tr>
+<td><code>quick_ratio(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>dict</code> with movement components, <code>gains</code>, <code>losses</code>, <code>quick_ratio</code></td>
+</tr>
+<tr>
+<td><code>waterfall(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with monthly starting/ending MRR and movements (dollars)</td>
+</tr>
+<tr>
+<td><code>movement_log(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with per-customer daily movements (<code>month</code>, <code>date</code>, <code>customer_name</code>, <code>customer_id</code>, <code>movement_type</code>, <code>amount</code>)</td>
+</tr>
+<tr>
+<td><code>trend(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with <code>month</code> and <code>ending_mrr</code> (dollars)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="style-functions">Style functions<a class="headerlink" href="#style-functions" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>style_snapshot(data)</code></td>
+<td>dict from <code>snapshot</code></td>
+<td>Styler — MRR / ARR one-row table</td>
+</tr>
+<tr>
+<td><code>style_waterfall(df)</code></td>
+<td>DataFrame from <code>waterfall</code></td>
+<td>Styler — monthly bridge</td>
+</tr>
+<tr>
+<td><code>style_movement_log(df)</code></td>
+<td>DataFrame from <code>movement_log</code></td>
+<td>Styler with colour-coded movement types and monthly subtotals</td>
+</tr>
+<tr>
+<td><code>style_quick_ratio(data)</code></td>
+<td>dict from <code>quick_ratio</code></td>
+<td>Styler — gains / losses / ratio</td>
+</tr>
+</tbody>
+</table>
+<h4 id="chart-functions">Chart functions<a class="headerlink" href="#chart-functions" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Chart type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plot_breakdown(df)</code></td>
+<td>DataFrame from <code>breakdown</code></td>
+<td>Bar chart — MRR movements</td>
+</tr>
+<tr>
+<td><code>plot_waterfall(df)</code></td>
+<td>DataFrame from <code>waterfall</code></td>
+<td>Stacked bar + ending MRR line</td>
+</tr>
+<tr>
+<td><code>plot_trend(df)</code></td>
+<td>DataFrame from <code>trend</code></td>
+<td>Area line — MRR over time</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="tidemillreportschurn"><code>tidemill.reports.churn</code><a class="headerlink" href="#tidemillreportschurn" title="Permanent link">&para;</a></h3>
+<p>Customer churn sets, snapshot, revenue-churn events, monthly timelines, and lost MRR.</p>
+<h4 id="data-functions_1">Data functions<a class="headerlink" href="#data-functions_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>customer_detail(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with per-customer churn detail (C_start / C_churned)</td>
+</tr>
+<tr>
+<td><code>snapshot(tm, start, end, detail=None)</code></td>
+<td><code>TidemillClient</code>, ISO date range, optional pre-fetched detail</td>
+<td><code>dict</code> with churn rates, counts, and MRR totals</td>
+</tr>
+<tr>
+<td><code>revenue_events(tm, start, end, detail=None)</code></td>
+<td><code>TidemillClient</code>, ISO date range, optional pre-fetched detail</td>
+<td><code>DataFrame</code> — one row per C_start customer with their churned MRR</td>
+</tr>
+<tr>
+<td><code>timeline(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with <code>month</code>, <code>logo_churn</code>, <code>revenue_churn</code> (decimals)</td>
+</tr>
+<tr>
+<td><code>monthly_lost_mrr(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with <code>month</code>, <code>churn_dollars</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="style-functions_1">Style functions<a class="headerlink" href="#style-functions_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>style_snapshot(data)</code></td>
+<td>dict from <code>snapshot</code></td>
+<td>Styler — logo + revenue churn rates with numerator / denominator</td>
+</tr>
+<tr>
+<td><code>style_c_start(detail)</code></td>
+<td>DataFrame from <code>customer_detail</code></td>
+<td>Styler — customers active at period start with MRR</td>
+</tr>
+<tr>
+<td><code>style_c_churned(detail)</code></td>
+<td>DataFrame from <code>customer_detail</code></td>
+<td>Styler — fully churned customers with lost MRR</td>
+</tr>
+<tr>
+<td><code>style_revenue_events(df)</code></td>
+<td>DataFrame from <code>revenue_events</code></td>
+<td>Styler — per-customer revenue-churn table with totals</td>
+</tr>
+<tr>
+<td><code>style_timeline(df)</code></td>
+<td>DataFrame from <code>timeline</code></td>
+<td>Styler — monthly churn rates</td>
+</tr>
+</tbody>
+</table>
+<h4 id="chart-functions_1">Chart functions<a class="headerlink" href="#chart-functions_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Chart type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plot_timeline(df)</code></td>
+<td>DataFrame from <code>timeline</code></td>
+<td>Dual line — logo + revenue churn rates</td>
+</tr>
+<tr>
+<td><code>plot_monthly_lost_mrr(df)</code></td>
+<td>DataFrame from <code>monthly_lost_mrr</code></td>
+<td>Bar chart — churned MRR per month</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="tidemillreportsretention"><code>tidemill.reports.retention</code><a class="headerlink" href="#tidemillreportsretention" title="Permanent link">&para;</a></h3>
+<p>Cohort retention matrix and monthly NRR / GRR tracking.</p>
+<h4 id="data-functions_2">Data functions<a class="headerlink" href="#data-functions_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cohort(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> indexed by <code>cohort_month</code> with <code>cohort_size</code> and <code>M0 … Mn</code> retention columns (decimals)</td>
+</tr>
+<tr>
+<td><code>nrr_grr(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with <code>month</code>, <code>nrr</code>, <code>grr</code> (decimals)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="style-functions_2">Style functions<a class="headerlink" href="#style-functions_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>style_cohort(df)</code></td>
+<td>DataFrame from <code>cohort</code></td>
+<td>Styler — heatmap-like percentage table</td>
+</tr>
+<tr>
+<td><code>style_nrr_grr(df)</code></td>
+<td>DataFrame from <code>nrr_grr</code></td>
+<td>Styler — monthly NRR / GRR</td>
+</tr>
+</tbody>
+</table>
+<h4 id="chart-functions_2">Chart functions<a class="headerlink" href="#chart-functions_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Chart type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plot_cohort(df)</code></td>
+<td>DataFrame from <code>cohort</code></td>
+<td>Heatmap — cohort retention over months since start</td>
+</tr>
+<tr>
+<td><code>plot_nrr_grr(df)</code></td>
+<td>DataFrame from <code>nrr_grr</code></td>
+<td>Dual line — NRR + GRR with 100% reference</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="tidemillreportsltv"><code>tidemill.reports.ltv</code><a class="headerlink" href="#tidemillreportsltv" title="Permanent link">&para;</a></h3>
+<p>ARPU, simple LTV, implied churn, and cohort LTV breakdowns.</p>
+<h4 id="data-functions_3">Data functions<a class="headerlink" href="#data-functions_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>overview(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>dict</code> with <code>arpu</code>, <code>ltv</code> (dollars or None), <code>implied_churn</code> (decimal or None)</td>
+</tr>
+<tr>
+<td><code>arpu_timeline(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with <code>month</code>, <code>active_customers</code>, <code>mrr_dollars</code>, <code>arpu_dollars</code></td>
+</tr>
+<tr>
+<td><code>cohort(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with <code>cohort_month</code>, <code>customer_count</code>, <code>avg_dollars</code>, <code>total_dollars</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="style-functions_3">Style functions<a class="headerlink" href="#style-functions_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>style_overview(data)</code></td>
+<td>dict from <code>overview</code></td>
+<td>Styler — ARPU, LTV, implied churn</td>
+</tr>
+<tr>
+<td><code>style_arpu_timeline(df)</code></td>
+<td>DataFrame from <code>arpu_timeline</code></td>
+<td>Styler — monthly ARPU, MRR, active customers</td>
+</tr>
+<tr>
+<td><code>style_cohort(df)</code></td>
+<td>DataFrame from <code>cohort</code></td>
+<td>Styler — per-cohort LTV</td>
+</tr>
+</tbody>
+</table>
+<h4 id="chart-functions_3">Chart functions<a class="headerlink" href="#chart-functions_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Chart type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plot_ltv_overview(data)</code></td>
+<td>dict from <code>overview</code></td>
+<td>Indicator — ARPU, churn rate, LTV</td>
+</tr>
+<tr>
+<td><code>plot_arpu_timeline(df)</code></td>
+<td>DataFrame from <code>arpu_timeline</code></td>
+<td>Area line — monthly ARPU</td>
+</tr>
+<tr>
+<td><code>plot_cohort(df)</code></td>
+<td>DataFrame from <code>cohort</code></td>
+<td>Dual bar — avg revenue + customer count per cohort</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="tidemillreportstrials"><code>tidemill.reports.trials</code><a class="headerlink" href="#tidemillreportstrials" title="Permanent link">&para;</a></h3>
+<p>Trial funnel, conversion rates, and monthly outcomes.</p>
+<h4 id="data-functions_4">Data functions<a class="headerlink" href="#data-functions_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>funnel(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>dict</code> with <code>started</code>, <code>converted</code>, <code>expired</code>, <code>conversion_rate</code></td>
+</tr>
+<tr>
+<td><code>timeline(tm, start, end)</code></td>
+<td><code>TidemillClient</code>, ISO date range</td>
+<td><code>DataFrame</code> with <code>period</code>, <code>started</code>, <code>converted</code>, <code>expired</code>, <code>conversion_rate</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="style-functions_4">Style functions<a class="headerlink" href="#style-functions_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>style_funnel(data)</code></td>
+<td>dict from <code>funnel</code></td>
+<td>Styler</td>
+</tr>
+<tr>
+<td><code>style_timeline(df)</code></td>
+<td>DataFrame from <code>timeline</code></td>
+<td>Styler</td>
+</tr>
+</tbody>
+</table>
+<h4 id="chart-functions_4">Chart functions<a class="headerlink" href="#chart-functions_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input</th>
+<th>Chart type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plot_funnel(data)</code></td>
+<td>dict from <code>funnel</code></td>
+<td>Bar (funnel counts) + pie (conversion rate)</td>
+</tr>
+<tr>
+<td><code>plot_timeline(df)</code></td>
+<td>DataFrame from <code>timeline</code></td>
+<td>Stacked bar (outcomes) + line (conversion rate)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="styling">Styling<a class="headerlink" href="#styling" title="Permanent link">&para;</a></h2>
+<h3 id="colour-palette">Colour palette<a class="headerlink" href="#colour-palette" title="Permanent link">&para;</a></h3>
+<p><code>tidemill.reports._style.COLORS</code> defines semantic colours used across all charts. The palette is Tailwind-inspired and grouped by what each colour represents:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Hex</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>new</code> / <code>active</code> / <code>converted</code> / <code>grr</code></td>
+<td><code>#16A34A</code></td>
+<td>Positive movements, active subs, converted trials, gross revenue retention</td>
+</tr>
+<tr>
+<td><code>expansion</code> / <code>nrr</code></td>
+<td><code>#2563EB</code></td>
+<td>Expansion MRR, net revenue retention</td>
+</tr>
+<tr>
+<td><code>contraction</code></td>
+<td><code>#EAB308</code></td>
+<td>Contraction MRR</td>
+</tr>
+<tr>
+<td><code>trialing</code></td>
+<td><code>#F59E0B</code></td>
+<td>Trialing subscriptions</td>
+</tr>
+<tr>
+<td><code>past_due</code></td>
+<td><code>#EA580C</code></td>
+<td>Past-due subscriptions</td>
+</tr>
+<tr>
+<td><code>churn</code> / <code>canceled</code> / <code>expired</code> / <code>logo_churn</code></td>
+<td><code>#DC2626</code></td>
+<td>Lost revenue, churned customers, expired trials</td>
+</tr>
+<tr>
+<td><code>revenue_churn</code></td>
+<td><code>#F59E0B</code></td>
+<td>Revenue churn (paired with logo churn)</td>
+</tr>
+<tr>
+<td><code>reactivation</code></td>
+<td><code>#8B5CF6</code></td>
+<td>Reactivation MRR</td>
+</tr>
+<tr>
+<td><code>arpu</code></td>
+<td><code>#8B5CF6</code></td>
+<td>ARPU lines / indicators</td>
+</tr>
+<tr>
+<td><code>starting_mrr</code> / <code>pending</code> / <code>grey</code></td>
+<td><code>#78716C</code></td>
+<td>Starting MRR, pending trials, neutral</td>
+</tr>
+</tbody>
+</table>
+<p>A default multi-series <code>COLORWAY</code> is also defined, cycling through amber, blue, green, violet, red, cyan, pink, lime, and stone.</p>
+<h3 id="plotly-template">Plotly template<a class="headerlink" href="#plotly-template" title="Permanent link">&para;</a></h3>
+<p><code>setup()</code> registers a custom Plotly template (<code>simple_white+tidemill</code>) that provides:</p>
+<ul>
+<li><strong>Typography:</strong> Inter font family, stone-grey scheme (titles on <code>#1C1917</code>, body on <code>#44403C</code>)</li>
+<li><strong>Layout:</strong> centred titles, 820×520 default size, light stone grid lines, transparent legends</li>
+<li><strong>Colour scales:</strong> warm orange sequential scale for heatmaps / continuous data</li>
+<li><strong>Trace defaults:</strong> <code>cliponaxis=False</code> on scatter and bar traces so data labels are never clipped at plot boundaries; scatter line width 2.5, zero bar line width</li>
+</ul>
+<hr />
+<h2 id="notebooks">Notebooks<a class="headerlink" href="#notebooks" title="Permanent link">&para;</a></h2>
+<p>The <code>docs/notebooks/</code> directory contains Jupyter notebooks that use the reports library — each code cell is typically a single report call:</p>
+<table>
+<thead>
+<tr>
+<th>Notebook</th>
+<th>Metric</th>
+<th>Uses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>01_mrr.ipynb</code></td>
+<td>MRR</td>
+<td>snapshot, breakdown, quick_ratio, waterfall, movement_log, trend</td>
+</tr>
+<tr>
+<td><code>02_churn.ipynb</code></td>
+<td>Churn</td>
+<td>customer_detail (C_start / C_churned), snapshot, revenue_events, timeline, monthly_lost_mrr</td>
+</tr>
+<tr>
+<td><code>03_retention.ipynb</code></td>
+<td>Retention</td>
+<td>cohort matrix, NRR / GRR</td>
+</tr>
+<tr>
+<td><code>04_ltv.ipynb</code></td>
+<td>LTV</td>
+<td>overview, arpu_timeline, cohort</td>
+</tr>
+<tr>
+<td><code>05_trials.ipynb</code></td>
+<td>Trials</td>
+<td>funnel, timeline</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

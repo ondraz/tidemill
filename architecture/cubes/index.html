@@ -1,0 +1,3582 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/architecture/cubes/">
+      
+      
+        <link rel="prev" href="../connectors/">
+      
+      
+        <link rel="next" href="../example-queries/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Cubes & Query Algebra - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cubes-query-algebra" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Cubes & Query Algebra
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Rationale
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Concepts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#queryfragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QueryFragment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fragment-algebra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fragment Algebra
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fragment-constructors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fragment Constructors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compilation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-joins-attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic joins + attribute()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or-groups-via-cubeor_group" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OR groups via Cube.or_group()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operator set
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concrete-cubes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Cubes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Concrete Cubes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mrr-snapshot-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Snapshot Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-movement-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Movement Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-customer-state-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn Customer State Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-event-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn Event Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention-cohort-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention Cohort Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ltv-invoice-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LTV Invoice Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trial-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trial Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stripe-api-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stripe API Mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stripe API Mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customer-customer-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customer → customer table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#product-product-table-new" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product → product table (new)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priceplan-plan-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Price/Plan → plan table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subscription-subscription-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscription → subscription table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-events-metric_churn_event-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn Events → metric_churn_event table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#not-captured-available-via-metadata-or-future-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Not captured (available via metadata or future extension)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-in-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage in Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage in Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reusable-fragments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reusable Fragments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quickratio-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QuickRatio Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryspec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QuerySpec
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sql-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQL Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SQL Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-spec-plain-aggregate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No spec — plain aggregate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-only-no-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter only (no dimensions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dimensional-cut" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dimensional cut
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-dimension-time-grain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter + dimension + time grain
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-breakdown-by-movement-type-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR breakdown by movement type + plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#date-range-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date-range semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#package-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sqlalchemy-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQLAlchemy Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-dimension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a New Dimension
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-computed-dimension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a Computed Dimension
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Rationale
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Concepts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#queryfragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QueryFragment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fragment-algebra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fragment Algebra
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fragment-constructors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fragment Constructors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compilation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-joins-attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic joins + attribute()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or-groups-via-cubeor_group" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OR groups via Cube.or_group()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operator set
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concrete-cubes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Cubes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Concrete Cubes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mrr-snapshot-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Snapshot Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-movement-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Movement Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-customer-state-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn Customer State Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-event-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn Event Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retention-cohort-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention Cohort Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ltv-invoice-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LTV Invoice Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trial-cube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trial Cube
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stripe-api-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stripe API Mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stripe API Mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customer-customer-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customer → customer table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#product-product-table-new" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Product → product table (new)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priceplan-plan-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Price/Plan → plan table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subscription-subscription-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscription → subscription table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-events-metric_churn_event-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn Events → metric_churn_event table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#not-captured-available-via-metadata-or-future-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Not captured (available via metadata or future extension)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-in-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage in Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage in Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reusable-fragments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reusable Fragments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quickratio-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QuickRatio Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryspec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QuerySpec
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sql-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQL Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SQL Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-spec-plain-aggregate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No spec — plain aggregate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-only-no-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter only (no dimensions)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dimensional-cut" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dimensional cut
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-dimension-time-grain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter + dimension + time grain
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-breakdown-by-movement-type-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR breakdown by movement type + plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#date-range-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date-range semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#package-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sqlalchemy-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQLAlchemy Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-dimension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a New Dimension
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-computed-dimension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a Computed Dimension
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="cubes-query-algebra">Cubes &amp; Query Algebra<a class="headerlink" href="#cubes-query-algebra" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Declarative query building: cubes define what's queryable, algebraic fragments compose queries.
+Last updated: April 2026</p>
+</blockquote>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Metric queries need to aggregate fact tables (e.g., <code>metric_mrr_snapshot</code>) while slicing and filtering by columns that live in other tables (plans, customers, subscriptions). The naive approach — procedurally building JOINs and WHERE clauses — leads to duplicated join logic across metrics and fragile SQL construction.</p>
+<p>This module solves the problem with a hybrid of two patterns:</p>
+<ol>
+<li><strong>Cube</strong> — a class that declares all available joins, measures, and dimensions for a fact table. Defines <em>what's queryable</em> in one place.</li>
+<li><strong>Algebraic Fragment Composition</strong> — queries are built by combining immutable <code>QueryFragment</code> objects with <code>+</code>. Each fragment carries column expressions, filters, and required joins. Fragments compose freely — order doesn't matter.</li>
+</ol>
+<p>The cube owns the <em>contract</em> (available dimensions, join paths, measure definitions). Fragments provide <em>composability</em> (metrics build queries by combining pieces conditionally). The compiler turns a composed fragment into a SQLAlchemy <code>Select</code>.</p>
+<h2 id="design-rationale">Design Rationale<a class="headerlink" href="#design-rationale" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Cube solves join resolution once.</strong> Pre-defined dimensions mean no ambiguity. The model is the single source of truth for what's queryable per fact table.</li>
+<li><strong>Fragment composition replaces procedural building.</strong> Metrics declare <em>what</em> they need, not <em>how</em> to join. Conditional logic is clean: <code>q = base + (extra if condition else Fragment())</code>.</li>
+<li><strong>SQL transparency comes free.</strong> <code>compile()</code> produces both the SQLAlchemy <code>Select</code> and a formatted SQL string. Every metric result can carry its SQL for auditability — the project's core differentiator.</li>
+<li><strong>Serializable query specs.</strong> The API receives <code>{"dimensions": [...], "filters": {...}}</code> and the model validates + compiles it. No custom parsing.</li>
+<li><strong>Each metric owns its cubes.</strong> MRR defines <code>MRRSnapshotCube</code> and <code>MRRMovementCube</code>. Churn defines <code>ChurnEventCube</code>. No shared global registry — each cube is self-contained.</li>
+</ol>
+<h2 id="core-concepts">Core Concepts<a class="headerlink" href="#core-concepts" title="Permanent link">&para;</a></h2>
+<h3 id="cube">Cube<a class="headerlink" href="#cube" title="Permanent link">&para;</a></h3>
+<p>A <code>Cube</code> is a class that declares everything needed to query a fact table with dimensional slicing. It contains four nested declarations:</p>
+<ul>
+<li><strong>Joins</strong> — how to reach dimension tables from the fact table, with dependency ordering</li>
+<li><strong>Measures</strong> — named aggregation expressions (<code>Sum</code>, <code>CountDistinct</code>, <code>Avg</code>, <code>Count</code>)</li>
+<li><strong>Dimensions</strong> — named columns for GROUP BY, each declaring which join it requires</li>
+<li><strong>TimeDimensions</strong> — time columns that support granularity truncation (<code>DATE_TRUNC</code>)</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MRRSnapshotCube</span><span class="p">(</span><span class="n">Cube</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cube for the MRR snapshot fact table.&quot;&quot;&quot;</span>
+    <span class="n">__source__</span> <span class="o">=</span> <span class="s2">&quot;metric_mrr_snapshot&quot;</span>
+    <span class="n">__alias__</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Joins</span><span class="p">:</span>
+        <span class="n">subscription</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;subscription&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;sub&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;sub.source_id = s.source_id AND sub.external_id = s.subscription_id&quot;</span><span class="p">)</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;p&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;p.id = sub.plan_id&quot;</span><span class="p">,</span> <span class="n">depends_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;subscription&quot;</span><span class="p">])</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;prod.id = p.product_id&quot;</span><span class="p">,</span> <span class="n">depends_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">])</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;c.source_id = s.source_id AND c.external_id = s.customer_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measures</span><span class="p">:</span>
+        <span class="n">mrr</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">)</span>
+        <span class="n">mrr_original</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;s.mrr_cents&quot;</span><span class="p">)</span>       <span class="c1"># in original currency</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;s.subscription_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;s.source_id&quot;</span><span class="p">)</span>
+        <span class="n">currency</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;s.currency&quot;</span><span class="p">)</span>
+        <span class="n">plan_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;sub.plan_id&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;subscription&quot;</span><span class="p">)</span>
+        <span class="n">plan_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>
+        <span class="n">plan_interval</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.interval&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>
+        <span class="n">billing_scheme</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.billing_scheme&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>   <span class="c1"># per_unit | tiered</span>
+        <span class="n">usage_type</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.usage_type&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>           <span class="c1"># licensed | metered</span>
+        <span class="n">product_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;prod.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;product&quot;</span><span class="p">)</span>         <span class="c1"># via plan → product</span>
+        <span class="n">customer_country</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.country&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">)</span>
+        <span class="n">collection_method</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;sub.collection_method&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;subscription&quot;</span><span class="p">)</span>
+        <span class="n">cancel_at_period_end</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;sub.cancel_at_period_end&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;subscription&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">TimeDimensions</span><span class="p">:</span>
+        <span class="n">snapshot_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;s.snapshot_at&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Key properties:</p>
+<ul>
+<li><strong>Join dependencies</strong> — <code>plan</code> depends on <code>subscription</code>, <code>product</code> depends on <code>plan</code>. Requesting <code>product_name</code> automatically pulls in all three joins in the correct order.</li>
+<li><strong>Lazy joins</strong> — only dimensions/filters that are actually used trigger their joins. A query with no plan dimensions never joins the <code>plan</code> table.</li>
+<li><strong>Introspection</strong> — the model can list its available dimensions and measures at runtime, enabling API validation and documentation generation.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Plan/product dimensions require plan ingestion</p>
+<p>The MRR cubes declare <code>plan_id</code>, <code>plan_name</code>, <code>plan_interval</code>,
+<code>billing_scheme</code>, <code>usage_type</code>, and <code>product_name</code>, but these join
+through the <code>plan</code> (and <code>product</code>) table. The Stripe connector
+currently does <strong>not</strong> emit <code>plan.*</code> / <code>product.*</code> events, so
+<code>subscription.plan_id</code> is NULL for Stripe-sourced data and any query
+that references those dimensions returns zero rows. They will start
+populating once plan/product ingestion lands — the cube declarations
+are correct in advance. Same-database connectors (Lago, Kill Bill)
+that query the billing engine's own plan tables are not affected.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="n">MRRSnapshotCube</span><span class="o">.</span><span class="n">available_dimensions</span><span class="p">()</span>
+<span class="c1"># [&#39;billing_scheme&#39;, &#39;cancel_at_period_end&#39;, &#39;collection_method&#39;, &#39;currency&#39;,</span>
+<span class="c1">#  &#39;customer_country&#39;, &#39;plan_id&#39;, &#39;plan_interval&#39;, &#39;plan_name&#39;,</span>
+<span class="c1">#  &#39;product_name&#39;, &#39;source_id&#39;, &#39;usage_type&#39;]</span>
+
+<span class="n">MRRSnapshotCube</span><span class="o">.</span><span class="n">available_measures</span><span class="p">()</span>
+<span class="c1"># [&#39;mrr&#39;, &#39;mrr_original&#39;, &#39;count&#39;]</span>
+
+<span class="n">MRRSnapshotCube</span><span class="o">.</span><span class="n">available_time_dimensions</span><span class="p">()</span>
+<span class="c1"># [&#39;snapshot_at&#39;]</span>
+</code></pre></div>
+<h3 id="queryfragment">QueryFragment<a class="headerlink" href="#queryfragment" title="Permanent link">&para;</a></h3>
+<p>A <code>QueryFragment</code> is an immutable, composable description of a query piece. It carries what to SELECT, what to filter, and which joins are needed — but no SQL yet.</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QueryFragment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Immutable query fragment. Fragments compose via + (monoid).&quot;&quot;&quot;</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">alias</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">measures</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MeasureExpr</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">dimensions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DimExpr</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">FilterExpr</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">joins</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>         <span class="c1"># join names needed</span>
+    <span class="n">time_grain</span><span class="p">:</span> <span class="n">TimeGrainExpr</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">QueryFragment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QueryFragment</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge two fragments. Joins are unioned, time_grain uses first non-None.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QueryFragment</span><span class="p">(</span>
+            <span class="n">source</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+            <span class="n">alias</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alias</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">alias</span><span class="p">,</span>
+            <span class="n">measures</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">measures</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">measures</span><span class="p">,</span>
+            <span class="n">dimensions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">dimensions</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filters</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+            <span class="n">joins</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">joins</span> <span class="o">|</span> <span class="n">other</span><span class="o">.</span><span class="n">joins</span><span class="p">,</span>
+            <span class="n">time_grain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_grain</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">time_grain</span><span class="p">,</span>
+        <span class="p">)</span>
+</code></pre></div>
+<h3 id="fragment-algebra">Fragment Algebra<a class="headerlink" href="#fragment-algebra" title="Permanent link">&para;</a></h3>
+<p>Fragments combine via <code>+</code> with these properties:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Associative</strong></td>
+<td><code>(a + b) + c == a + (b + c)</code> — grouping doesn't affect result</td>
+</tr>
+<tr>
+<td><strong>Commutative</strong></td>
+<td><code>a + b == b + a</code> — order of composition doesn't matter</td>
+</tr>
+<tr>
+<td><strong>Identity</strong></td>
+<td><code>QueryFragment() + x == x</code> — empty fragment changes nothing</td>
+</tr>
+</tbody>
+</table>
+<p>This makes fragments a <strong>commutative monoid</strong>, which means:</p>
+<ul>
+<li>You can store fragments in lists and <code>reduce()</code> them</li>
+<li>Conditional inclusion is trivial: <code>base + (f if condition else QueryFragment())</code></li>
+<li>Order of adding dimensions/filters/measures never matters</li>
+<li>Fragments are independently testable</li>
+</ul>
+<h3 id="fragment-constructors">Fragment Constructors<a class="headerlink" href="#fragment-constructors" title="Permanent link">&para;</a></h3>
+<p>The cube provides factory methods that return fragments. Each method encapsulates the column expression <em>and</em> the joins required to resolve it:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Measure fragments — carry the aggregation expression</span>
+<span class="n">model</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span>
+<span class="c1"># → QueryFragment(source=&quot;metric_mrr_snapshot&quot;, alias=&quot;s&quot;,</span>
+<span class="c1">#                  measures=(MeasureExpr(&quot;SUM&quot;, &quot;s.mrr_base_cents&quot;, label=&quot;mrr&quot;),))</span>
+
+<span class="c1"># Dimension fragments — carry column expression + required joins</span>
+<span class="n">model</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">)</span>
+<span class="c1"># → QueryFragment(dimensions=(DimExpr(&quot;p.interval&quot;, label=&quot;plan_interval&quot;),),</span>
+<span class="c1">#                  joins=frozenset({&quot;subscription&quot;, &quot;plan&quot;}))</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;customer_country&quot;</span><span class="p">)</span>
+<span class="c1"># → QueryFragment(dimensions=(DimExpr(&quot;c.country&quot;, label=&quot;customer_country&quot;),),</span>
+<span class="c1">#                  joins=frozenset({&quot;customer&quot;}))</span>
+
+<span class="c1"># Filter fragments — carry predicate + required joins</span>
+<span class="n">model</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">)</span>
+<span class="c1"># → QueryFragment(filters=(FilterExpr(&quot;p.interval&quot;, &quot;=&quot;, &quot;monthly&quot;),),</span>
+<span class="c1">#                  joins=frozenset({&quot;subscription&quot;, &quot;plan&quot;}))</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;customer_country&quot;</span><span class="p">,</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;US&quot;</span><span class="p">,</span> <span class="s2">&quot;DE&quot;</span><span class="p">])</span>
+<span class="c1"># → QueryFragment(filters=(FilterExpr(&quot;c.country&quot;, &quot;in&quot;, [&quot;US&quot;, &quot;DE&quot;]),),</span>
+<span class="c1">#                  joins=frozenset({&quot;customer&quot;}))</span>
+
+<span class="c1"># Time grain fragment — carries DATE_TRUNC expression</span>
+<span class="n">model</span><span class="o">.</span><span class="n">time_grain</span><span class="p">(</span><span class="s2">&quot;snapshot_at&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">)</span>
+<span class="c1"># → QueryFragment(time_grain=TimeGrainExpr(&quot;s.snapshot_at&quot;, &quot;month&quot;))</span>
+
+<span class="c1"># Raw filter on the source table (no join needed)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="c1"># → QueryFragment(filters=(FilterExpr(&quot;s.mrr_base_cents&quot;, &quot;&gt;&quot;, 0),))</span>
+</code></pre></div>
+<h3 id="compilation">Compilation<a class="headerlink" href="#compilation" title="Permanent link">&para;</a></h3>
+<p><code>compile()</code> turns a composed <code>QueryFragment</code> into a SQLAlchemy <code>Select</code> statement and a bind-params dict. The compilation pipeline:</p>
+<ol>
+<li><strong>FROM</strong> — <code>SELECT ... FROM {source} AS {alias}</code></li>
+<li><strong>Resolve static joins</strong> — collect all join names (self + compare branches), topologically sort by <code>depends_on</code>, emit <code>JOIN</code> clauses. Deduplication is automatic (joins are a <code>frozenset</code>).</li>
+<li><strong>Apply dynamic joins</strong> — emit one <code>LEFT JOIN</code> per unique <code>DynamicJoinExpr</code> alias. Used by <code>Cube.attribute()</code> to reach EAV attribute tables without declaring every attribute up-front. Always LEFT so <code>is_empty</code> / <code>IS NULL</code> semantics stay correct.</li>
+<li><strong>Compare mode</strong> — if <code>fragment.compare</code> is non-empty, add <code>CROSS JOIN (VALUES ('seg_a'), ('seg_b')) AS seg(segment_id)</code> and prepend <code>seg.segment_id</code> to SELECT and GROUP BY.</li>
+<li><strong>Add time grain</strong> — <code>DATE_TRUNC(granularity, column) AS period</code> in SELECT and GROUP BY (so <code>period</code> leads the projection).</li>
+<li><strong>Add dimensions</strong> — column expressions in SELECT and GROUP BY.</li>
+<li><strong>Add measures</strong> — aggregation expressions in SELECT (<code>SUM(...)</code>, <code>COUNT(DISTINCT ...)</code>, <code>COUNT(...)</code>, <code>AVG(...)</code>).</li>
+<li><strong>Add filters</strong> — WHERE clauses with bound parameters. Non-compare filters AND together; when compare is set, an additional compound OR-of-ANDs is AND'd in (each branch tagged with <code>seg.segment_id = :branch_id</code>).</li>
+</ol>
+<p>There is no ORDER BY in the algebra — ordering is handled by the caller or by post-processing in the metric. Also note: aggregates are emitted as raw <code>SUM(col)</code> / <code>COUNT(DISTINCT col)</code> — no unit conversion happens in the compiler (cents-to-dollars is the caller's responsibility).</p>
+<p>A <code>to_sql(model)</code> helper compiles the statement against the PostgreSQL dialect and inline-substitutes bind parameters, which is useful for notebooks and SQL logging.</p>
+<h3 id="dynamic-joins-attribute">Dynamic joins + attribute()<a class="headerlink" href="#dynamic-joins-attribute" title="Permanent link">&para;</a></h3>
+<p><code>Cube.attribute(key, op, value, attr_type="string")</code> produces a <code>QueryFragment</code> that adds a <code>DynamicJoinExpr(alias="ca_{key}", table="customer_attribute", depends_on=("customer",))</code> and a filter against the matching <code>value_*</code> column (<code>value_string</code>, <code>value_number</code>, <code>value_bool</code>, <code>value_timestamp</code>). Two filters on the same key share one join — aliases are deduped by <code>alias</code> in <code>__add__</code> and again at compile time. See <a href="../segments/">segments.md</a> for the full attribute EAV model.</p>
+<h3 id="or-groups-via-cubeor_group">OR groups via Cube.or_group()<a class="headerlink" href="#or-groups-via-cubeor_group" title="Permanent link">&para;</a></h3>
+<p><code>Cube.or_group([frag_a, frag_b, …])</code> combines fragments with OR — each leg's filters AND together internally, legs are OR'd at the top. Implemented as a <code>FilterExpr(kind="or", children=(...))</code> variant that <code>_filter_clause</code> handles uniformly with simple filters — no new compilation path.</p>
+<h3 id="operator-set">Operator set<a class="headerlink" href="#operator-set" title="Permanent link">&para;</a></h3>
+<p><code>FilterExpr</code> supports: <code>= != &gt; &gt;= &lt; &lt;= in not in between contains not_contains starts_with ends_with is_empty is_not_empty</code>. All map cleanly to SQLAlchemy Core — <code>ILIKE</code> for the string ops (with <code>%</code> / <code>_</code> / <code>\\</code> escaped in the bound value), <code>IS NULL</code> / <code>IS NOT NULL</code> for the empty ops (no bind param emitted). No raw <code>text()</code> beyond what static join declarations already use.</p>
+<h2 id="concrete-cubes">Concrete Cubes<a class="headerlink" href="#concrete-cubes" title="Permanent link">&para;</a></h2>
+<p>These are the cubes for the project's <a href="../database/#metric-tables">metric tables</a>. Each maps a fact table to its available joins, measures, and dimensions. Every cube lives next to its metric (e.g., <code>tidemill/metrics/mrr/cubes.py</code>, <code>tidemill/metrics/churn/cubes.py</code>).</p>
+<p>Dimensions sourced from Stripe API objects: Customer (<code>name</code>, <code>address.country</code>), Subscription (<code>status</code>, <code>collection_method</code>, <code>cancel_at_period_end</code>, <code>cancellation_details</code>), Price/Plan (<code>interval</code>, <code>interval_count</code>, <code>billing_scheme</code>, <code>usage_type</code>), Product (<code>name</code>). See <a href="#stripe-api-mapping">Stripe API mapping</a> below for the full field comparison.</p>
+<h3 id="mrr-snapshot-cube">MRR Snapshot Cube<a class="headerlink" href="#mrr-snapshot-cube" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MRRSnapshotCube</span><span class="p">(</span><span class="n">Cube</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Current MRR per subscription. Updated on every subscription event.&quot;&quot;&quot;</span>
+    <span class="n">__source__</span> <span class="o">=</span> <span class="s2">&quot;metric_mrr_snapshot&quot;</span>
+    <span class="n">__alias__</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Joins</span><span class="p">:</span>
+        <span class="n">subscription</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;subscription&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;sub&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;sub.source_id = s.source_id AND sub.external_id = s.subscription_id&quot;</span><span class="p">)</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;p&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;p.id = sub.plan_id&quot;</span><span class="p">,</span> <span class="n">depends_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;subscription&quot;</span><span class="p">])</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;prod.id = p.product_id&quot;</span><span class="p">,</span> <span class="n">depends_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">])</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;c.source_id = s.source_id AND c.external_id = s.customer_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measures</span><span class="p">:</span>
+        <span class="n">mrr</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;mrr&quot;</span><span class="p">)</span>
+        <span class="n">mrr_original</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;s.mrr_cents&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;mrr_original&quot;</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;s.subscription_id&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;subscription_count&quot;</span><span class="p">)</span>
+        <span class="n">customer_count</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;s.customer_id&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_count&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;s.source_id&quot;</span><span class="p">)</span>
+        <span class="n">currency</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;s.currency&quot;</span><span class="p">)</span>
+        <span class="c1"># Plan (subscription → plan)</span>
+        <span class="n">plan_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;sub.plan_id&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;subscription&quot;</span><span class="p">)</span>
+        <span class="n">plan_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;plan_name&quot;</span><span class="p">)</span>
+        <span class="n">plan_interval</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.interval&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">)</span>
+        <span class="n">billing_scheme</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.billing_scheme&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>       <span class="c1"># per_unit | tiered</span>
+        <span class="n">usage_type</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.usage_type&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>               <span class="c1"># licensed | metered</span>
+        <span class="c1"># Product (subscription → plan → product)</span>
+        <span class="n">product_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;prod.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;product_name&quot;</span><span class="p">)</span>
+        <span class="c1"># Customer</span>
+        <span class="n">customer_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_name&quot;</span><span class="p">)</span>
+        <span class="n">customer_country</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.country&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_country&quot;</span><span class="p">)</span>
+        <span class="c1"># Subscription attributes</span>
+        <span class="n">collection_method</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;sub.collection_method&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;subscription&quot;</span><span class="p">)</span>
+        <span class="n">cancel_at_period_end</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;sub.cancel_at_period_end&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;subscription&quot;</span><span class="p">)</span>
+        <span class="c1"># Computed — CASE / DATE_TRUNC expressions on c.created_at and the</span>
+        <span class="c1"># MRR column.  Surfaced through the same /fields endpoint as regular</span>
+        <span class="c1"># dims; segment definitions reach them via the `computed.&lt;name&gt;`</span>
+        <span class="c1"># field prefix (or bare name for backwards compatibility).</span>
+        <span class="n">mrr_band</span>       <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="n">_mrr_band_sql</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">),</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;MRR band&quot;</span><span class="p">)</span>
+        <span class="n">arr_band</span>       <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="n">_arr_band_sql</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">),</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;ARR band&quot;</span><span class="p">)</span>
+        <span class="n">tenure_months</span>  <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="n">_TENURE_MONTHS_SQL</span><span class="p">,</span>                <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tenure (months)&quot;</span><span class="p">)</span>
+        <span class="n">cohort_month</span>   <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="n">_COHORT_MONTH_SQL</span><span class="p">,</span>                 <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Cohort month&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">TimeDimensions</span><span class="p">:</span>
+        <span class="n">snapshot_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;s.snapshot_at&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The <code>customer_count</code> measure exists so LTV/ARPU queries can compute <code>SUM(mrr) / COUNT(DISTINCT customer_id)</code> in a single trip to the DB.</p>
+<p><strong>Computed dimensions</strong> (<code>mrr_band</code>, <code>arr_band</code>, <code>tenure_months</code>, <code>cohort_month</code>) are SQL expressions stored verbatim in <code>Dim.column</code>. <code>literal_column</code> accepts arbitrary expressions, so <code>dimension("mrr_band")</code> and <code>filter("mrr_band", "=", "$100-$500")</code> work the same as any column-backed dim. The expressions live in <code>tidemill/metrics/mrr/cubes.py</code> (<code>_mrr_band_sql</code>, <code>_arr_band_sql</code>, <code>_TENURE_MONTHS_SQL</code>, <code>_COHORT_MONTH_SQL</code>) and are reused across the Churn, LTV, Retention, and Trials cubes wherever a <code>customer</code> join is available. See <a href="../segments/">Segmentation</a> for how segment definitions reach them.</p>
+<h3 id="mrr-movement-cube">MRR Movement Cube<a class="headerlink" href="#mrr-movement-cube" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MRRMovementCube</span><span class="p">(</span><span class="n">Cube</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Append-only log of MRR changes. Used for breakdown and time-series queries.&quot;&quot;&quot;</span>
+    <span class="n">__source__</span> <span class="o">=</span> <span class="s2">&quot;metric_mrr_movement&quot;</span>
+    <span class="n">__alias__</span> <span class="o">=</span> <span class="s2">&quot;m&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Joins</span><span class="p">:</span>
+        <span class="n">subscription</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;subscription&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;sub&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;sub.source_id = m.source_id AND sub.external_id = m.subscription_id&quot;</span><span class="p">)</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;p&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;p.id = sub.plan_id&quot;</span><span class="p">,</span> <span class="n">depends_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;subscription&quot;</span><span class="p">])</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;prod&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;prod.id = p.product_id&quot;</span><span class="p">,</span> <span class="n">depends_on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">])</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;c.source_id = m.source_id AND c.external_id = m.customer_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measures</span><span class="p">:</span>
+        <span class="n">amount</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;m.amount_base_cents&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;amount_base&quot;</span><span class="p">)</span>
+        <span class="n">amount_original</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;m.amount_cents&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;amount_original&quot;</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;m.event_id&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;event_count&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;m.source_id&quot;</span><span class="p">)</span>
+        <span class="n">customer_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;m.customer_id&quot;</span><span class="p">)</span>
+        <span class="n">currency</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;m.currency&quot;</span><span class="p">)</span>
+        <span class="n">movement_type</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;m.movement_type&quot;</span><span class="p">)</span>
+        <span class="n">plan_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;sub.plan_id&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;subscription&quot;</span><span class="p">)</span>
+        <span class="n">plan_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;plan_name&quot;</span><span class="p">)</span>
+        <span class="n">plan_interval</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.interval&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">)</span>
+        <span class="n">billing_scheme</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.billing_scheme&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>
+        <span class="n">usage_type</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;p.usage_type&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>
+        <span class="n">product_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;prod.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;product_name&quot;</span><span class="p">)</span>
+        <span class="n">customer_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_name&quot;</span><span class="p">)</span>
+        <span class="n">customer_country</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.country&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_country&quot;</span><span class="p">)</span>
+        <span class="n">collection_method</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;sub.collection_method&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;subscription&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">TimeDimensions</span><span class="p">:</span>
+        <span class="n">occurred_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;m.occurred_at&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="churn-customer-state-cube">Churn Customer State Cube<a class="headerlink" href="#churn-customer-state-cube" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChurnCustomerStateCube</span><span class="p">(</span><span class="n">Cube</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Active/churned state per customer. Updated by subscription events.&quot;&quot;&quot;</span>
+    <span class="n">__source__</span> <span class="o">=</span> <span class="s2">&quot;metric_churn_customer_state&quot;</span>
+    <span class="n">__alias__</span> <span class="o">=</span> <span class="s2">&quot;cs&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Joins</span><span class="p">:</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;c.source_id = cs.source_id AND c.external_id = cs.customer_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measures</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;cs.customer_id&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_count&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;cs.source_id&quot;</span><span class="p">)</span>
+        <span class="n">customer_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;cs.customer_id&quot;</span><span class="p">)</span>
+        <span class="n">customer_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_name&quot;</span><span class="p">)</span>
+        <span class="n">customer_country</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.country&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_country&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">TimeDimensions</span><span class="p">:</span>
+        <span class="n">first_active_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;cs.first_active_at&quot;</span><span class="p">)</span>
+        <span class="n">churned_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;cs.churned_at&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="churn-event-cube">Churn Event Cube<a class="headerlink" href="#churn-event-cube" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChurnEventCube</span><span class="p">(</span><span class="n">Cube</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Individual churn events for rate calculation.&quot;&quot;&quot;</span>
+    <span class="n">__source__</span> <span class="o">=</span> <span class="s2">&quot;metric_churn_event&quot;</span>
+    <span class="n">__alias__</span> <span class="o">=</span> <span class="s2">&quot;ce&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Joins</span><span class="p">:</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;c.source_id = ce.source_id AND c.external_id = ce.customer_id&quot;</span><span class="p">)</span>
+        <span class="n">customer_state</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;metric_churn_customer_state&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;cs&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;cs.source_id = ce.source_id AND cs.customer_id = ce.customer_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measures</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;churn_count&quot;</span><span class="p">)</span>
+        <span class="n">revenue_lost</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;ce.mrr_cents&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;revenue_lost&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;ce.source_id&quot;</span><span class="p">)</span>
+        <span class="n">customer_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;ce.customer_id&quot;</span><span class="p">)</span>
+        <span class="n">churn_type</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;ce.churn_type&quot;</span><span class="p">)</span>
+        <span class="n">cancel_reason</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;ce.cancel_reason&quot;</span><span class="p">)</span>               <span class="c1"># from cancellation_details.feedback; populated on logo, revenue, and canceled rows</span>
+        <span class="n">customer_name</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.name&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_name&quot;</span><span class="p">)</span>
+        <span class="n">customer_country</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.country&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_country&quot;</span><span class="p">)</span>
+        <span class="c1"># Scopes churn events to customers active at period start</span>
+        <span class="n">customer_first_active</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;cs.first_active_at&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer_state&quot;</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_first_active&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">TimeDimensions</span><span class="p">:</span>
+        <span class="n">occurred_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;ce.occurred_at&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The <code>customer_state</code> join plus the <code>customer_first_active</code> dimension let the churn metric restrict events to customers who were already active before the measurement window — essential for correct logo-churn denominators.</p>
+<h3 id="retention-cohort-cube">Retention Cohort Cube<a class="headerlink" href="#retention-cohort-cube" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">RetentionCohortCube</span><span class="p">(</span><span class="n">Cube</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cohort membership and monthly activity for retention analysis.&quot;&quot;&quot;</span>
+    <span class="n">__source__</span> <span class="o">=</span> <span class="s2">&quot;metric_retention_cohort&quot;</span>
+    <span class="n">__alias__</span> <span class="o">=</span> <span class="s2">&quot;rc&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Joins</span><span class="p">:</span>
+        <span class="n">activity</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;metric_retention_activity&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;ra&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;ra.customer_id = rc.customer_id AND ra.source_id = rc.source_id&quot;</span><span class="p">)</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;c.source_id = rc.source_id AND c.external_id = rc.customer_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measures</span><span class="p">:</span>
+        <span class="n">cohort_size</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;rc.customer_id&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;cohort_size&quot;</span><span class="p">)</span>
+        <span class="n">active_count</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;ra.customer_id&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;active_count&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;rc.source_id&quot;</span><span class="p">)</span>
+        <span class="n">customer_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;rc.customer_id&quot;</span><span class="p">)</span>
+        <span class="n">cohort_month</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;rc.cohort_month&quot;</span><span class="p">)</span>
+        <span class="n">active_month</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;ra.active_month&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;activity&quot;</span><span class="p">)</span>
+        <span class="n">customer_country</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.country&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_country&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">TimeDimensions</span><span class="p">:</span>
+        <span class="n">cohort_month_time</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;rc.cohort_month&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="ltv-invoice-cube">LTV Invoice Cube<a class="headerlink" href="#ltv-invoice-cube" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LtvInvoiceCube</span><span class="p">(</span><span class="n">Cube</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Append-only log of paid invoices. Used for cohort LTV and revenue tracking.&quot;&quot;&quot;</span>
+    <span class="n">__source__</span> <span class="o">=</span> <span class="s2">&quot;metric_ltv_invoice&quot;</span>
+    <span class="n">__alias__</span> <span class="o">=</span> <span class="s2">&quot;li&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Joins</span><span class="p">:</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;c.source_id = li.source_id AND c.external_id = li.customer_id&quot;</span><span class="p">)</span>
+        <span class="n">cohort</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;metric_retention_cohort&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;rc&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;rc.source_id = li.source_id AND rc.customer_id = li.customer_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measures</span><span class="p">:</span>
+        <span class="n">total_revenue</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;li.amount_base_cents&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;total_revenue&quot;</span><span class="p">)</span>
+        <span class="n">total_revenue_original</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;li.amount_cents&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;total_revenue_original&quot;</span><span class="p">)</span>
+        <span class="n">invoice_count</span> <span class="o">=</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;invoice_count&quot;</span><span class="p">)</span>
+        <span class="n">customer_count</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;li.customer_id&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_count&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;li.source_id&quot;</span><span class="p">)</span>
+        <span class="n">customer_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;li.customer_id&quot;</span><span class="p">)</span>
+        <span class="n">currency</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;li.currency&quot;</span><span class="p">)</span>
+        <span class="n">customer_country</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.country&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_country&quot;</span><span class="p">)</span>
+        <span class="n">cohort_month</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;rc.cohort_month&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;cohort&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;cohort_month&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">TimeDimensions</span><span class="p">:</span>
+        <span class="n">paid_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;li.paid_at&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The <code>cohort</code> join reaches <code>metric_retention_cohort</code> — the same table used by the retention metric — so LTV and retention share cohort definitions. Cohort LTV currently computes cohort membership in Python (<code>movement_type = 'new'</code> in <code>MRRMovementCube</code>) for flexibility; the <code>cohort_month</code> dimension is available but unused by the default cohort-LTV query.</p>
+<h3 id="trial-cube">Trial Cube<a class="headerlink" href="#trial-cube" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrialCube</span><span class="p">(</span><span class="n">Cube</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-trial outcomes. Cohort = month of started_at.&quot;&quot;&quot;</span>
+    <span class="n">__source__</span> <span class="o">=</span> <span class="s2">&quot;metric_trial&quot;</span>
+    <span class="n">__alias__</span> <span class="o">=</span> <span class="s2">&quot;t&quot;</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Joins</span><span class="p">:</span>
+        <span class="n">customer</span> <span class="o">=</span> <span class="n">Join</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;c&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;c.source_id = t.source_id AND c.external_id = t.customer_id&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measures</span><span class="p">:</span>
+        <span class="c1"># count(*) counts all rows; count(col) counts non-null values.</span>
+        <span class="c1"># Every row has started_at, so started_count == count(*).</span>
+        <span class="n">started_count</span> <span class="o">=</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;started&quot;</span><span class="p">)</span>
+        <span class="n">converted_count</span> <span class="o">=</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;t.converted_at&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;converted&quot;</span><span class="p">)</span>
+        <span class="n">expired_count</span> <span class="o">=</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;t.expired_at&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;expired&quot;</span><span class="p">)</span>
+        <span class="n">customer_count</span> <span class="o">=</span> <span class="n">CountDistinct</span><span class="p">(</span><span class="s2">&quot;t.customer_id&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_count&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;t.source_id&quot;</span><span class="p">)</span>
+        <span class="n">customer_country</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.country&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;customer_country&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">TimeDimensions</span><span class="p">:</span>
+        <span class="n">started_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;t.started_at&quot;</span><span class="p">)</span>
+        <span class="n">converted_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;t.converted_at&quot;</span><span class="p">)</span>
+        <span class="n">expired_at</span> <span class="o">=</span> <span class="n">TimeDim</span><span class="p">(</span><span class="s2">&quot;t.expired_at&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Trial metrics are <strong>cohort-based</strong>: the funnel measures (<code>started</code>, <code>converted</code>, <code>expired</code>) are derived from <code>COUNT(*)</code> and <code>COUNT(&lt;timestamp&gt;)</code> over the same row set, filtered by <code>started_at</code>. A trial that starts in January and converts in March is attributed to the January cohort regardless of when the conversion lands.</p>
+<h2 id="stripe-api-mapping">Stripe API Mapping<a class="headerlink" href="#stripe-api-mapping" title="Permanent link">&para;</a></h2>
+<p>The table below maps Stripe API fields to our schema columns and cube dimensions. Fields marked with <strong>dim</strong> are exposed as queryable dimensions in the cubes above.</p>
+<h3 id="customer-customer-table">Customer → <code>customer</code> table<a class="headerlink" href="#customer-customer-table" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stripe field</th>
+<th>Our column</th>
+<th>Cube dimension</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>external_id</code></td>
+<td>—</td>
+<td>Stripe customer ID</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>name</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td><code>email</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>address.country</code></td>
+<td><code>country</code></td>
+<td><strong><code>customer_country</code></strong></td>
+<td>ISO 3166-1 alpha-2</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td><code>currency</code></td>
+<td><strong><code>currency</code></strong></td>
+<td>Default billing currency</td>
+</tr>
+<tr>
+<td><code>created</code></td>
+<td><code>created_at</code></td>
+<td>—</td>
+<td>Cohort assignment</td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td><code>metadata</code></td>
+<td>—</td>
+<td>Custom business dimensions (JSONB)</td>
+</tr>
+<tr>
+<td><code>delinquent</code></td>
+<td>—</td>
+<td>—</td>
+<td>Could add for payment health segmentation</td>
+</tr>
+<tr>
+<td><code>address.state/city</code></td>
+<td>—</td>
+<td>—</td>
+<td>Sub-national geo; use metadata if needed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="product-product-table-new">Product → <code>product</code> table (new)<a class="headerlink" href="#product-product-table-new" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stripe field</th>
+<th>Our column</th>
+<th>Cube dimension</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>external_id</code></td>
+<td>—</td>
+<td>Stripe product ID</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>name</code></td>
+<td><strong><code>product_name</code></strong></td>
+<td>Product-level MRR/churn analysis</td>
+</tr>
+<tr>
+<td><code>active</code></td>
+<td><code>active</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td><code>metadata</code></td>
+<td>—</td>
+<td>Product line, category</td>
+</tr>
+</tbody>
+</table>
+<h3 id="priceplan-plan-table">Price/Plan → <code>plan</code> table<a class="headerlink" href="#priceplan-plan-table" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stripe field</th>
+<th>Our column</th>
+<th>Cube dimension</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>external_id</code></td>
+<td><strong><code>plan_id</code></strong></td>
+<td>Stripe price/plan ID</td>
+</tr>
+<tr>
+<td><code>product</code></td>
+<td><code>product_id</code></td>
+<td>(via product join)</td>
+<td>FK to product table</td>
+</tr>
+<tr>
+<td><code>nickname</code> / <code>product.name</code></td>
+<td><code>name</code></td>
+<td><strong><code>plan_name</code></strong></td>
+<td>Human-readable plan name</td>
+</tr>
+<tr>
+<td><code>recurring.interval</code></td>
+<td><code>interval</code></td>
+<td><strong><code>plan_interval</code></strong></td>
+<td>month, year, week, day</td>
+</tr>
+<tr>
+<td><code>recurring.interval_count</code></td>
+<td><code>interval_count</code></td>
+<td>—</td>
+<td>1=monthly, 3=quarterly, 12=annual</td>
+</tr>
+<tr>
+<td><code>unit_amount</code></td>
+<td><code>amount_cents</code></td>
+<td>—</td>
+<td>Per-unit price</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td><code>currency</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>billing_scheme</code></td>
+<td><code>billing_scheme</code></td>
+<td><strong><code>billing_scheme</code></strong></td>
+<td>per_unit, tiered</td>
+</tr>
+<tr>
+<td><code>recurring.usage_type</code></td>
+<td><code>usage_type</code></td>
+<td><strong><code>usage_type</code></strong></td>
+<td>licensed, metered</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>—</td>
+<td>—</td>
+<td>one_time vs recurring; filter at ingest</td>
+</tr>
+<tr>
+<td><code>trial_period_days</code></td>
+<td><code>trial_period_days</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>tiers</code></td>
+<td>—</td>
+<td>—</td>
+<td>Tiered pricing detail; store in metadata</td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td><code>metadata</code></td>
+<td>—</td>
+<td>Custom plan attributes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="subscription-subscription-table">Subscription → <code>subscription</code> table<a class="headerlink" href="#subscription-subscription-table" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stripe field</th>
+<th>Our column</th>
+<th>Cube dimension</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>external_id</code></td>
+<td>—</td>
+<td>Stripe subscription ID</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><code>status</code></td>
+<td>—</td>
+<td>active, trialing, past_due, canceled, etc.</td>
+</tr>
+<tr>
+<td><code>items[].price × quantity</code></td>
+<td><code>mrr_cents</code> / <code>mrr_base_cents</code></td>
+<td>(measure)</td>
+<td>Computed at ingest time</td>
+</tr>
+<tr>
+<td><code>items[].quantity</code></td>
+<td><code>quantity</code></td>
+<td>—</td>
+<td>Seat/unit count</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td><code>currency</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>collection_method</code></td>
+<td><code>collection_method</code></td>
+<td><strong><code>collection_method</code></strong></td>
+<td>charge_automatically, send_invoice</td>
+</tr>
+<tr>
+<td><code>cancel_at_period_end</code></td>
+<td><code>cancel_at_period_end</code></td>
+<td><strong><code>cancel_at_period_end</code></strong></td>
+<td>Churn early warning</td>
+</tr>
+<tr>
+<td><code>cancellation_details.reason</code></td>
+<td><code>cancel_reason</code></td>
+<td>—</td>
+<td>customer, payment_failure, etc.</td>
+</tr>
+<tr>
+<td><code>cancellation_details.feedback</code></td>
+<td><code>cancel_feedback</code></td>
+<td>—</td>
+<td>too_expensive, missing_features, etc.</td>
+</tr>
+<tr>
+<td><code>start_date</code></td>
+<td><code>started_at</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>trial_start</code> / <code>trial_end</code></td>
+<td><code>trial_start</code> / <code>trial_end</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>canceled_at</code></td>
+<td><code>canceled_at</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>ended_at</code></td>
+<td><code>ended_at</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>current_period_start/end</code></td>
+<td><code>current_period_start/end</code></td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td>—</td>
+<td>—</td>
+<td>Store in event payload</td>
+</tr>
+</tbody>
+</table>
+<h3 id="churn-events-metric_churn_event-table">Churn Events → <code>metric_churn_event</code> table<a class="headerlink" href="#churn-events-metric_churn_event-table" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stripe field</th>
+<th>Our column</th>
+<th>Cube dimension</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cancellation_details.reason</code></td>
+<td><code>cancel_reason</code></td>
+<td><strong><code>cancel_reason</code></strong></td>
+<td>Denormalized from subscription for direct churn analysis</td>
+</tr>
+</tbody>
+</table>
+<h3 id="not-captured-available-via-metadata-or-future-extension">Not captured (available via metadata or future extension)<a class="headerlink" href="#not-captured-available-via-metadata-or-future-extension" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stripe field</th>
+<th>Analytics value</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>charge.payment_method_details.card.brand</code></td>
+<td>Payment success by card brand</td>
+<td>P1</td>
+</tr>
+<tr>
+<td><code>charge.payment_method_details.card.country</code></td>
+<td>Card issuing country vs billing country</td>
+<td>P1</td>
+</tr>
+<tr>
+<td><code>charge.outcome.risk_level</code></td>
+<td>Fraud/risk segmentation</td>
+<td>P2</td>
+</tr>
+<tr>
+<td><code>invoice.billing_reason</code></td>
+<td>Distinguish cycle vs proration vs manual</td>
+<td>P1</td>
+</tr>
+<tr>
+<td><code>invoice.amount_paid</code> / <code>amount_remaining</code></td>
+<td>AR aging, collection rate</td>
+<td>P1</td>
+</tr>
+<tr>
+<td><code>invoice.total_discount_amounts</code></td>
+<td>Discount impact on revenue</td>
+<td>P2</td>
+</tr>
+<tr>
+<td><code>customer.delinquent</code></td>
+<td>Payment health flag</td>
+<td>P2</td>
+</tr>
+<tr>
+<td><code>price.tiers</code> / <code>tiers_mode</code></td>
+<td>Tiered pricing analysis</td>
+<td>P2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="usage-in-metrics">Usage in Metrics<a class="headerlink" href="#usage-in-metrics" title="Permanent link">&para;</a></h2>
+<p>Metrics declare which cube they use. The <code>query()</code> method composes fragments from the model based on the incoming <code>QuerySpec</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@register</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MrrMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">MRRSnapshotCube</span>
+    <span class="n">movement_model</span> <span class="o">=</span> <span class="n">MRRMovementCube</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">match</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_type&quot;</span><span class="p">):</span>
+            <span class="k">case</span> <span class="s2">&quot;current&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_mrr</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;at&quot;</span><span class="p">),</span> <span class="n">spec</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mrr_series</span><span class="p">(</span>
+                    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;interval&quot;</span><span class="p">],</span> <span class="n">spec</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;breakdown&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mrr_breakdown</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">],</span> <span class="n">spec</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_current_mrr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Choose original-currency measure when caller groups by currency</span>
+        <span class="n">use_original</span> <span class="o">=</span> <span class="n">spec</span> <span class="ow">and</span> <span class="s2">&quot;currency&quot;</span> <span class="ow">in</span> <span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">or</span> <span class="p">[])</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="n">measure</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr_original</span> <span class="k">if</span> <span class="n">use_original</span> <span class="k">else</span> <span class="n">m</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span>
+
+        <span class="c1"># Base: always-present fragments</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">measure</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Time filter</span>
+        <span class="k">if</span> <span class="n">at</span><span class="p">:</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;snapshot_at&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="n">at</span><span class="p">)</span>
+
+        <span class="c1"># Dimensions + filters + segment + compare from the spec, in one</span>
+        <span class="c1"># bridge call (see tidemill/segments/compiler.py).</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="k">await</span> <span class="n">build_spec_fragment</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+
+        <span class="n">stmt</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">mappings</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="n">has_compare</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">spec</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">compare</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">spec</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">spec</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_compare</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;mrr&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">rows</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">]</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mrr_breakdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">mm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">movement_model</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">mm</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">amount</span>
+            <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;movement_type&quot;</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;occurred_at&quot;</span><span class="p">,</span> <span class="s2">&quot;between&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="k">await</span> <span class="n">build_spec_fragment</span><span class="p">(</span><span class="n">mm</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+
+        <span class="n">stmt</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">mm</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">mappings</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
+</code></pre></div>
+<h3 id="reusable-fragments">Reusable Fragments<a class="headerlink" href="#reusable-fragments" title="Permanent link">&para;</a></h3>
+<p>Common filter combinations can be stored as named fragments and reused across metrics:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Shared fragment: active subscriptions only</span>
+<span class="n">ACTIVE_ONLY</span> <span class="o">=</span> <span class="n">MRRSnapshotCube</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Shared fragment: monthly plans</span>
+<span class="n">MONTHLY_PLANS</span> <span class="o">=</span> <span class="n">MRRSnapshotCube</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">)</span>
+
+<span class="c1"># Compose freely</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">MRRSnapshotCube</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span> <span class="o">+</span> <span class="n">ACTIVE_ONLY</span> <span class="o">+</span> <span class="n">MONTHLY_PLANS</span>
+</code></pre></div>
+<h3 id="quickratio-example">QuickRatio Example<a class="headerlink" href="#quickratio-example" title="Permanent link">&para;</a></h3>
+<p>The QuickRatio metric composes fragments from the MRR movement model:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@register</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuickRatioMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">MRRMovementCube</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mrr&quot;</span><span class="p">]</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">amount</span>
+            <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;movement_type&quot;</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;occurred_at&quot;</span><span class="p">,</span> <span class="s2">&quot;between&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">]))</span>
+        <span class="p">)</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="k">await</span> <span class="n">build_spec_fragment</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="p">)</span>
+
+        <span class="n">stmt</span><span class="p">,</span> <span class="n">bind</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">bind</span><span class="p">))</span><span class="o">.</span><span class="n">mappings</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="n">by_type</span> <span class="o">=</span> <span class="p">{</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;movement_type&quot;</span><span class="p">]:</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;amount_base&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">}</span>
+        <span class="n">growth</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">by_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="s2">&quot;expansion&quot;</span><span class="p">,</span> <span class="s2">&quot;reactivation&quot;</span><span class="p">))</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">by_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;churn&quot;</span><span class="p">,</span> <span class="s2">&quot;contraction&quot;</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">growth</span> <span class="o">/</span> <span class="n">loss</span> <span class="k">if</span> <span class="n">loss</span> <span class="k">else</span> <span class="kc">None</span>
+</code></pre></div>
+<h2 id="queryspec">QuerySpec<a class="headerlink" href="#queryspec" title="Permanent link">&para;</a></h2>
+<p><code>QuerySpec</code> is the external API contract — what FastAPI/CLI users pass in. It references dimension and filter names from the metric's cube:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuerySpec</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Declarative query specification. Validated against the metric&#39;s Cube.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Dimensions to group by (names from model.Dimensions)</span>
+    <span class="n">dimensions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># Filters: dimension_name → value (equality) or {op: value}</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="c1"># Time bucketing</span>
+    <span class="n">granularity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>        <span class="c1"># day | week | month | quarter | year</span>
+    <span class="n">time_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+<p>The model's <code>apply_spec()</code> method translates the <code>dimensions</code> / <code>filters</code> / <code>granularity</code> fields of a <code>QuerySpec</code> into a composed fragment. Validation happens inside <code>Cube.dimension()</code>, <code>Cube.filter()</code>, and <code>Cube.time_grain()</code> — each raises <code>ValueError</code> with the list of available names when given an unknown one.</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_spec</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">QuerySpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QueryFragment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Translate a QuerySpec into a composed QueryFragment.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">QueryFragment</span><span class="p">()</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">QueryFragment</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">dim_name</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="n">dim_name</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">filters</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="n">op</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">granularity</span><span class="p">:</span>
+        <span class="n">time_dims</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_time_dimensions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">time_dims</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">time_grain</span><span class="p">(</span><span class="n">time_dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">spec</span><span class="o">.</span><span class="n">granularity</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+</code></pre></div>
+<p><code>apply_spec</code> only handles the dim / filter / granularity layer. <strong>Metric query methods should call <code>await build_spec_fragment(cube, spec, db)</code></strong> (in <code>tidemill.segments.compiler</code>) — that helper layers <code>apply_spec</code> plus the <code>segment</code> (universe filter) and <code>compare</code> (per-branch CROSS JOIN) carried by the spec, looking up attribute types from the registry as needed. Calling <code>apply_spec</code> directly skips segments and compare-mode entirely.</p>
+<h2 id="api-integration">API Integration<a class="headerlink" href="#api-integration" title="Permanent link">&para;</a></h2>
+<p>The REST API receives a JSON query spec and delegates to the engine:</p>
+<div class="highlight"><pre><span></span><code><span class="err">POST</span><span class="w"> </span><span class="err">/api/me</span><span class="kc">tr</span><span class="err">ics/mrr</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;query_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;current&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;customer_country&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;filters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;customer_country&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;US&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;granularity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;month&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>FastAPI translates this to:</p>
+<div class="highlight"><pre><span></span><code><span class="n">spec</span> <span class="o">=</span> <span class="n">QuerySpec</span><span class="p">(</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">,</span> <span class="s2">&quot;customer_country&quot;</span><span class="p">],</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;customer_country&quot;</span><span class="p">:</span> <span class="s2">&quot;US&quot;</span><span class="p">},</span>
+    <span class="n">granularity</span><span class="o">=</span><span class="s2">&quot;month&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;mrr&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;current&quot;</span><span class="p">},</span> <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+</code></pre></div>
+<p>The model validates dimension/filter names before compilation. Invalid names produce clear error messages:</p>
+<div class="highlight"><pre><span></span><code>ValueError: Unknown dimension &#39;plan_name&#39;. Available: [&#39;currency&#39;, &#39;customer_country&#39;, &#39;plan_id&#39;, &#39;plan_interval&#39;, &#39;source_id&#39;]
+</code></pre></div>
+<h2 id="sql-examples">SQL Examples<a class="headerlink" href="#sql-examples" title="Permanent link">&para;</a></h2>
+<p>Money values are stored as cents (integer); the compiler does not divide — cents-to-dollars conversion is the caller's responsibility.</p>
+<h3 id="no-spec-plain-aggregate">No spec — plain aggregate<a class="headerlink" href="#no-spec-plain-aggregate" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">q</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+</code></pre></div>
+<h3 id="filter-only-no-dimensions">Filter only (no dimensions)<a class="headerlink" href="#filter-only-no-dimensions" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">q</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="s2">&quot;yearly&quot;</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">subscription</span><span class="w"> </span><span class="n">sub</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span>
+<span class="w">                       </span><span class="k">AND</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">subscription_id</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">plan</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="nb">interval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">plan_interval</span>
+</code></pre></div>
+<h3 id="dimensional-cut">Dimensional cut<a class="headerlink" href="#dimensional-cut" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+     <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;plan_interval&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;customer_country&quot;</span><span class="p">))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="nb">interval</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">plan_interval</span><span class="p">,</span>
+<span class="w">       </span><span class="k">c</span><span class="p">.</span><span class="n">country</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">customer_country</span><span class="p">,</span>
+<span class="w">       </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">subscription</span><span class="w"> </span><span class="n">sub</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span>
+<span class="w">                       </span><span class="k">AND</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">subscription_id</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">plan</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">customer</span><span class="w"> </span><span class="k">c</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span>
+<span class="w">                 </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">customer_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="nb">interval</span><span class="p">,</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">country</span>
+</code></pre></div>
+<h3 id="filter-dimension-time-grain">Filter + dimension + time grain<a class="headerlink" href="#filter-dimension-time-grain" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;s.mrr_base_cents&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+     <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;customer_country&quot;</span><span class="p">,</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;US&quot;</span><span class="p">,</span> <span class="s2">&quot;DE&quot;</span><span class="p">])</span>
+     <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;plan_id&quot;</span><span class="p">)</span>
+     <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">time_grain</span><span class="p">(</span><span class="s2">&quot;snapshot_at&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">DATE_TRUNC</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">snapshot_at</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">period</span><span class="p">,</span>
+<span class="w">       </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span><span class="p">,</span>
+<span class="w">       </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mrr</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">subscription</span><span class="w"> </span><span class="n">sub</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span>
+<span class="w">                       </span><span class="k">AND</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">subscription_id</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">customer</span><span class="w"> </span><span class="k">c</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">source_id</span>
+<span class="w">                 </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">customer_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">country</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">:</span><span class="n">customer_country</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">DATE_TRUNC</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="n">snapshot_at</span><span class="p">),</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span>
+</code></pre></div>
+<h3 id="mrr-breakdown-by-movement-type-plan">MRR breakdown by movement type + plan<a class="headerlink" href="#mrr-breakdown-by-movement-type-plan" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">mm</span> <span class="o">=</span> <span class="n">MRRMovementCube</span>
+<span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">amount</span> <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;movement_type&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">dimension</span><span class="p">(</span><span class="s2">&quot;plan_id&quot;</span><span class="p">)</span>
+     <span class="o">+</span> <span class="n">mm</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;occurred_at&quot;</span><span class="p">,</span> <span class="s2">&quot;between&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">movement_type</span><span class="p">,</span>
+<span class="w">       </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span><span class="p">,</span>
+<span class="w">       </span><span class="k">SUM</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">amount_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">amount_base</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_movement</span><span class="w"> </span><span class="n">m</span>
+<span class="w">  </span><span class="k">JOIN</span><span class="w"> </span><span class="n">subscription</span><span class="w"> </span><span class="n">sub</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">source_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">source_id</span>
+<span class="w">                       </span><span class="k">AND</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">external_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">subscription_id</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">occurred_at</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="p">:</span><span class="n">occurred_at_start</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">:</span><span class="n">occurred_at_end</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">movement_type</span><span class="p">,</span><span class="w"> </span><span class="n">sub</span><span class="p">.</span><span class="n">plan_id</span>
+</code></pre></div>
+<p><code>between</code> binds two parameters using the dimension name as the prefix (here <code>occurred_at_start</code> / <code>occurred_at_end</code>). Equality and <code>in</code> filters use <code>:&lt;dimension_name&gt;</code>; other raw <code>where(...)</code> calls derive a parameter name from the column and operator (e.g. <code>s_mrr_base_cents_gt</code>).</p>
+<h3 id="date-range-semantics">Date-range semantics<a class="headerlink" href="#date-range-semantics" title="Permanent link">&para;</a></h3>
+<p>All date ranges are <strong>closed-closed</strong> <code>[start, end]</code> — both endpoints are inclusive (see <code>docs/definitions.md#date-range-convention</code>). When a bare <code>date</code> is passed as a filter value, the filter layer coerces it to the appropriate day boundary so SQL <code>BETWEEN</code> captures the full calendar day against a <code>TIMESTAMPTZ</code> column:</p>
+<ul>
+<li><code>between (start, end)</code> → <code>start</code> is pinned to <code>00:00:00.000000</code>, <code>end</code> to <code>23:59:59.999999</code></li>
+<li><code>&lt;=</code> upper bound → coerced to end-of-day (inclusive)</li>
+<li><code>&lt;</code>, <code>&gt;</code>, <code>&gt;=</code> — no coercion; the bare date sits at <code>00:00:00</code> and behaves as the half-open boundary you'd expect</li>
+</ul>
+<p>So <code>between (date(2025, 7, 1), date(2025, 9, 30))</code> covers every event from Jul 1 midnight through the last microsecond of Sep 30.</p>
+<h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">&para;</a></h2>
+<h3 id="file-location">File Location<a class="headerlink" href="#file-location" title="Permanent link">&para;</a></h3>
+<p>The cube machinery lives in <code>tidemill/metrics/query.py</code> — the same file that metrics import from. The concrete cubes are defined alongside their metrics (e.g., <code>MRRSnapshotCube</code> in <code>tidemill/metrics/mrr/cubes.py</code>).</p>
+<h3 id="package-structure">Package Structure<a class="headerlink" href="#package-structure" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>tidemill/metrics/
+├── __init__.py          # re-exports Metric, QuerySpec, register, ...
+├── base.py              # Metric ABC + QuerySpec (includes `segment`, `compare`)
+├── query.py             # Cube, QueryFragment (incl. dynamic_joins + compare), compilation
+├── registry.py          # @register, discovery, dependency resolution, primary_cube lookup
+├── route_helpers.py     # parse_spec (now also reads ?segment / ?compare_segments),
+│                          query_metric (resolves segment IDs → SegmentDefs)
+├── mrr/                 # MRRSnapshotCube, MRRMovementCube + computed dims
+├── churn/               # ChurnCustomerStateCube, ChurnEventCube
+├── retention/           # RetentionCohortCube
+├── ltv/                 # LtvInvoiceCube
+└── trials/              # TrialCube
+
+tidemill/segments/
+├── model.py             # SegmentDef AST (Group, Condition), Segment.to_fragment, Compare
+├── compiler.py          # build_spec_fragment — bridges QuerySpec (incl. segment/compare) → Cube
+└── routes.py            # /api/segments CRUD + /validate
+
+tidemill/attributes/
+├── ingest.py            # Stripe metadata fan-out, type inference, upsert helpers
+├── registry.py          # attribute_definition reads, distinct values for autocomplete
+└── routes.py            # /api/attributes + /api/customers/{id}/attributes
+</code></pre></div>
+<p>Each metric subpackage contains <code>cubes.py</code>, <code>metric.py</code>, <code>routes.py</code>, <code>tables.py</code>, and <code>__init__.py</code>. Metrics call <code>await build_spec_fragment(cube, spec, db)</code> in their <code>query()</code> methods to apply the full <code>QuerySpec</code> (dim / filter / granularity / segment / compare) in one shot.</p>
+<h3 id="sqlalchemy-integration">SQLAlchemy Integration<a class="headerlink" href="#sqlalchemy-integration" title="Permanent link">&para;</a></h3>
+<p>All compilation targets SQLAlchemy Core's <code>Select</code> object — no string concatenation. The compiled statement is executed via <code>AsyncSession.execute(stmt, params)</code>, consistent with the project's async-everywhere convention.</p>
+<h3 id="adding-a-new-dimension">Adding a New Dimension<a class="headerlink" href="#adding-a-new-dimension" title="Permanent link">&para;</a></h3>
+<p>To make a new column queryable:</p>
+<ol>
+<li>Add the join (if the table isn't already reachable) to the model's <code>Joins</code> class</li>
+<li>Add a <code>Dim(...)</code> entry to the model's <code>Dimensions</code> class, referencing the join</li>
+<li>Done — the dimension is immediately available in <code>QuerySpec</code> and the API</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="c1"># Example: add customer segment dimension to MRR</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+    <span class="o">...</span>
+    <span class="n">customer_segment</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="s2">&quot;c.segment&quot;</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>No changes to compilation, API, or other metrics needed.</p>
+<h3 id="adding-a-computed-dimension">Adding a Computed Dimension<a class="headerlink" href="#adding-a-computed-dimension" title="Permanent link">&para;</a></h3>
+<p>A <em>computed</em> dimension is a SQL expression rather than a single column reference. The compiler treats it the same as a column-backed dim — <code>literal_column</code> accepts arbitrary expressions, so <code>dimension(...)</code>, <code>filter(...)</code>, and the <code>computed.&lt;name&gt;</code> segment field path all work without changes.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Example: bucket customers by tenure</span>
+<span class="n">_TENURE_BUCKET_SQL</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;CASE&quot;</span>
+    <span class="s2">&quot; WHEN AGE(NOW(), c.created_at) &lt; INTERVAL &#39;30 days&#39; THEN &#39;&lt;30d&#39;&quot;</span>
+    <span class="s2">&quot; WHEN AGE(NOW(), c.created_at) &lt; INTERVAL &#39;180 days&#39; THEN &#39;30d-6mo&#39;&quot;</span>
+    <span class="s2">&quot; ELSE &#39;&gt;6mo&#39;&quot;</span>
+    <span class="s2">&quot; END&quot;</span>
+<span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+    <span class="o">...</span>
+    <span class="n">tenure_bucket</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span><span class="n">_TENURE_BUCKET_SQL</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tenure bucket&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The <code>/api/metrics/{name}/fields</code> endpoint surfaces computed dims alongside column-backed ones — the FE picker treats them identically. The <code>_infer_dim_type</code> helper in <code>tidemill/api/routers/metrics.py</code> reads <code>::date</code>, <code>::int</code>, <code>CASE WHEN</code>, etc. from the expression to pick a sensible widget type (date / number / string).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

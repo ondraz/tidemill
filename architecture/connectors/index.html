@@ -1,0 +1,2568 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/architecture/connectors/">
+      
+      
+        <link rel="prev" href="../database/">
+      
+      
+        <link rel="next" href="../cubes/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Connectors - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#connectors" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Connectors
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webhook-connector-ingestion-mode-primary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Webhook Connector (Ingestion Mode) — Primary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-connector-same-database-mode-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Connector (Same-Database Mode) — Alternative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stripe-connector-p0-reference-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stripe Connector (P0) — Reference Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stripe Connector (P0) — Reference Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webhook-translation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Webhook Translation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subscription-update-translation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscription Update Translation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-computation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Computation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backfill-first-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backfill (First Run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lago-connector-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lago Connector (P1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lago Connector (P1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#integration-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-lago-tables-queried" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Lago Tables Queried
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-computation-direct-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Computation (Direct SQL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subscription-changes-direct-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscription Changes (Direct SQL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-same-database-for-lago" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Same-Database for Lago
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kill-bill-connector-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kill Bill Connector (P1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Kill Bill Connector (P1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#integration-architecture_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-kill-bill-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Kill Bill Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#event-type-mapping-webhook-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Type Mapping (Webhook Fallback)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connector-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connector Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-new-connector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a New Connector
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adding a New Connector">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webhook-connector-for-any-billing-system-with-webhooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Webhook Connector (for any billing system with webhooks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-connector-for-billing-engines-with-accessible-databases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Connector (for billing engines with accessible databases)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webhook-connector-ingestion-mode-primary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Webhook Connector (Ingestion Mode) — Primary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-connector-same-database-mode-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Connector (Same-Database Mode) — Alternative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stripe-connector-p0-reference-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stripe Connector (P0) — Reference Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stripe Connector (P0) — Reference Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webhook-translation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Webhook Translation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subscription-update-translation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscription Update Translation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-computation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Computation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backfill-first-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backfill (First Run)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lago-connector-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lago Connector (P1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lago Connector (P1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#integration-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-lago-tables-queried" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Lago Tables Queried
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-computation-direct-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Computation (Direct SQL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subscription-changes-direct-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscription Changes (Direct SQL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-same-database-for-lago" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Same-Database for Lago
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kill-bill-connector-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kill Bill Connector (P1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Kill Bill Connector (P1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#integration-architecture_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-kill-bill-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Kill Bill Tables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#event-type-mapping-webhook-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Type Mapping (Webhook Fallback)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connector-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connector Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-new-connector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a New Connector
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adding a New Connector">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webhook-connector-for-any-billing-system-with-webhooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Webhook Connector (for any billing system with webhooks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-connector-for-billing-engines-with-accessible-databases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Connector (for billing engines with accessible databases)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="connectors">Connectors<a class="headerlink" href="#connectors" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Adapters that connect billing systems to the analytics engine.
+Last updated: March 2026</p>
+</blockquote>
+<h2 id="design">Design<a class="headerlink" href="#design" title="Permanent link">&para;</a></h2>
+<p>There are two types of connectors, matching the <a href="../overview/">dual architecture</a>:</p>
+<ol>
+<li><strong>Webhook connectors</strong> (ingestion mode) — receive webhooks, translate them into <a href="../events/">internal events</a>, and publish to Kafka. This is the primary integration path. Stripe is the reference implementation.</li>
+<li><strong>Database connectors</strong> (same-database mode) — query the billing engine's PostgreSQL directly. No webhooks, no Kafka, no ETL. Available for open-source billing engines (Lago, Kill Bill) that expose their database.</li>
+</ol>
+<h3 id="webhook-connector-ingestion-mode-primary">Webhook Connector (Ingestion Mode) — Primary<a class="headerlink" href="#webhook-connector-ingestion-mode-primary" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tidemill.events</span><span class="w"> </span><span class="kn">import</span> <span class="n">Event</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">WebhookConnector</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Translates billing system webhooks into internal events.</span>
+<span class="sd">    This is the primary connector type — works with any billing system</span>
+<span class="sd">    that exposes webhooks.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">source_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identifier: &#39;stripe&#39;.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">webhook_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Translate a raw webhook payload into internal events.</span>
+<span class="sd">        Synchronous — pure data transformation, no I/O.</span>
+<span class="sd">        Returns an empty list if the webhook type is not relevant.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">verify_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">signature</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Verify webhook signature. Synchronous — pure crypto, no I/O.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">backfill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">since</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pull historical data from the billing system API.</span>
+<span class="sd">        Async — makes HTTP requests to the billing system.</span>
+<span class="sd">        Yields the same internal events as translate().&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</code></pre></div>
+<p><strong>Webhook flow:</strong></p>
+<div class="highlight"><pre><span></span><code>Billing System                Connector              Kafka
+     │                            │                     │
+     │  POST /webhooks/{source}   │                     │
+     ├───────────────────────────►│                     │
+     │                            │  verify_signature() │
+     │                            │  translate()        │
+     │                            │                     │
+     │                            │  publish(events)    │
+     │                            ├────────────────────►│
+     │        200 OK              │                     │
+     │◄───────────────────────────┤                     │
+</code></pre></div>
+<p>The webhook endpoint returns 200 immediately after publishing to Kafka. Processing happens asynchronously in consumers.</p>
+<h3 id="database-connector-same-database-mode-alternative">Database Connector (Same-Database Mode) — Alternative<a class="headerlink" href="#database-connector-same-database-mode-alternative" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.ext.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncEngine</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DatabaseConnector</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Queries a billing engine&#39;s database directly for metric computation.</span>
+<span class="sd">    Zero ETL, zero latency — but only available for billing engines that</span>
+<span class="sd">    expose their PostgreSQL (Lago, Kill Bill).</span>
+
+<span class="sd">    All methods are async — they issue SQL against the billing engine&#39;s PostgreSQL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">:</span> <span class="n">AsyncEngine</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">engine</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">source_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identifier: &#39;lago&#39;, &#39;killbill&#39;.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_active_subscriptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return active subscriptions with MRR contribution.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_mrr_cents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return total MRR in cents (original currency) at a point in time.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_mrr_usd_cents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return total MRR in USD cents at a point in time.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_subscription_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return subscription state changes in a period.</span>
+<span class="sd">        Each change includes: type (new/expansion/contraction/churn/reactivation),</span>
+<span class="sd">        amount_cents, amount_usd_cents, currency, customer_id, subscription_id, occurred_at.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_customers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return customer records.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_invoices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return invoices in a period.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+</code></pre></div>
+<p><strong>Data flow (same-database):</strong></p>
+<div class="highlight"><pre><span></span><code>Billing Engine PostgreSQL          Database Connector         Metric
+  ┌────────────────────┐         ┌──────────────────┐      ┌──────────────┐
+  │ subscriptions      │◄── SQL ─┤ get_mrr_cents()  │◄─────┤ metric.query │
+  │ fees / invoices    │         │ get_changes()    │      │              │
+  │ customers          │         │ get_customers()  │      │              │
+  └────────────────────┘         └──────────────────┘      └──────────────┘
+</code></pre></div>
+<p>No event bus. No consumer processes. The metric calls the database connector at query time.</p>
+<h2 id="stripe-connector-p0-reference-implementation">Stripe Connector (P0) — Reference Implementation<a class="headerlink" href="#stripe-connector-p0-reference-implementation" title="Permanent link">&para;</a></h2>
+<p>Stripe is the primary connector. It uses the webhook/Kafka ingestion architecture.</p>
+<h3 id="webhook-translation">Webhook Translation<a class="headerlink" href="#webhook-translation" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Stripe Webhook</th>
+<th>Internal Event(s)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>customer.created</code></td>
+<td><code>customer.created</code></td>
+<td>Copies <code>address.country</code> onto the payload so segmentation by country works out of the box</td>
+</tr>
+<tr>
+<td><code>customer.updated</code></td>
+<td><code>customer.updated</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>customer.deleted</code></td>
+<td><code>customer.deleted</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>customer.subscription.created</code></td>
+<td><code>subscription.created</code>, optionally <code>subscription.trial_started</code></td>
+<td>If <code>status=trialing</code>, also emit trial event</td>
+</tr>
+<tr>
+<td><code>customer.subscription.updated</code></td>
+<td>Depends on what changed (see below)</td>
+<td>Most complex translation</td>
+</tr>
+<tr>
+<td><code>customer.subscription.deleted</code></td>
+<td><code>subscription.churned</code></td>
+<td>Forwards <code>cancellation_details.feedback</code> as <code>cancel_reason</code></td>
+</tr>
+<tr>
+<td><code>customer.subscription.trial_will_end</code></td>
+<td>(ignored, handled via status change)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>invoice.created</code></td>
+<td><code>invoice.created</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>invoice.paid</code></td>
+<td><code>invoice.paid</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>invoice.voided</code></td>
+<td><code>invoice.voided</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>invoice.marked_uncollectible</code></td>
+<td><code>invoice.uncollectible</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>payment_intent.succeeded</code></td>
+<td><code>payment.succeeded</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>payment_intent.payment_failed</code></td>
+<td><code>payment.failed</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>charge.refunded</code></td>
+<td><code>payment.refunded</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="subscription-update-translation">Subscription Update Translation<a class="headerlink" href="#subscription-update-translation" title="Permanent link">&para;</a></h3>
+<p><code>customer.subscription.updated</code> is Stripe's catch-all. The connector inspects <code>previous_attributes</code> to determine what changed:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_translate_subscription_updated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">webhook</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="n">sub</span> <span class="o">=</span> <span class="n">webhook</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;object&quot;</span><span class="p">]</span>
+    <span class="n">prev</span> <span class="o">=</span> <span class="n">webhook</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;previous_attributes&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Status change</span>
+    <span class="k">if</span> <span class="s2">&quot;status&quot;</span> <span class="ow">in</span> <span class="n">prev</span><span class="p">:</span>
+        <span class="n">old_status</span> <span class="o">=</span> <span class="n">prev</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+        <span class="n">new_status</span> <span class="o">=</span> <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">old_status</span> <span class="o">==</span> <span class="s2">&quot;trialing&quot;</span> <span class="ow">and</span> <span class="n">new_status</span> <span class="o">==</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.trial_converted&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.activated&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">old_status</span> <span class="o">==</span> <span class="s2">&quot;trialing&quot;</span> <span class="ow">and</span> <span class="n">new_status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;canceled&quot;</span><span class="p">,</span> <span class="s2">&quot;unpaid&quot;</span><span class="p">):</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.trial_expired&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">new_status</span> <span class="o">==</span> <span class="s2">&quot;active&quot;</span> <span class="ow">and</span> <span class="n">old_status</span> <span class="o">!=</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.activated&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">new_status</span> <span class="o">==</span> <span class="s2">&quot;canceled&quot;</span><span class="p">:</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.canceled&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">new_status</span> <span class="o">==</span> <span class="s2">&quot;paused&quot;</span><span class="p">:</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.paused&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>
+
+    <span class="c1"># Plan or quantity change (while active)</span>
+    <span class="k">if</span> <span class="s2">&quot;items&quot;</span> <span class="ow">in</span> <span class="n">prev</span> <span class="ow">or</span> <span class="s2">&quot;quantity&quot;</span> <span class="ow">in</span> <span class="n">prev</span><span class="p">:</span>
+        <span class="n">prev_mrr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_mrr</span><span class="p">(</span><span class="n">prev</span><span class="p">)</span>
+        <span class="n">new_mrr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_mrr</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span>
+        <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.changed&quot;</span><span class="p">,</span>
+            <span class="n">prev_mrr_cents</span><span class="o">=</span><span class="n">prev_mrr</span><span class="p">,</span> <span class="n">new_mrr_cents</span><span class="o">=</span><span class="n">new_mrr</span><span class="p">,</span> <span class="o">...</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">events</span>
+</code></pre></div>
+<h3 id="mrr-computation">MRR Computation<a class="headerlink" href="#mrr-computation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">_compute_mrr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subscription</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute MRR in cents from a Stripe subscription object.&quot;&quot;&quot;</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">subscription</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;items&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span>
+        <span class="n">qty</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">amount</span> <span class="o">=</span> <span class="n">price</span><span class="p">[</span><span class="s2">&quot;unit_amount&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">qty</span>
+        <span class="n">interval</span> <span class="o">=</span> <span class="n">price</span><span class="p">[</span><span class="s2">&quot;recurring&quot;</span><span class="p">][</span><span class="s2">&quot;interval&quot;</span><span class="p">]</span>
+        <span class="n">interval_count</span> <span class="o">=</span> <span class="n">price</span><span class="p">[</span><span class="s2">&quot;recurring&quot;</span><span class="p">][</span><span class="s2">&quot;interval_count&quot;</span><span class="p">]</span>
+
+        <span class="k">match</span> <span class="n">interval</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span> <span class="n">total</span> <span class="o">+=</span> <span class="n">amount</span> <span class="o">//</span> <span class="n">interval_count</span>
+            <span class="k">case</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>  <span class="n">total</span> <span class="o">+=</span> <span class="n">amount</span> <span class="o">//</span> <span class="p">(</span><span class="mi">12</span> <span class="o">*</span> <span class="n">interval_count</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>  <span class="n">total</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">amount</span> <span class="o">*</span> <span class="mi">52</span> <span class="o">/</span> <span class="p">(</span><span class="mi">12</span> <span class="o">*</span> <span class="n">interval_count</span><span class="p">))</span>
+            <span class="k">case</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>   <span class="n">total</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">amount</span> <span class="o">*</span> <span class="mi">365</span> <span class="o">/</span> <span class="p">(</span><span class="mi">12</span> <span class="o">*</span> <span class="n">interval_count</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">total</span>
+</code></pre></div>
+<h3 id="backfill-first-run">Backfill (First Run)<a class="headerlink" href="#backfill-first-run" title="Permanent link">&para;</a></h3>
+<p>On first deployment, the analytics database is empty — no customers, no subscriptions, no metric data. The <code>backfill()</code> method pulls the full history from Stripe's API and yields internal events identical to what webhooks would have produced.</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">backfill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">since</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pull historical data from the Stripe API.</span>
+
+<span class="sd">    Paginates through all objects and yields internal events in</span>
+<span class="sd">    chronological order. The caller publishes them to Kafka; from</span>
+<span class="sd">    there the normal consumer pipeline (core state + metrics) processes</span>
+<span class="sd">    them exactly like live webhooks.</span>
+
+<span class="sd">    Order: customers → subscriptions → invoices → payments.</span>
+<span class="sd">    Within each type, objects are yielded oldest-first.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stripe</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span>
+
+    <span class="c1"># 1. Customers</span>
+    <span class="k">for</span> <span class="n">customer</span> <span class="ow">in</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paginate</span><span class="p">(</span><span class="n">stripe</span><span class="o">.</span><span class="n">Customer</span><span class="o">.</span><span class="n">list</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gte&quot;</span><span class="p">:</span> <span class="n">since</span><span class="p">}):</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;customer.created&quot;</span><span class="p">,</span>
+            <span class="n">customer_id</span><span class="o">=</span><span class="n">customer</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+            <span class="n">payload</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_extract_customer</span><span class="p">(</span><span class="n">customer</span><span class="p">),</span>
+            <span class="n">occurred_at</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">customer</span><span class="p">[</span><span class="s2">&quot;created&quot;</span><span class="p">],</span> <span class="n">tz</span><span class="o">=</span><span class="n">UTC</span><span class="p">))</span>
+
+    <span class="c1"># 2. Subscriptions (includes current state + computed MRR)</span>
+    <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paginate</span><span class="p">(</span><span class="n">stripe</span><span class="o">.</span><span class="n">Subscription</span><span class="o">.</span><span class="n">list</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gte&quot;</span><span class="p">:</span> <span class="n">since</span><span class="p">}):</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.created&quot;</span><span class="p">,</span>
+            <span class="n">customer_id</span><span class="o">=</span><span class="n">sub</span><span class="p">[</span><span class="s2">&quot;customer&quot;</span><span class="p">],</span>
+            <span class="n">payload</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;subscription_id&quot;</span><span class="p">:</span> <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;plan_id&quot;</span><span class="p">:</span> <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;items&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;price&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;mrr_cents&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_mrr</span><span class="p">(</span><span class="n">sub</span><span class="p">),</span>
+                <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="n">occurred_at</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">sub</span><span class="p">[</span><span class="s2">&quot;created&quot;</span><span class="p">],</span> <span class="n">tz</span><span class="o">=</span><span class="n">UTC</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;active&quot;</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.activated&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">sub</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;canceled&quot;</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;subscription.churned&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+
+    <span class="c1"># 3. Invoices</span>
+    <span class="k">for</span> <span class="n">invoice</span> <span class="ow">in</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paginate</span><span class="p">(</span><span class="n">stripe</span><span class="o">.</span><span class="n">Invoice</span><span class="o">.</span><span class="n">list</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gte&quot;</span><span class="p">:</span> <span class="n">since</span><span class="p">}):</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;invoice.created&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">invoice</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;paid&quot;</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;invoice.paid&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+
+    <span class="c1"># 4. Payments</span>
+    <span class="k">for</span> <span class="n">pi</span> <span class="ow">in</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paginate</span><span class="p">(</span><span class="n">stripe</span><span class="o">.</span><span class="n">PaymentIntent</span><span class="o">.</span><span class="n">list</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gte&quot;</span><span class="p">:</span> <span class="n">since</span><span class="p">}):</span>
+        <span class="k">if</span> <span class="n">pi</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;succeeded&quot;</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_event</span><span class="p">(</span><span class="s2">&quot;payment.succeeded&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_paginate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_fn</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Auto-paginate a Stripe list endpoint.&quot;&quot;&quot;</span>
+    <span class="n">params</span><span class="p">[</span><span class="s2">&quot;limit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="k">await</span> <span class="n">list_fn</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">page</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]:</span>
+            <span class="k">yield</span> <span class="n">obj</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">page</span><span class="p">[</span><span class="s2">&quot;has_more&quot;</span><span class="p">]:</span>
+            <span class="k">break</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;starting_after&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">page</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+</code></pre></div>
+<p><strong>Triggering backfill:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Via API</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>localhost:8000/api/sources/<span class="o">{</span>source_id<span class="o">}</span>/backfill
+
+<span class="c1"># Via CLI</span>
+tidemill<span class="w"> </span>backfill<span class="w"> </span>--source<span class="w"> </span>stripe
+
+<span class="c1"># Programmatic</span>
+async<span class="w"> </span><span class="k">for</span><span class="w"> </span>event<span class="w"> </span><span class="k">in</span><span class="w"> </span>stripe_connector.backfill<span class="o">(</span><span class="nv">since</span><span class="o">=</span>None<span class="o">)</span>:
+<span class="w">    </span>await<span class="w"> </span>bus.publish<span class="o">(</span>event<span class="o">)</span>
+</code></pre></div>
+<p>The backfill publishes events to Kafka through the same pipeline as live webhooks. The core state consumer and metric consumers process them normally, building up the base tables and metric tables from scratch.</p>
+<p><strong>Idempotency:</strong> Each event carries a deterministic <code>id</code> derived from the Stripe object ID and event type. If backfill is run twice, <code>handle_event()</code> implementations use <code>ON CONFLICT DO NOTHING</code> (via the <code>event_id UNIQUE</code> constraint on metric tables) to skip duplicates.</p>
+<p><strong>Incremental backfill:</strong> Pass <code>since</code> to only fetch objects created after a given timestamp. Useful for catching up after a period of missed webhooks.</p>
+<h2 id="lago-connector-p1">Lago Connector (P1)<a class="headerlink" href="#lago-connector-p1" title="Permanent link">&para;</a></h2>
+<p>Lago is the reference implementation for same-database mode. Because Lago uses PostgreSQL as its primary database, the analytics engine can query Lago's tables directly — zero ETL, zero latency, zero per-transaction cost. This is a strong differentiator for Lago users, but lower priority than the Stripe integration.</p>
+<h3 id="integration-architecture">Integration Architecture<a class="headerlink" href="#integration-architecture" title="Permanent link">&para;</a></h3>
+<p>The Lago connector is a <code>DatabaseConnector</code> that issues SQL queries against Lago's PostgreSQL tables. The analytics engine either:</p>
+<ul>
+<li><strong>Shares Lago's PostgreSQL</strong> (recommended) — <code>metric_*</code> tables are created in a separate schema within the same database</li>
+<li><strong>Connects to Lago's PostgreSQL as read-only</strong> — analytics has its own database for <code>metric_*</code> tables and queries Lago's DB for billing data</li>
+</ul>
+<h3 id="key-lago-tables-queried">Key Lago Tables Queried<a class="headerlink" href="#key-lago-tables-queried" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Lago Table</th>
+<th>Analytics Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subscriptions</code></td>
+<td>Active subscriptions, status, plan, billing period</td>
+</tr>
+<tr>
+<td><code>fees</code></td>
+<td>Individual fee line items (subscription, usage, add-ons) — the source of truth for MRR</td>
+</tr>
+<tr>
+<td><code>invoices</code></td>
+<td>Invoice records, payment status, totals</td>
+</tr>
+<tr>
+<td><code>customers</code></td>
+<td>Customer records, external IDs, metadata</td>
+</tr>
+<tr>
+<td><code>plans</code></td>
+<td>Plan definitions, intervals, pricing</td>
+</tr>
+<tr>
+<td><code>charges</code></td>
+<td>Usage-based pricing charges</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mrr-computation-direct-sql">MRR Computation (Direct SQL)<a class="headerlink" href="#mrr-computation-direct-sql" title="Permanent link">&para;</a></h3>
+<p>Lago's <code>fees</code> table provides fee-type separation (subscription vs. usage vs. add-ons), which gives more accurate MRR than inferring from plan prices:</p>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_mrr_usd_cents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query Lago&#39;s fees table for current MRR in USD cents.&quot;&quot;&quot;</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT COALESCE(SUM(</span>
+<span class="s2">                CASE</span>
+<span class="s2">                    WHEN p.interval = &#39;monthly&#39;    THEN f.amount_cents</span>
+<span class="s2">                    WHEN p.interval = &#39;yearly&#39;     THEN f.amount_cents / 12</span>
+<span class="s2">                    WHEN p.interval = &#39;quarterly&#39;  THEN f.amount_cents / 3</span>
+<span class="s2">                    WHEN p.interval = &#39;weekly&#39;     THEN CAST(f.amount_cents * 52.0 / 12 AS BIGINT)</span>
+<span class="s2">                END</span>
+<span class="s2">                * fx.rate</span>
+<span class="s2">            ), 0)</span>
+<span class="s2">            FROM fees f</span>
+<span class="s2">            JOIN subscriptions s ON f.subscription_id = s.id</span>
+<span class="s2">            JOIN plans p ON s.plan_id = p.id</span>
+<span class="s2">            JOIN LATERAL (</span>
+<span class="s2">                SELECT rate FROM fx_rate</span>
+<span class="s2">                WHERE from_currency = f.currency AND to_currency = &#39;USD&#39;</span>
+<span class="s2">                  AND date &lt;= COALESCE(:at, CURRENT_DATE)</span>
+<span class="s2">                ORDER BY date DESC LIMIT 1</span>
+<span class="s2">            ) fx ON true</span>
+<span class="s2">            WHERE s.status = &#39;active&#39;</span>
+<span class="s2">              AND f.fee_type = &#39;subscription&#39;</span>
+<span class="s2">              AND f.created_at &lt;= COALESCE(:at, CURRENT_DATE)</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">),</span> <span class="p">{</span><span class="s2">&quot;at&quot;</span><span class="p">:</span> <span class="n">at</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">0</span>
+</code></pre></div>
+<h3 id="subscription-changes-direct-sql">Subscription Changes (Direct SQL)<a class="headerlink" href="#subscription-changes-direct-sql" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_subscription_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query subscription state transitions from Lago&#39;s tables.&quot;&quot;&quot;</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT ...</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">),</span> <span class="p">{</span><span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="n">end</span><span class="p">})</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
+</code></pre></div>
+<h3 id="why-same-database-for-lago">Why Same-Database for Lago<a class="headerlink" href="#why-same-database-for-lago" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Direct PostgreSQL access</strong> — same-database queries eliminate ETL complexity</li>
+<li><strong>Fee-type separation</strong> — Lago natively separates subscription, usage, and add-on fees, giving accurate MRR without inference</li>
+<li><strong>Event-based architecture</strong> — Lago processes 15,000 events/sec, aligns with our event model</li>
+<li><strong>Open-source</strong> — fully inspectable schema, no vendor lock-in</li>
+</ol>
+<h2 id="kill-bill-connector-p1">Kill Bill Connector (P1)<a class="headerlink" href="#kill-bill-connector-p1" title="Permanent link">&para;</a></h2>
+<p>Kill Bill also uses PostgreSQL (or MySQL) as its primary database, making it a natural fit for same-database mode.</p>
+<h3 id="integration-architecture_1">Integration Architecture<a class="headerlink" href="#integration-architecture_1" title="Permanent link">&para;</a></h3>
+<p>Like Lago, Kill Bill's connector is a <code>DatabaseConnector</code>. When Kill Bill's analytics plugin is installed, the connector reads <code>current_mrr</code> directly from the <code>analytics_bundles</code> table and <code>prev_mrr</code>/<code>next_mrr</code> from <code>analytics_subscription_transitions</code>. This is more accurate than computing from catalog prices.</p>
+<p>Fallback: compute from catalog plan price + interval.</p>
+<h3 id="key-kill-bill-tables">Key Kill Bill Tables<a class="headerlink" href="#key-kill-bill-tables" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Kill Bill Table</th>
+<th>Analytics Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subscriptions</code></td>
+<td>Subscription state and plan</td>
+</tr>
+<tr>
+<td><code>bundles</code></td>
+<td>Subscription bundles</td>
+</tr>
+<tr>
+<td><code>accounts</code></td>
+<td>Customer accounts</td>
+</tr>
+<tr>
+<td><code>invoices</code> / <code>invoice_items</code></td>
+<td>Invoice and line item data</td>
+</tr>
+<tr>
+<td><code>payments</code> / <code>payment_transactions</code></td>
+<td>Payment records</td>
+</tr>
+<tr>
+<td><code>analytics_bundles</code> (plugin)</td>
+<td>Pre-computed MRR</td>
+</tr>
+<tr>
+<td><code>analytics_subscription_transitions</code> (plugin)</td>
+<td>State change history</td>
+</tr>
+</tbody>
+</table>
+<h3 id="event-type-mapping-webhook-fallback">Event Type Mapping (Webhook Fallback)<a class="headerlink" href="#event-type-mapping-webhook-fallback" title="Permanent link">&para;</a></h3>
+<p>Kill Bill can also operate in ingestion mode via <code>ExtBusEvent</code> webhooks:</p>
+<table>
+<thead>
+<tr>
+<th>Kill Bill Event Type</th>
+<th>Internal Event(s)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ACCOUNT_CREATION</code></td>
+<td><code>customer.created</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ACCOUNT_CHANGE</code></td>
+<td><code>customer.updated</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SUBSCRIPTION_CREATION</code></td>
+<td><code>subscription.created</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SUBSCRIPTION_PHASE</code></td>
+<td><code>subscription.activated</code> or <code>subscription.trial_started</code></td>
+<td>Depends on <code>phaseType</code></td>
+</tr>
+<tr>
+<td><code>SUBSCRIPTION_CHANGE</code></td>
+<td><code>subscription.changed</code></td>
+<td>Fetch prev/new plan from API</td>
+</tr>
+<tr>
+<td><code>SUBSCRIPTION_CANCEL</code></td>
+<td><code>subscription.canceled</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SUBSCRIPTION_EXPIRED</code></td>
+<td><code>subscription.churned</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SUBSCRIPTION_UNCANCEL</code></td>
+<td><code>subscription.reactivated</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>BUNDLE_PAUSE</code></td>
+<td><code>subscription.paused</code> (per sub in bundle)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>BUNDLE_RESUME</code></td>
+<td><code>subscription.resumed</code> (per sub in bundle)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>INVOICE_CREATION</code></td>
+<td><code>invoice.created</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>INVOICE_PAYMENT_SUCCESS</code></td>
+<td><code>invoice.paid</code> + <code>payment.succeeded</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>INVOICE_PAYMENT_FAILED</code></td>
+<td><code>payment.failed</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="connector-registry">Connector Registry<a class="headerlink" href="#connector-registry" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">tidemill.connectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">register</span><span class="p">,</span> <span class="n">get_connector</span>
+
+<span class="c1"># Webhook connector (ingestion mode) — primary</span>
+<span class="nd">@register</span><span class="p">(</span><span class="s2">&quot;stripe&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StripeConnector</span><span class="p">(</span><span class="n">WebhookConnector</span><span class="p">):</span>
+    <span class="o">...</span>
+
+<span class="c1"># Database connector (same-database mode) — alternative</span>
+<span class="nd">@register</span><span class="p">(</span><span class="s2">&quot;lago&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LagoConnector</span><span class="p">(</span><span class="n">DatabaseConnector</span><span class="p">):</span>
+    <span class="o">...</span>
+
+<span class="c1"># Usage — webhook connector (translate is sync, backfill is async)</span>
+<span class="n">stripe</span> <span class="o">=</span> <span class="n">get_connector</span><span class="p">(</span><span class="s2">&quot;stripe&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;api_key&quot;</span><span class="p">:</span> <span class="s2">&quot;sk_...&quot;</span><span class="p">,</span> <span class="s2">&quot;webhook_secret&quot;</span><span class="p">:</span> <span class="s2">&quot;whsec_...&quot;</span><span class="p">})</span>
+<span class="n">events</span> <span class="o">=</span> <span class="n">stripe</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">raw_payload</span><span class="p">)</span>           <span class="c1"># sync</span>
+<span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">stripe</span><span class="o">.</span><span class="n">backfill</span><span class="p">(</span><span class="n">since</span><span class="o">=...</span><span class="p">):</span>   <span class="c1"># async</span>
+    <span class="k">await</span> <span class="n">bus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+<span class="c1"># Usage — database connector (async)</span>
+<span class="n">lago</span> <span class="o">=</span> <span class="n">get_connector</span><span class="p">(</span><span class="s2">&quot;lago&quot;</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">lago_async_engine</span><span class="p">)</span>
+<span class="n">mrr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">lago</span><span class="o">.</span><span class="n">get_mrr_usd_cents</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="adding-a-new-connector">Adding a New Connector<a class="headerlink" href="#adding-a-new-connector" title="Permanent link">&para;</a></h2>
+<h3 id="webhook-connector-for-any-billing-system-with-webhooks">Webhook Connector (for any billing system with webhooks)<a class="headerlink" href="#webhook-connector-for-any-billing-system-with-webhooks" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Create <code>tidemill/connectors/myplatform.py</code></li>
+<li>Subclass <code>WebhookConnector</code></li>
+<li>Implement <code>translate()</code> and optionally <code>backfill()</code></li>
+<li>Map each vendor webhook to the appropriate internal events</li>
+<li>Implement MRR computation for the vendor's subscription/pricing model</li>
+<li>Decorate with <code>@register("myplatform")</code></li>
+</ol>
+<h3 id="database-connector-for-billing-engines-with-accessible-databases">Database Connector (for billing engines with accessible databases)<a class="headerlink" href="#database-connector-for-billing-engines-with-accessible-databases" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Create <code>tidemill/connectors/myplatform.py</code></li>
+<li>Subclass <code>DatabaseConnector</code></li>
+<li>Implement <code>get_active_subscriptions()</code>, <code>get_mrr_cents()</code>, <code>get_subscription_changes()</code>, etc.</li>
+<li>Write SQL queries against the billing engine's tables</li>
+<li>Decorate with <code>@register("myplatform")</code></li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

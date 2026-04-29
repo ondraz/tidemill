@@ -1,0 +1,2425 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/definitions/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../palette/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Definitions - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#metric-definitions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Definitions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#time-zone-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time Zone Convention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#date-range-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date Range Convention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mrr-monthly-recurring-revenue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR — Monthly Recurring Revenue
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MRR — Monthly Recurring Revenue">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-mrr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current MRR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arr-annual-recurring-revenue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ARR — Annual Recurring Revenue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-movements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Movements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#net-new-mrr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Net New MRR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-waterfall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Waterfall
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#churn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Churn">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#logo-churn-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logo Churn Rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#revenue-churn-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Revenue Churn Rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Retention">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cohort-retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cohort Retention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#net-revenue-retention-nrr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Net Revenue Retention (NRR)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gross-revenue-retention-grr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gross Revenue Retention (GRR)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planned-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planned (P1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Planned (P1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ltv-customer-lifetime-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LTV — Customer Lifetime Value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trial-conversion-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trial Conversion Rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quick-ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Ratio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#differences-from-chartmogul" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Differences from ChartMogul
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Differences from ChartMogul">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#logo-churn-same-period-joiners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logo Churn — same-period joiners
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#revenue-churn-rate-gross-vs-net" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Revenue Churn Rate — gross vs net
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quick-ratio-reactivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Ratio — reactivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ltv-trailing-average" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LTV — trailing average
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trial-conversion-retroactive-cohort-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trial Conversion — retroactive cohort model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-recognition-timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn recognition timing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cohort-retention-revenue-cohorts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cohort retention — revenue cohorts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mid-period-extrapolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mid-period extrapolation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arr-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ARR naming
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#time-zone-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time Zone Convention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#date-range-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date Range Convention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mrr-monthly-recurring-revenue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR — Monthly Recurring Revenue
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MRR — Monthly Recurring Revenue">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-mrr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current MRR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arr-annual-recurring-revenue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ARR — Annual Recurring Revenue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-movements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Movements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#net-new-mrr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Net New MRR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mrr-waterfall" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MRR Waterfall
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#churn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Churn">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#logo-churn-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logo Churn Rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#revenue-churn-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Revenue Churn Rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Retention">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cohort-retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cohort Retention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#net-revenue-retention-nrr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Net Revenue Retention (NRR)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gross-revenue-retention-grr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gross Revenue Retention (GRR)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planned-p1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planned (P1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Planned (P1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ltv-customer-lifetime-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LTV — Customer Lifetime Value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trial-conversion-rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trial Conversion Rate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quick-ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Ratio
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#differences-from-chartmogul" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Differences from ChartMogul
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Differences from ChartMogul">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#logo-churn-same-period-joiners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logo Churn — same-period joiners
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#revenue-churn-rate-gross-vs-net" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Revenue Churn Rate — gross vs net
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quick-ratio-reactivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Ratio — reactivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ltv-trailing-average" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LTV — trailing average
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trial-conversion-retroactive-cohort-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trial Conversion — retroactive cohort model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#churn-recognition-timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Churn recognition timing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cohort-retention-revenue-cohorts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cohort retention — revenue cohorts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mid-period-extrapolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mid-period extrapolation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arr-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ARR naming
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="metric-definitions">Metric Definitions<a class="headerlink" href="#metric-definitions" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Formal definitions for every metric computed by Tidemill.
+All monetary values are stored as integer cents and converted to decimal at query boundaries.</p>
+</blockquote>
+<h2 id="time-zone-convention">Time Zone Convention<a class="headerlink" href="#time-zone-convention" title="Permanent link">&para;</a></h2>
+<p><strong>Every timestamp in Tidemill is UTC.</strong></p>
+<p>All wall-clock values — stored columns, API payloads, Kafka events, CLI output,
+notebook arguments — are interpreted as UTC. PostgreSQL columns are
+<code>TIMESTAMPTZ</code> and Python <code>datetime</code> values are constructed with
+<code>datetime.now(UTC)</code> / <code>datetime.fromtimestamp(..., tz=UTC)</code>. Bare
+<code>YYYY-MM-DD</code> dates passed across the API boundary are resolved against UTC
+(so <code>2025-09-30</code> expands to <code>2025-09-30T00:00:00Z</code> … <code>2025-09-30T23:59:59.999999Z</code>).</p>
+<p>The frontend date picker intentionally treats <code>YYYY-MM-DD</code> strings as local
+calendar days for display purposes only — the values sent to the API are the
+raw date strings and are resolved as UTC server-side.</p>
+<h2 id="date-range-convention">Date Range Convention<a class="headerlink" href="#date-range-convention" title="Permanent link">&para;</a></h2>
+<p><strong>Every date range in Tidemill is closed-closed: <code>[start, end]</code> — both endpoints are inclusive.</strong></p>
+<p>A range written as <code>2025-07-01 to 2025-09-30</code> covers every UTC timestamp from
+<code>2025-07-01T00:00:00.000000Z</code> through <code>2025-09-30T23:59:59.999999Z</code>, inclusive
+of both boundaries.</p>
+<p>This convention applies everywhere:</p>
+<ul>
+<li><strong>API query parameters</strong> (<code>?start=2025-07-01&amp;end=2025-09-30</code>) — both dates are inclusive calendar days.</li>
+<li><strong>Python reports &amp; notebooks</strong> — pass the last day of the period as <code>end</code>, not the first of next month.</li>
+<li><strong>Frontend picker</strong> — stores and displays the inclusive last day.</li>
+<li><strong>Metric SQL</strong> — the cube filter layer coerces a bare <code>date</code> upper bound to the
+  last microsecond of that day so SQL <code>BETWEEN</code> is truly inclusive against
+  <code>TIMESTAMPTZ</code> columns.</li>
+</ul>
+<p>Period subscripts like "period start" / "period end" in the formulas below
+always refer to these inclusive boundaries.</p>
+<h2 id="mrr-monthly-recurring-revenue">MRR — Monthly Recurring Revenue<a class="headerlink" href="#mrr-monthly-recurring-revenue" title="Permanent link">&para;</a></h2>
+<p>The normalized monthly revenue from all active subscriptions. Annual and other non-monthly intervals are converted to a monthly equivalent.</p>
+<h3 id="current-mrr">Current MRR<a class="headerlink" href="#current-mrr" title="Permanent link">&para;</a></h3>
+<div class="arithmatex">\[
+\text{MRR} = \sum_{s \in S_{\text{active}}} \text{mrr}(s)
+\]</div>
+<p>where <span class="arithmatex">\(S_{\text{active}}\)</span> is the set of subscriptions with <span class="arithmatex">\(\text{mrr} &gt; 0\)</span> at the query date, and:</p>
+<div class="arithmatex">\[
+\text{mrr}(s) = \begin{cases}
+\text{amount} &amp; \text{if interval = month} \\
+\text{amount} / 12 &amp; \text{if interval = year} \\
+\text{amount} \times 52 / 12 &amp; \text{if interval = week}
+\end{cases}
+\]</div>
+<h3 id="arr-annual-recurring-revenue">ARR — Annual Recurring Revenue<a class="headerlink" href="#arr-annual-recurring-revenue" title="Permanent link">&para;</a></h3>
+<div class="arithmatex">\[
+\text{ARR} = \text{MRR} \times 12
+\]</div>
+<h3 id="mrr-movements">MRR Movements<a class="headerlink" href="#mrr-movements" title="Permanent link">&para;</a></h3>
+<p>Every subscription change produces exactly one movement, categorized as:</p>
+<table>
+<thead>
+<tr>
+<th>Movement</th>
+<th>Trigger</th>
+<th>Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>New</strong></td>
+<td>Subscription activated</td>
+<td><span class="arithmatex">\(+\text{mrr}(s)\)</span></td>
+</tr>
+<tr>
+<td><strong>Expansion</strong></td>
+<td>Plan change with price increase</td>
+<td><span class="arithmatex">\(+(\text{mrr}_{\text{new}} - \text{mrr}_{\text{prev}})\)</span></td>
+</tr>
+<tr>
+<td><strong>Contraction</strong></td>
+<td>Plan change with price decrease</td>
+<td><span class="arithmatex">\(-(\text{mrr}_{\text{prev}} - \text{mrr}_{\text{new}})\)</span></td>
+</tr>
+<tr>
+<td><strong>Churn</strong></td>
+<td>Subscription churned or paused</td>
+<td><span class="arithmatex">\(-\text{mrr}_{\text{prev}}\)</span></td>
+</tr>
+<tr>
+<td><strong>Reactivation</strong></td>
+<td>Previously churned subscription resumed</td>
+<td><span class="arithmatex">\(+\text{mrr}(s)\)</span></td>
+</tr>
+</tbody>
+</table>
+<h3 id="net-new-mrr">Net New MRR<a class="headerlink" href="#net-new-mrr" title="Permanent link">&para;</a></h3>
+<div class="arithmatex">\[
+\Delta\text{MRR} = \text{New} + \text{Expansion} + \text{Reactivation} - |\text{Contraction}| - |\text{Churn}|
+\]</div>
+<h3 id="mrr-waterfall">MRR Waterfall<a class="headerlink" href="#mrr-waterfall" title="Permanent link">&para;</a></h3>
+<p>For each month <span class="arithmatex">\(m\)</span> in a range:</p>
+<div class="arithmatex">\[
+\text{Starting MRR}_m = \text{Ending MRR}_{m-1}
+\]</div>
+<div class="arithmatex">\[
+\text{Ending MRR}_m = \text{Starting MRR}_m + \Delta\text{MRR}_m
+\]</div>
+<p>The first month's starting MRR is the snapshot MRR at the beginning of the range.</p>
+<hr />
+<h2 id="churn">Churn<a class="headerlink" href="#churn" title="Permanent link">&para;</a></h2>
+<h3 id="logo-churn-rate">Logo Churn Rate<a class="headerlink" href="#logo-churn-rate" title="Permanent link">&para;</a></h3>
+<p>The fraction of customers lost in a period. A customer is considered churned when their last active subscription ends (active subscription count reaches zero).</p>
+<div class="arithmatex">\[
+\text{Logo Churn Rate} = \frac{C_{\text{churned}}}{C_{\text{start}}}
+\]</div>
+<p>where:</p>
+<ul>
+<li><span class="arithmatex">\(C_{\text{churned}}\)</span> = customers from <span class="arithmatex">\(C_{\text{start}}\)</span> with a logo churn event in <span class="arithmatex">\([\text{start}, \text{end}]\)</span></li>
+<li><span class="arithmatex">\(C_{\text{start}}\)</span> = customers active at period start, i.e. <code>first_active_at</code> <span class="arithmatex">\(&lt; \text{start}\)</span> and (<code>churned_at</code> <span class="arithmatex">\(\geq \text{start}\)</span> or still active)</li>
+</ul>
+<p>Only customers in <span class="arithmatex">\(C_{\text{start}}\)</span> can appear in the numerator — customers who both join and churn within the period are excluded.</p>
+<h3 id="revenue-churn-rate">Revenue Churn Rate<a class="headerlink" href="#revenue-churn-rate" title="Permanent link">&para;</a></h3>
+<p>The fraction of MRR lost to churn in a period (gross revenue churn, excludes expansion).</p>
+<div class="arithmatex">\[
+\text{Revenue Churn Rate} = \frac{|\text{Churn MRR}|}{\text{MRR}_{\text{start}}}
+\]</div>
+<p>where:</p>
+<ul>
+<li><span class="arithmatex">\(|\text{Churn MRR}|\)</span> = absolute value of MRR lost from customers in <span class="arithmatex">\(C_{\text{start}}\)</span> with churn events in <span class="arithmatex">\([\text{start}, \text{end}]\)</span></li>
+<li><span class="arithmatex">\(\text{MRR}_{\text{start}}\)</span> = total MRR at period start (cumulative movements before start)</li>
+<li><span class="arithmatex">\(C_{\text{start}}\)</span> = customers active at period start (<code>first_active_at</code> <span class="arithmatex">\(&lt; \text{start}\)</span>)</li>
+</ul>
+<p>As with logo churn, only revenue lost from customers active at period start is counted.</p>
+<hr />
+<h2 id="retention">Retention<a class="headerlink" href="#retention" title="Permanent link">&para;</a></h2>
+<h3 id="cohort-retention">Cohort Retention<a class="headerlink" href="#cohort-retention" title="Permanent link">&para;</a></h3>
+<p>Customers are assigned to a cohort based on the month of their first subscription. Retention measures what fraction of a cohort remains active in subsequent months.</p>
+<div class="arithmatex">\[
+\text{Retention}(c, m) = \frac{A(c, m)}{|c|}
+\]</div>
+<p>where:</p>
+<ul>
+<li><span class="arithmatex">\(c\)</span> = cohort (set of customers with the same first-subscription month)</li>
+<li><span class="arithmatex">\(|c|\)</span> = cohort size (number of customers)</li>
+<li><span class="arithmatex">\(A(c, m)\)</span> = customers from cohort <span class="arithmatex">\(c\)</span> who are active in month <span class="arithmatex">\(m\)</span></li>
+<li>A customer is active in a month if they have at least one active subscription during that month</li>
+</ul>
+<h3 id="net-revenue-retention-nrr">Net Revenue Retention (NRR)<a class="headerlink" href="#net-revenue-retention-nrr" title="Permanent link">&para;</a></h3>
+<p>Measures whether revenue from existing customers is growing or shrinking, including expansion.</p>
+<div class="arithmatex">\[
+\text{NRR} = \frac{\text{MRR}_{\text{start}} + \text{Expansion} + \text{Reactivation} - |\text{Contraction}| - |\text{Churn}|}{\text{MRR}_{\text{start}}}
+\]</div>
+<ul>
+<li>NRR &gt; 100% means expansion outpaces churn (net negative churn)</li>
+<li>NRR &lt; 100% means the customer base is shrinking in revenue</li>
+</ul>
+<h3 id="gross-revenue-retention-grr">Gross Revenue Retention (GRR)<a class="headerlink" href="#gross-revenue-retention-grr" title="Permanent link">&para;</a></h3>
+<p>Same as NRR but excludes expansion — measures how well existing revenue is preserved.</p>
+<div class="arithmatex">\[
+\text{GRR} = \frac{\text{MRR}_{\text{start}} - |\text{Contraction}| - |\text{Churn}|}{\text{MRR}_{\text{start}}}
+\]</div>
+<ul>
+<li>GRR is always <span class="arithmatex">\(\leq\)</span> 100%</li>
+<li>GRR = 100% means zero revenue loss from existing customers</li>
+</ul>
+<hr />
+<h2 id="planned-p1">Planned (P1)<a class="headerlink" href="#planned-p1" title="Permanent link">&para;</a></h2>
+<p>The following metrics are designed but not yet implemented.</p>
+<h3 id="ltv-customer-lifetime-value">LTV — Customer Lifetime Value<a class="headerlink" href="#ltv-customer-lifetime-value" title="Permanent link">&para;</a></h3>
+<div class="arithmatex">\[
+\text{LTV} = \frac{\text{ARPU}}{\text{Logo Churn Rate}}
+\]</div>
+<p>where ARPU (Average Revenue Per User) is:</p>
+<div class="arithmatex">\[
+\text{ARPU} = \frac{\text{MRR}}{C_{\text{active}}}
+\]</div>
+<ul>
+<li><span class="arithmatex">\(C_{\text{active}}\)</span> = number of customers with at least one active subscription (<span class="arithmatex">\(\text{mrr} &gt; 0\)</span>)</li>
+</ul>
+<p><strong>Cohort LTV</strong> is the average cumulative revenue per customer within a cohort:</p>
+<div class="arithmatex">\[
+\text{Cohort LTV}(c) = \frac{\sum_{i \in c} R_i}{|c|}
+\]</div>
+<ul>
+<li><span class="arithmatex">\(R_i\)</span> = total revenue collected from customer <span class="arithmatex">\(i\)</span> (sum of all paid invoices, in base currency)</li>
+</ul>
+<h3 id="trial-conversion-rate">Trial Conversion Rate<a class="headerlink" href="#trial-conversion-rate" title="Permanent link">&para;</a></h3>
+<p>Cohort-based: a trial is attributed to the period of its <code>trial_started</code> event, and its eventual outcome (converted or expired) rolls up to that same cohort — regardless of when the outcome occurs.</p>
+<div class="arithmatex">\[
+\text{Trial Conversion Rate} = \frac{T_{\text{converted}}(c)}{T_{\text{started}}(c)}
+\]</div>
+<p>where, for a cohort period <span class="arithmatex">\(c = [\text{start}, \text{end}]\)</span>:</p>
+<ul>
+<li><span class="arithmatex">\(T_{\text{started}}(c)\)</span> = trials with <code>started_at</code> <span class="arithmatex">\(\in c\)</span></li>
+<li><span class="arithmatex">\(T_{\text{converted}}(c)\)</span> = of those, trials with a non-null <code>converted_at</code> (at any time)</li>
+</ul>
+<p>A March conversion of a January-cohort trial updates January's rate. Recent periods may show pending trials (neither converted nor expired yet), so their rate will move as those trials reach a terminal state.</p>
+<h3 id="quick-ratio">Quick Ratio<a class="headerlink" href="#quick-ratio" title="Permanent link">&para;</a></h3>
+<p>Measures growth efficiency — how much new revenue is generated per unit of lost revenue.</p>
+<div class="arithmatex">\[
+\text{Quick Ratio} = \frac{\text{New} + \text{Expansion} + \text{Reactivation}}{|\text{Churn}| + |\text{Contraction}|}
+\]</div>
+<ul>
+<li>Quick Ratio &gt; 1 means the business is growing</li>
+<li>Quick Ratio = 4 is often cited as a benchmark for healthy SaaS</li>
+</ul>
+<hr />
+<h2 id="differences-from-chartmogul">Differences from ChartMogul<a class="headerlink" href="#differences-from-chartmogul" title="Permanent link">&para;</a></h2>
+<p>Tidemill's definitions are broadly aligned with ChartMogul but diverge in several places. These are intentional choices — documented here so users migrating from ChartMogul know what to expect.</p>
+<h3 id="logo-churn-same-period-joiners">Logo Churn — same-period joiners<a class="headerlink" href="#logo-churn-same-period-joiners" title="Permanent link">&para;</a></h3>
+<p>Both Tidemill and ChartMogul exclude customers who both join and churn within the same reporting period from the churn numerator. Tidemill enforces this by scoping the numerator to <span class="arithmatex">\(C_{\text{start}}\)</span> (customers with <code>first_active_at</code> <span class="arithmatex">\(&lt; \text{start}\)</span>), so same-period joiners never appear.</p>
+<p>ChartMogul additionally excludes customers who churned and reactivated in the same period:</p>
+<div class="arithmatex">\[
+\text{ChartMogul: } \text{Logo Churn Rate} = \frac{C_{\text{churned}} - C_{\text{churned\&amp;reactivated}}}{C_{\text{start}}}
+\]</div>
+<p><strong>Where we still differ:</strong> Tidemill counts a customer who churns and then reactivates within the period as a churn event. ChartMogul nets them out.</p>
+<h3 id="revenue-churn-rate-gross-vs-net">Revenue Churn Rate — gross vs net<a class="headerlink" href="#revenue-churn-rate-gross-vs-net" title="Permanent link">&para;</a></h3>
+<p>Tidemill defines Revenue Churn Rate as gross churn only (<span class="arithmatex">\(|\text{Churn MRR}| / \text{MRR}_{\text{start}}\)</span>). ChartMogul defines two variants:</p>
+<ul>
+<li><strong>Gross MRR Churn Rate</strong> = <span class="arithmatex">\((|\text{Churn}| + |\text{Contraction}|) / \text{MRR}_{\text{start}}\)</span> — includes contraction</li>
+<li><strong>Net MRR Churn Rate</strong> = <span class="arithmatex">\((\text{Churn} + \text{Contraction} - \text{Expansion}) / \text{MRR}_{\text{start}}\)</span> — can go negative</li>
+</ul>
+<p><strong>Why we differ:</strong> Tidemill separates churn from contraction at the movement level. Contraction and expansion are visible in the MRR waterfall. We may add gross/net MRR churn as explicit query variants.</p>
+<h3 id="quick-ratio-reactivation">Quick Ratio — reactivation<a class="headerlink" href="#quick-ratio-reactivation" title="Permanent link">&para;</a></h3>
+<p>Tidemill includes reactivation in the Quick Ratio numerator. ChartMogul does not.</p>
+<div class="arithmatex">\[
+\text{Tidemill: } \frac{\text{New} + \text{Expansion} + \text{Reactivation}}{|\text{Churn}| + |\text{Contraction}|}
+\]</div>
+<div class="arithmatex">\[
+\text{ChartMogul: } \frac{\text{New} + \text{Expansion}}{|\text{Churn}| + |\text{Contraction}|}
+\]</div>
+<p><strong>Why we differ:</strong> Including reactivation gives a more complete picture of inflows vs outflows. ChartMogul treats reactivation as a separate category. Industry practice varies — neither is wrong.</p>
+<h3 id="ltv-trailing-average">LTV — trailing average<a class="headerlink" href="#ltv-trailing-average" title="Permanent link">&para;</a></h3>
+<p>Tidemill uses the current-period churn rate as the LTV denominator. ChartMogul uses a <strong>6-month trailing average</strong> of customer churn rate to smooth volatility.</p>
+<p><strong>Why we differ:</strong> The trailing average is useful but opaque — it's unclear which months are included. Tidemill's approach is more transparent. We may add a configurable lookback window.</p>
+<h3 id="trial-conversion-retroactive-cohort-model">Trial Conversion — retroactive cohort model<a class="headerlink" href="#trial-conversion-retroactive-cohort-model" title="Permanent link">&para;</a></h3>
+<p>Tidemill uses the same <strong>retroactive cohort model</strong> as ChartMogul: a trial started in January that converts in March updates January's conversion rate. The cohort is fixed by the <code>trial_started</code> event; the outcome can land at any time.</p>
+<p><strong>Trade-off:</strong> this gives a more accurate eventual conversion rate, but historical period numbers will move as late-arriving outcomes are recorded.</p>
+<h3 id="churn-recognition-timing">Churn recognition timing<a class="headerlink" href="#churn-recognition-timing" title="Permanent link">&para;</a></h3>
+<p>Tidemill records churn when the subscription status changes. ChartMogul offers three configurable options:</p>
+<ol>
+<li>At cancellation (when the customer requests it)</li>
+<li>At end of service period (when access actually ends)</li>
+<li>When cancellation is scheduled</li>
+</ol>
+<p><strong>Why we differ:</strong> Tidemill currently uses option 2 (status change at period end, driven by Stripe webhook events). Making this configurable is a potential future enhancement.</p>
+<h3 id="cohort-retention-revenue-cohorts">Cohort retention — revenue cohorts<a class="headerlink" href="#cohort-retention-revenue-cohorts" title="Permanent link">&para;</a></h3>
+<p>ChartMogul provides both customer retention and <strong>Net MRR Retention per cohort</strong> (tracking how a cohort's MRR evolves over time). Tidemill currently tracks customer retention per cohort only; revenue retention is available as a global NRR/GRR metric but not broken down by cohort.</p>
+<h3 id="mid-period-extrapolation">Mid-period extrapolation<a class="headerlink" href="#mid-period-extrapolation" title="Permanent link">&para;</a></h3>
+<p>ChartMogul projects incomplete periods using:</p>
+<div class="arithmatex">\[
+\text{Projected Rate} = \frac{\text{Total Days in Period}}{\text{Days Elapsed}} \times \text{Actual Rate}
+\]</div>
+<p>Tidemill does not extrapolate — incomplete periods show actuals only.</p>
+<h3 id="arr-naming">ARR naming<a class="headerlink" href="#arr-naming" title="Permanent link">&para;</a></h3>
+<p>ChartMogul calls their metric <strong>Annual Run Rate</strong> (Annualized Run Rate), not Annual Recurring Revenue. The formula is identical (<span class="arithmatex">\(\text{MRR} \times 12\)</span>). Tidemill uses the more common "Annual Recurring Revenue" name.</p>
+<hr />
+<h2 id="conventions">Conventions<a class="headerlink" href="#conventions" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Money</strong> is stored as integer cents (<code>BIGINT</code>). All amounts are dual-column: <code>*_cents</code> (original currency) and <code>*_base_cents</code> (converted to base currency at the daily FX rate). Aggregations use base currency by default; request the <code>currency</code> dimension for per-currency breakdowns.</li>
+<li><strong>Dates</strong> are <code>TIMESTAMPTZ</code> in the database (always UTC), <code>YYYY-MM-DD</code> in the API (resolved as UTC).</li>
+<li><strong>Period axis labels</strong> on every chart follow a single convention, driven by the time-series granularity:</li>
+<li>daily → <code>2025-09-15</code></li>
+<li>weekly → <code>2025-W34</code> (ISO week)</li>
+<li>monthly → <code>Sep 2025</code></li>
+<li>quarterly → <code>2025-Q3</code></li>
+<li>yearly → <code>2025</code></li>
+</ul>
+<p>The Python helper is <code>tidemill.reports._style.format_period(period, granularity)</code>; the TypeScript equivalent is <code>formatPeriod(date, granularity)</code> in <code>frontend/src/lib/formatters.ts</code>.
+- <strong>Churn events</strong> are recorded when a subscription's status transitions to a terminal state. A paused subscription is treated as churned for MRR purposes and reactivated when resumed.
+- <strong>Cohort assignment</strong> is immutable — a customer's cohort is set on their first subscription and never changes, even after churn and reactivation.
+- <strong>Segment membership</strong> — segments filter on <code>customer.id</code> (account scope only in MVP; contract scope with per-subscription attributes is a P1 follow-up). A customer is a member of a segment iff the segment's definition evaluates to true with that customer's attributes. <strong>NULL attribute values are treated as "not a member"</strong> for non-null operators (<code>=</code>, <code>!=</code>, <code>in</code>, <code>not in</code>, <code>contains</code>, <code>&gt;</code>, <code>&lt;</code>, etc.) because the dynamic <code>customer_attribute</code> LEFT JOIN leaves the alias's columns NULL for customers without a row for the key — and NULL never equals a literal value. The <code>is_empty</code> / <code>is_not_empty</code> operators explicitly test for that NULL. In <strong>compare mode</strong>, a customer who satisfies multiple branches is counted in each — the CROSS JOIN duplicates each row per matching segment, preserving overlap semantics. See <a href="../architecture/segments/">segments.md</a> for the full compilation model.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

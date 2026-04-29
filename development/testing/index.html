@@ -1,0 +1,2407 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/development/testing/">
+      
+      
+        <link rel="prev" href="../development/">
+      
+      
+        <link rel="next" href="../deployment/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Testing - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#testing" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Testing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seeding-test-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seeding Test Data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Seeding Test Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-make-seed-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What make seed Does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-seed-script-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the Seed Script Directly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dimension-variety" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dimension Variety
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unit-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#frontend-type-checking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frontend Type-Checking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plans
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#customer-archetypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customer Archetypes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Customer Archetypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#monthly-trial-additions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monthly Trial Additions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customer-attributes-example-segments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customer Attributes &amp; Example Segments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-metrics-after-seeding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying Metrics After Seeding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-the-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying the Frontend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events Generated
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-clocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Clocks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Cards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Cards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#successful-payments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Successful Payments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#failing-cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failing Cards
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stripe-cli-fixtures-quick-smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stripe CLI Fixtures (Quick Smoke Test)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-test-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Test Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lago-testing-same-database-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lago Testing (Same-Database Mode)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seeding-test-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seeding Test Data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Seeding Test Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-make-seed-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What make seed Does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-the-seed-script-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the Seed Script Directly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dimension-variety" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dimension Variety
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Running Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unit-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#frontend-type-checking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frontend Type-Checking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plans
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#customer-archetypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customer Archetypes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Customer Archetypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#monthly-trial-additions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monthly Trial Additions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customer-attributes-example-segments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customer Attributes &amp; Example Segments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-metrics-after-seeding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying Metrics After Seeding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-the-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying the Frontend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Events Generated
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-clocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Clocks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Cards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Cards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#successful-payments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Successful Payments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#failing-cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failing Cards
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stripe-cli-fixtures-quick-smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stripe CLI Fixtures (Quick Smoke Test)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-test-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Test Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lago-testing-same-database-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lago Testing (Same-Database Mode)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>How to generate realistic subscription data and validate the event pipeline.</p>
+</blockquote>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Every Stripe account has a <strong>test mode</strong> with a separate <code>sk_test_</code> API key. Test mode data is completely isolated from live data — no real charges, no real customers.</p>
+<p>Stripe's <strong>Test Clocks</strong> let you simulate time advancement: create subscriptions in the past and fast-forward through months of billing cycles, generating real invoices, renewals, cancellations, and webhook events. This is the primary way to exercise the full event pipeline.</p>
+<h2 id="seeding-test-data">Seeding Test Data<a class="headerlink" href="#seeding-test-data" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Seed Stripe test data (self-contained — starts its own stack)</span>
+make<span class="w"> </span>seed<span class="w">   </span><span class="c1"># requires STRIPE_API_KEY</span>
+</code></pre></div>
+<h3 id="what-make-seed-does">What <code>make seed</code> Does<a class="headerlink" href="#what-make-seed-does" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Cleans up</strong> — deletes existing test clocks and their resources, stops any running stack</li>
+<li><strong>Starts the full stack</strong> in Docker (PostgreSQL + Redpanda + API + Worker) using <code>docker-compose.local.yml</code></li>
+<li><strong>Starts <code>stripe listen</code></strong> to forward webhook events to the API</li>
+<li><strong>Runs the seed script</strong> (<code>deploy/seed/stripe_seed.py</code>) — creates customers, subscriptions, and advances time through 18 months of billing cycles</li>
+<li><strong>Validates results</strong> — checks that sources, metrics, and MRR are populated</li>
+<li><strong>Stops the stack</strong> — the seeded data remains in PostgreSQL volumes</li>
+</ol>
+<p>After seeding, use <code>make dev</code> to restart the infrastructure for local development (see <a href="../development/">Development</a>).</p>
+<h3 id="running-the-seed-script-directly">Running the Seed Script Directly<a class="headerlink" href="#running-the-seed-script-directly" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>deploy/seed
+<span class="nv">STRIPE_API_KEY</span><span class="o">=</span>sk_test_...<span class="w"> </span>python<span class="w"> </span>stripe_seed.py<span class="w">                  </span><span class="c1"># full seed (19 customers, 18 months)</span>
+<span class="nv">STRIPE_API_KEY</span><span class="o">=</span>sk_test_...<span class="w"> </span>python<span class="w"> </span>stripe_seed.py<span class="w"> </span>--customers<span class="w"> </span><span class="m">5</span><span class="w">    </span><span class="c1"># fewer customers</span>
+<span class="nv">STRIPE_API_KEY</span><span class="o">=</span>sk_test_...<span class="w"> </span>python<span class="w"> </span>stripe_seed.py<span class="w"> </span>--months<span class="w"> </span><span class="m">6</span><span class="w">       </span><span class="c1"># shorter history</span>
+<span class="nv">STRIPE_API_KEY</span><span class="o">=</span>sk_test_...<span class="w"> </span>python<span class="w"> </span>stripe_seed.py<span class="w"> </span>--cleanup<span class="w">        </span><span class="c1"># delete all seed clocks</span>
+<span class="nv">STRIPE_API_KEY</span><span class="o">=</span>sk_test_...<span class="w"> </span>python<span class="w"> </span>stripe_seed.py<span class="w"> </span>--cleanup<span class="w"> </span>CLOCK_ID<span class="w">  </span><span class="c1"># delete specific clock</span>
+</code></pre></div>
+<h3 id="dimension-variety">Dimension Variety<a class="headerlink" href="#dimension-variety" title="Permanent link">&para;</a></h3>
+<p>The seed rotates values across several fields so dashboards have visible
+breakdowns on a fresh install:</p>
+<ul>
+<li><strong><code>customer.country</code></strong> — cycles through <code>US</code>, <code>GB</code>, <code>DE</code>, <code>FR</code>, <code>CA</code>, <code>AU</code>
+  (written to <code>address.country</code>; Stripe's <code>customer.created</code> webhook carries
+  it, the connector forwards it as <code>payload.country</code>, and the state consumer
+  persists it in <code>customer.country</code>).</li>
+<li><strong><code>currency</code></strong> — Starter-tier base prices and Enterprise monthly prices
+  have <code>usd</code> / <code>eur</code> / <code>gbp</code> variants. Subscriptions rotate through them.
+  Metered tiers stay USD-only because Stripe billing meters are
+  single-currency.</li>
+<li><strong><code>cancel_reason</code></strong> — every cancel operation passes
+  <code>cancellation_details.feedback</code> (<code>too_expensive</code>, <code>missing_features</code>,
+  <code>switched_service</code>, <code>customer_service</code>, <code>unused</code>, <code>low_quality</code>, <code>other</code>);
+  the connector forwards it so it surfaces on <code>metric_churn_event.cancel_reason</code>.</li>
+</ul>
+<p>Plan/product dimensions (<code>plan_interval</code>, <code>plan_name</code>, <code>product_name</code>, …)
+are declared on the cubes but are not populated yet — the Stripe connector
+does not emit <code>plan.*</code> / <code>product.*</code> events, so <code>subscription.plan_id</code>
+stays NULL and joins through <code>plan</code> return empty.</p>
+<h2 id="running-tests">Running Tests<a class="headerlink" href="#running-tests" title="Permanent link">&para;</a></h2>
+<h3 id="unit-tests">Unit Tests<a class="headerlink" href="#unit-tests" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span><span class="nb">test</span><span class="w">                </span><span class="c1"># runs pytest (excludes integration tests)</span>
+make<span class="w"> </span>check<span class="w">               </span><span class="c1"># runs lint + test + typecheck</span>
+</code></pre></div>
+<p>Unit tests use an in-memory SQLite database (via <code>aiosqlite</code>) — no Docker or PostgreSQL required.</p>
+<h3 id="integration-tests">Integration Tests<a class="headerlink" href="#integration-tests" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>check-integration<span class="w">   </span><span class="c1"># starts a PostgreSQL container, runs integration tests, cleans up</span>
+</code></pre></div>
+<p>This starts a temporary PostgreSQL container on port 5433, runs tests marked <code>@pytest.mark.integration</code>, and removes the container afterward.</p>
+<h3 id="frontend-type-checking">Frontend Type-Checking<a class="headerlink" href="#frontend-type-checking" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>frontend
+npm<span class="w"> </span>run<span class="w"> </span>build<span class="w">            </span><span class="c1"># runs tsc -b &amp;&amp; vite build (type errors fail the build)</span>
+</code></pre></div>
+<p>There is no separate <code>tsc --noEmit</code> target — the <code>build</code> command runs the TypeScript compiler first.</p>
+<h2 id="plans">Plans<a class="headerlink" href="#plans" title="Permanent link">&para;</a></h2>
+<p>All plans use usage-based billing via Stripe Billing Meters (<code>analytical_query</code> events):</p>
+<table>
+<thead>
+<tr>
+<th>Plan</th>
+<th>Base Fee</th>
+<th>Metered Component</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Starter</td>
+<td>$20/mo</td>
+<td>$1 per query</td>
+</tr>
+<tr>
+<td>Professional</td>
+<td>$79/mo / $790/yr</td>
+<td>10,000 queries free, then $0.01/query</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>$249/mo / $2,490/yr</td>
+<td>Unlimited (flat fee)</td>
+</tr>
+<tr>
+<td>Trial</td>
+<td>30-day free</td>
+<td>Converts to Starter billing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="customer-archetypes">Customer Archetypes<a class="headerlink" href="#customer-archetypes" title="Permanent link">&para;</a></h2>
+<p>The seed script creates 19 customers by default across these archetypes:</p>
+<table>
+<thead>
+<tr>
+<th>Archetype</th>
+<th>Plan</th>
+<th>Billing</th>
+<th>Behavior</th>
+<th>Queries/mo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Active Starter (x2)</td>
+<td>Starter</td>
+<td>Month</td>
+<td>Normal renewals</td>
+<td>30-50</td>
+</tr>
+<tr>
+<td>Active Starter Heavy</td>
+<td>Starter</td>
+<td>Month</td>
+<td>High usage</td>
+<td>120</td>
+</tr>
+<tr>
+<td>Active Monthly Pro (x2)</td>
+<td>Professional</td>
+<td>Month</td>
+<td>Normal renewals</td>
+<td>8k-15k</td>
+</tr>
+<tr>
+<td>Active Annual Pro</td>
+<td>Professional</td>
+<td>Year</td>
+<td>Annual billing</td>
+<td>12k</td>
+</tr>
+<tr>
+<td>Active Annual Enterprise</td>
+<td>Enterprise</td>
+<td>Year</td>
+<td>Flat fee, no metered usage</td>
+<td>--</td>
+</tr>
+<tr>
+<td>Churned Starter</td>
+<td>Starter</td>
+<td>Month</td>
+<td>Cancels at period end in month 2</td>
+<td>20</td>
+</tr>
+<tr>
+<td>Churned Pro</td>
+<td>Professional</td>
+<td>Month</td>
+<td>Cancels at period end in month 2</td>
+<td>9k</td>
+</tr>
+<tr>
+<td>Upgraded (x2)</td>
+<td>Starter</td>
+<td>Month</td>
+<td>Upgrades to Professional in month 2</td>
+<td>60-80</td>
+</tr>
+<tr>
+<td>Downgraded</td>
+<td>Professional</td>
+<td>Month</td>
+<td>Downgrades to Starter in month 2</td>
+<td>2k</td>
+</tr>
+<tr>
+<td>Failed Payment</td>
+<td>Starter</td>
+<td>Month</td>
+<td>Card always declines (involuntary churn)</td>
+<td>40</td>
+</tr>
+<tr>
+<td>Trial → Converted</td>
+<td>Trial</td>
+<td>Month</td>
+<td>30-day trial, converts to paid Starter</td>
+<td>25</td>
+</tr>
+<tr>
+<td>Trial → Expired</td>
+<td>Trial</td>
+<td>Month</td>
+<td>30-day trial, cancelled before conversion</td>
+<td>--</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monthly-trial-additions">Monthly Trial Additions<a class="headerlink" href="#monthly-trial-additions" title="Permanent link">&para;</a></h3>
+<p>Beyond the initial 19 customers, the script adds <strong>2-5 new trial customers each month</strong> (except the last month). Some convert to Starter and some churn, producing realistic month-over-month growth patterns.</p>
+<h3 id="customer-attributes-example-segments">Customer Attributes &amp; Example Segments<a class="headerlink" href="#customer-attributes-example-segments" title="Permanent link">&para;</a></h3>
+<p>After the webhook ingest finishes, <code>seed.sh</code> posts <code>deploy/seed/customer_attributes.csv</code> to <code>POST /api/attributes/import</code> (matched by email — seed customer emails are deterministic <code>seed-N@test.example.com</code>). That populates four attributes for the 19 archetype customers — <code>account_manager</code>, <code>region</code>, <code>industry</code>, <code>is_strategic</code> — covering data the segment builder couldn't otherwise reach via Stripe metadata. It then creates two starter segments via <code>POST /api/segments</code>:</p>
+<ul>
+<li><strong>Strategic accounts</strong> — <code>attr.is_strategic = true</code></li>
+<li><strong>EMEA region</strong> — <code>attr.region = EMEA</code></li>
+</ul>
+<p>so a fresh stack has something for the <code>SegmentPicker</code> to bind to. Stripe-sourced attributes (<code>seed</code>, <code>archetype</code>, <code>country</code> from <code>customer.metadata</code>) land automatically via the state consumer's <code>fan_out_customer_metadata</code> call — no separate import required.</p>
+<h3 id="cleanup">Cleanup<a class="headerlink" href="#cleanup" title="Permanent link">&para;</a></h3>
+<p>Deleting a test clock deletes <strong>all</strong> resources attached to it (customers, subscriptions, invoices, charges):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Via make (cleans up all clocks before re-seeding)</span>
+make<span class="w"> </span>seed
+
+<span class="c1"># Cleanup only, no re-seed</span>
+./deploy/seed/seed.sh<span class="w"> </span>--cleanup-only
+
+<span class="c1"># Or via the Python script</span>
+python<span class="w"> </span>deploy/seed/stripe_seed.py<span class="w"> </span>--cleanup
+python<span class="w"> </span>deploy/seed/stripe_seed.py<span class="w"> </span>--cleanup<span class="w"> </span>clock_...
+</code></pre></div>
+<h2 id="verifying-metrics-after-seeding">Verifying Metrics After Seeding<a class="headerlink" href="#verifying-metrics-after-seeding" title="Permanent link">&para;</a></h2>
+<p>Start the dev stack and API, then verify metrics via curl or the frontend:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check MRR</span>
+curl<span class="w"> </span>localhost:8000/api/metrics/mrr
+
+<span class="c1"># Check MRR time series</span>
+curl<span class="w"> </span><span class="s2">&quot;localhost:8000/api/metrics/mrr?start=2025-10-01&amp;end=2026-03-30&amp;interval=month&quot;</span>
+
+<span class="c1"># Check MRR breakdown</span>
+curl<span class="w"> </span><span class="s2">&quot;localhost:8000/api/metrics/mrr/breakdown?start=2025-09-01&amp;end=2026-03-31&quot;</span>
+
+<span class="c1"># Check churn</span>
+curl<span class="w"> </span><span class="s2">&quot;localhost:8000/api/metrics/churn?start=2025-12-01&amp;end=2026-01-01&quot;</span>
+
+<span class="c1"># Check retention</span>
+curl<span class="w"> </span><span class="s2">&quot;localhost:8000/api/metrics/retention?start=2025-09-01&amp;end=2026-03-31&quot;</span>
+
+<span class="c1"># Check all metrics</span>
+curl<span class="w"> </span>localhost:8000/api/metrics/summary
+</code></pre></div>
+<p>Or open the frontend at <code>http://localhost:5173</code> and navigate to the report pages — MRR, Churn, Retention, LTV, Trials — all query the same API endpoints.</p>
+<h2 id="verifying-the-frontend">Verifying the Frontend<a class="headerlink" href="#verifying-the-frontend" title="Permanent link">&para;</a></h2>
+<p>With the API running and seeded data in PostgreSQL:</p>
+<ol>
+<li>Start the frontend: <code>make frontend</code></li>
+<li>Open <code>http://localhost:5173</code> (with <code>AUTH_ENABLED=false</code> on the API, no login required)</li>
+<li>Navigate each report page and verify charts render with data:</li>
+<li><strong>Overview</strong> (<code>/</code>) — KPI cards for all metrics</li>
+<li><strong>MRR</strong> (<code>/reports/mrr</code>) — line chart, bar breakdown, waterfall</li>
+<li><strong>Churn</strong> (<code>/reports/churn</code>) — logo and revenue churn rate charts</li>
+<li><strong>Retention</strong> (<code>/reports/retention</code>) — cohort heatmap</li>
+<li><strong>LTV</strong> (<code>/reports/ltv</code>) — LTV line chart</li>
+<li><strong>Trials</strong> (<code>/reports/trials</code>) — conversion rate chart</li>
+<li>Test dashboard CRUD:</li>
+<li>Create a dashboard at <code>/dashboards</code></li>
+<li>Save a chart from any report page (bookmark icon)</li>
+<li>Add the saved chart to your dashboard</li>
+<li>If auth is enabled, test the login flow and API key management at <code>/settings/api-keys</code></li>
+</ol>
+<h2 id="events-generated">Events Generated<a class="headerlink" href="#events-generated" title="Permanent link">&para;</a></h2>
+<p>As time advances through each billing cycle, Stripe fires webhook events:</p>
+<p><strong>Renewals:</strong></p>
+<ol>
+<li><code>invoice.created</code> — draft invoice generated</li>
+<li><code>invoice.finalized</code> — invoice finalized for payment</li>
+<li><code>charge.succeeded</code> / <code>payment_intent.succeeded</code> — payment completed</li>
+<li><code>invoice.paid</code> — invoice marked paid</li>
+<li><code>customer.subscription.updated</code> — new billing period</li>
+</ol>
+<p><strong>Cancellations:</strong></p>
+<ul>
+<li><code>customer.subscription.updated</code> — <code>cancel_at_period_end</code> set</li>
+<li><code>customer.subscription.deleted</code> — subscription ended</li>
+</ul>
+<p><strong>Plan changes (upgrades/downgrades):</strong></p>
+<ul>
+<li><code>customer.subscription.updated</code> — new price, proration items</li>
+<li><code>invoice.created</code> — proration invoice</li>
+</ul>
+<p><strong>Failed payments:</strong></p>
+<ul>
+<li><code>invoice.payment_failed</code> — charge declined</li>
+<li><code>customer.subscription.updated</code> — status → <code>past_due</code></li>
+</ul>
+<p><strong>Trials:</strong></p>
+<ul>
+<li><code>customer.subscription.created</code> — status <code>trialing</code></li>
+<li><code>customer.subscription.trial_will_end</code> — 3 days before trial ends</li>
+<li><code>customer.subscription.updated</code> — status → <code>active</code> (converted) or <code>canceled</code> (expired)</li>
+</ul>
+<h2 id="test-clocks">Test Clocks<a class="headerlink" href="#test-clocks" title="Permanent link">&para;</a></h2>
+<p>A Stripe Test Clock overrides "now" for all resources attached to it:</p>
+<div class="highlight"><pre><span></span><code>Real time:  March 30, 2026 (unchanged)
+Clock time: October 1, 2025 ──advance──► November 1, 2025 ──advance──► ...
+</code></pre></div>
+<p>When you advance the clock from October to November, Stripe processes everything that would have happened: invoice generation, payment attempts, subscription renewals, trial expirations, metered usage billing. Every action fires the same webhook events as production.</p>
+<p>The seed script groups customers into test clocks with a maximum of 3 customers per clock (Stripe's limit) and advances all clocks in parallel.</p>
+<h2 id="test-cards">Test Cards<a class="headerlink" href="#test-cards" title="Permanent link">&para;</a></h2>
+<h3 id="successful-payments">Successful Payments<a class="headerlink" href="#successful-payments" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Number</th>
+<th>Brand</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>4242 4242 4242 4242</code></td>
+<td>Visa</td>
+</tr>
+<tr>
+<td><code>5555 5555 5555 4444</code></td>
+<td>Mastercard</td>
+</tr>
+<tr>
+<td><code>3782 822463 10005</code></td>
+<td>Amex</td>
+</tr>
+</tbody>
+</table>
+<p>For all: any future expiry, any 3-digit CVC. In the API, use <code>pm_card_visa</code> as a shortcut.</p>
+<h3 id="failing-cards">Failing Cards<a class="headerlink" href="#failing-cards" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Number</th>
+<th>Failure</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>4000 0000 0000 0341</code></td>
+<td>Attaches OK, fails on charge (used by seed script)</td>
+</tr>
+<tr>
+<td><code>4000 0000 0000 0002</code></td>
+<td>Generic decline</td>
+</tr>
+<tr>
+<td><code>4000 0000 0000 9995</code></td>
+<td>Insufficient funds</td>
+</tr>
+<tr>
+<td><code>4000 0000 0000 0069</code></td>
+<td>Expired card</td>
+</tr>
+<tr>
+<td><code>4000 0000 0000 0119</code></td>
+<td>Processing error</td>
+</tr>
+</tbody>
+</table>
+<h2 id="stripe-cli-fixtures-quick-smoke-test">Stripe CLI Fixtures (Quick Smoke Test)<a class="headerlink" href="#stripe-cli-fixtures-quick-smoke-test" title="Permanent link">&para;</a></h2>
+<p>For a quick smoke test without time advancement:</p>
+<div class="highlight"><pre><span></span><code>stripe<span class="w"> </span>fixtures<span class="w"> </span>deploy/seed/stripe_fixtures.json
+</code></pre></div>
+<p>This creates 3 products, 3 prices, 1 customer, and 1 active subscription. No billing history — useful for testing a single webhook handler.</p>
+<h2 id="end-to-end-test-flow">End-to-End Test Flow<a class="headerlink" href="#end-to-end-test-flow" title="Permanent link">&para;</a></h2>
+<p>The full loop to verify the pipeline:</p>
+<div class="highlight"><pre><span></span><code>stripe_seed.py          stripe listen              API server              Worker
+      |                       |                         |                     |
+      |  create customer      |                         |                     |
+      |  create subscription  |                         |                     |
+      |  advance clock        |                         |                     |
+      |                       |                         |                     |
+      |                  Stripe fires webhooks           |                     |
+      |                       |                         |                     |
+      |                       |  POST /api/webhooks     |                     |
+      |                       +------------------------&gt;|                     |
+      |                       |                         |  translate -&gt; Kafka |
+      |                       |                         +--------------------&gt;|
+      |                       |                         |                     | update tables
+      |                       |                         |                     |
+      |                       |   GET /api/metrics/mrr  |                     |
+      |                       |  &lt;----------------------+                     |
+      |                       |   {&quot;mrr&quot;: 1234.00}      |                     |
+</code></pre></div>
+<h2 id="lago-testing-same-database-mode">Lago Testing (Same-Database Mode)<a class="headerlink" href="#lago-testing-same-database-mode" title="Permanent link">&para;</a></h2>
+<p>For same-database mode, test data lives in Lago's PostgreSQL. No Kafka or webhooks are involved.</p>
+<ol>
+<li><strong>Use Lago's own test environment</strong> — create customers, subscriptions, and invoices through Lago's API or UI</li>
+<li><strong>Point the analytics engine at Lago's database</strong> — set <code>CONNECTOR=lago</code> and <code>DATABASE_URL</code> to Lago's PostgreSQL</li>
+<li><strong>Query metrics directly</strong> — the analytics engine reads Lago's tables at request time</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">TIDEMILL_DATABASE_URL</span><span class="o">=</span>postgresql://lago:password@localhost/lago
+<span class="nb">export</span><span class="w"> </span><span class="nv">TIDEMILL_CONNECTOR</span><span class="o">=</span>lago
+
+tidemill<span class="w"> </span>mrr
+tidemill<span class="w"> </span>churn<span class="w"> </span>--start<span class="w"> </span><span class="m">2025</span>-12-01<span class="w"> </span>--end<span class="w"> </span><span class="m">2026</span>-01-01
+tidemill<span class="w"> </span>summary
+</code></pre></div>
+<p>No seed script is provided for Lago — use Lago's own API to create test data. The analytics engine is read-only against Lago's tables.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
