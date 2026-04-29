@@ -15,7 +15,7 @@ runcmd:
   - curl -fsSL https://get.docker.com | sh
 
   # Create tidemill user and add to docker group
-  - useradd --system --create-home --shell /usr/sbin/nologin tidemill
+  - useradd --system --create-home --shell /bin/bash tidemill
   - usermod -aG docker tidemill
 
   # Install Tailscale
