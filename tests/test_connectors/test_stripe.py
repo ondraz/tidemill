@@ -241,6 +241,13 @@ class TestProductTranslation:
         assert events[0].type == "product.updated"
         assert events[0].payload["active"] is False
 
+    def test_updated_uses_webhook_event_time(self, connector: StripeConnector):
+        """Use webhook event time for product.updated, not the product's original ``created``."""
+        wh = _product_wh("product.updated", created=1700000000)
+        wh["created"] = 1700100000  # webhook event time, later than product.created
+        events = connector.translate(wh)
+        assert events[0].occurred_at.timestamp() == 1700100000
+
     def test_deleted(self, connector: StripeConnector):
         events = connector.translate(_product_wh("product.deleted"))
         assert len(events) == 1
@@ -284,10 +291,26 @@ class TestPriceTranslation:
         assert events[0].type == "plan.updated"
         assert events[0].payload["active"] is False
 
+    def test_updated_uses_webhook_event_time(self, connector: StripeConnector):
+        """Use webhook event time for price.updated, not the price's original ``created``."""
+        wh = _price_wh("price.updated", created=1700000000)
+        wh["created"] = 1700100000  # webhook event time, later than price.created
+        events = connector.translate(wh)
+        assert events[0].occurred_at.timestamp() == 1700100000
+
     def test_deleted(self, connector: StripeConnector):
         events = connector.translate(_price_wh("price.deleted"))
         assert events[0].type == "plan.deleted"
         assert events[0].payload == {"external_id": "price_1"}
+
+    def test_non_recurring_price_emits_no_event(self, connector: StripeConnector):
+        """One-time Stripe Prices (no ``recurring`` block) emit no plan.* events."""
+        wh_created = _price_wh("price.created", recurring=None)
+        wh_updated = _price_wh("price.updated", recurring=None)
+        wh_deleted = _price_wh("price.deleted", recurring=None)
+        assert connector.translate(wh_created) == []
+        assert connector.translate(wh_updated) == []
+        assert connector.translate(wh_deleted) == []
 
 
 # ── Customer translations ────────────────────────────────────────────────

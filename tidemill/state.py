@@ -104,6 +104,12 @@ async def _handle_plan(session: AsyncSession, event: Event) -> None:
     p = event.payload
     match event.type:
         case "plan.created" | "plan.updated":
+            # The connector filters non-recurring Stripe Prices, so
+            # ``interval`` should always be set.  Skip defensively
+            # rather than coercing to a default that would distort
+            # the ``plan_interval`` analytics dimension.
+            if not p.get("interval"):
+                return
             await session.execute(
                 text(
                     "INSERT INTO plan"
@@ -136,7 +142,7 @@ async def _handle_plan(session: AsyncSession, event: Event) -> None:
                     "eid": p["external_id"],
                     "prod_eid": p.get("product_external_id", ""),
                     "name": p.get("name"),
-                    "interval": p.get("interval") or "month",
+                    "interval": p["interval"],
                     "ic": p.get("interval_count") or 1,
                     "amount": p.get("amount_cents"),
                     "currency": normalize_currency(p.get("currency")),
