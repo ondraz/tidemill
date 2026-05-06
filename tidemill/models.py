@@ -306,6 +306,157 @@ segment = Table(
     Column("updated_at", DateTime(timezone=True)),
 )
 
+# ── Expense entities (vendors, chart of accounts, bills, expenses) ──────
+# Platform-neutral schema designed to accept QuickBooks Online, Xero,
+# FreshBooks, Wave, Sage, etc. Connectors normalize their native vocabulary
+# into the canonical enums documented in docs/architecture/expenses.md.
+# Native values are preserved in metadata_ for traceability.
+
+vendor = Table(
+    "vendor",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("name", Text),
+    Column("email", Text),
+    Column("country", Text),
+    Column("currency", Text),
+    Column("active", Boolean, default=True),
+    Column("metadata_", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("updated_at", DateTime(timezone=True)),
+    UniqueConstraint("source_id", "external_id", name="uq_vendor_source"),
+)
+
+# Chart of Accounts. account_type ∈ {expense, cogs, income, asset, liability,
+# equity, other} — covers the GAAP/IFRS structure exposed by every accounting
+# platform we target. The original native type is kept in metadata_.
+account = Table(
+    "account",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("name", Text, nullable=False),
+    Column("account_type", Text, nullable=False),
+    Column("account_subtype", Text),
+    Column("parent_external_id", Text),
+    Column("currency", Text),
+    Column("active", Boolean, default=True),
+    Column("metadata_", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("updated_at", DateTime(timezone=True)),
+    UniqueConstraint("source_id", "external_id", name="uq_account_source"),
+    Index("ix_account_type", "source_id", "account_type"),
+)
+
+# Accrual-side payable. status ∈ {open, partial, paid, voided}.
+bill = Table(
+    "bill",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("vendor_id", Text, ForeignKey("vendor.id")),
+    Column("status", Text, nullable=False),
+    Column("doc_number", Text),
+    Column("currency", Text),
+    Column("subtotal_cents", BigInteger),
+    Column("subtotal_base_cents", BigInteger),
+    Column("tax_cents", BigInteger),
+    Column("tax_base_cents", BigInteger),
+    Column("total_cents", BigInteger),
+    Column("total_base_cents", BigInteger),
+    Column("txn_date", DateTime(timezone=True)),
+    Column("due_date", DateTime(timezone=True)),
+    Column("paid_at", DateTime(timezone=True)),
+    Column("voided_at", DateTime(timezone=True)),
+    Column("memo", Text),
+    Column("metadata_", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("updated_at", DateTime(timezone=True)),
+    UniqueConstraint("source_id", "external_id", name="uq_bill_source"),
+    Index("ix_bill_vendor_date", "vendor_id", "txn_date"),
+)
+
+bill_line = Table(
+    "bill_line",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("bill_id", Text, ForeignKey("bill.id"), nullable=False),
+    Column("account_id", Text, ForeignKey("account.id")),
+    Column("description", Text),
+    Column("quantity", Numeric),
+    Column("amount_cents", BigInteger),
+    Column("amount_base_cents", BigInteger),
+    Column("currency", Text),
+    # JSON-encoded cross-cutting tagging (project / class / department /
+    # tracking_category) — abstracts the per-platform taxonomy so future
+    # connectors can plug in without schema changes.
+    Column("dimensions", Text),
+    Index("ix_bill_line_account", "account_id"),
+)
+
+# Direct cash/credit/check expense — no bill intermediary.
+# payment_type ∈ {cash, credit_card, check, bank_transfer, other}.
+expense = Table(
+    "expense",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("vendor_id", Text, ForeignKey("vendor.id")),
+    Column("payment_type", Text, nullable=False),
+    Column("doc_number", Text),
+    Column("currency", Text),
+    Column("subtotal_cents", BigInteger),
+    Column("subtotal_base_cents", BigInteger),
+    Column("tax_cents", BigInteger),
+    Column("tax_base_cents", BigInteger),
+    Column("total_cents", BigInteger),
+    Column("total_base_cents", BigInteger),
+    Column("txn_date", DateTime(timezone=True)),
+    Column("voided_at", DateTime(timezone=True)),
+    Column("memo", Text),
+    Column("metadata_", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("updated_at", DateTime(timezone=True)),
+    UniqueConstraint("source_id", "external_id", name="uq_expense_source"),
+    Index("ix_expense_vendor_date", "vendor_id", "txn_date"),
+)
+
+expense_line = Table(
+    "expense_line",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("expense_id", Text, ForeignKey("expense.id"), nullable=False),
+    Column("account_id", Text, ForeignKey("account.id")),
+    Column("description", Text),
+    Column("quantity", Numeric),
+    Column("amount_cents", BigInteger),
+    Column("amount_base_cents", BigInteger),
+    Column("currency", Text),
+    Column("dimensions", Text),
+    Index("ix_expense_line_account", "account_id"),
+)
+
+bill_payment = Table(
+    "bill_payment",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("bill_id", Text, ForeignKey("bill.id")),
+    Column("paid_at", DateTime(timezone=True)),
+    Column("amount_cents", BigInteger),
+    Column("amount_base_cents", BigInteger),
+    Column("currency", Text),
+    Column("metadata_", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint("source_id", "external_id", name="uq_bill_payment_source"),
+)
+
 # Metric tables are defined in each metric's own tables.py module.
 # Importing the metrics package triggers registration on this shared metadata.
 import tidemill.metrics  # noqa: E402, F401

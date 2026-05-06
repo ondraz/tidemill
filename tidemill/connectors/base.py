@@ -53,3 +53,42 @@ class DatabaseConnector(ABC):
     @property
     @abstractmethod
     def source_type(self) -> str: ...
+
+
+# Canonical enums every ExpenseConnector must produce. Documented here
+# (not in expenses.md alone) so a future connector author has the contract
+# at the import site.
+CANONICAL_ACCOUNT_TYPES = ("expense", "cogs", "income", "asset", "liability", "equity", "other")
+CANONICAL_BILL_STATUSES = ("open", "partial", "paid", "voided")
+CANONICAL_PAYMENT_TYPES = ("cash", "credit_card", "check", "bank_transfer", "other")
+
+
+class ExpenseConnector(WebhookConnector, ABC):
+    """A WebhookConnector that emits expense-side events.
+
+    Subclasses translate native vendor/account/bill/expense vocabulary into
+    Tidemill's canonical enums (see CANONICAL_* tuples above). The expense
+    schema is platform-neutral — QuickBooks, Xero, FreshBooks, Wave, Sage
+    plug in by implementing these four normalize/extract methods plus their
+    own auth + entity translation; no schema changes are required.
+    """
+
+    @classmethod
+    @abstractmethod
+    def normalize_account_type(cls, native: str) -> str:
+        """Map a native account-type string to one of CANONICAL_ACCOUNT_TYPES."""
+
+    @classmethod
+    @abstractmethod
+    def normalize_bill_status(cls, native: str) -> str:
+        """Map a native bill-status string to one of CANONICAL_BILL_STATUSES."""
+
+    @classmethod
+    @abstractmethod
+    def normalize_payment_type(cls, native: str) -> str:
+        """Map a native payment-type string to one of CANONICAL_PAYMENT_TYPES."""
+
+    @classmethod
+    @abstractmethod
+    def extract_dimensions(cls, native_obj: dict[str, Any]) -> dict[str, Any]:
+        """Pull cross-cutting tagging dimensions (project/class/department) from a line item."""

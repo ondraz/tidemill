@@ -57,10 +57,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.session_factory = factory
 
     # Connector configs — used by webhook handlers for signature verification.
+    # Per-source config (OAuth tokens, realm IDs) is persisted in
+    # ``connector_source.config`` and merged on top at request time.
     app.state.connector_configs = {
         "stripe": {
             "api_key": os.environ.get("STRIPE_API_KEY", ""),
             "webhook_secret": os.environ.get("STRIPE_WEBHOOK_SECRET", ""),
+        },
+        "quickbooks": {
+            "client_id": os.environ.get("QUICKBOOKS_CLIENT_ID", ""),
+            "client_secret": os.environ.get("QUICKBOOKS_CLIENT_SECRET", ""),
+            "webhook_verifier_token": os.environ.get("QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN", ""),
+            "redirect_uri": os.environ.get("QUICKBOOKS_REDIRECT_URI", ""),
+            "environment": os.environ.get("QUICKBOOKS_ENVIRONMENT", "production"),
         },
     }
 

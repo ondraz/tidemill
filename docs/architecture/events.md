@@ -83,6 +83,28 @@ The most important events for metric computation.
 |------|---------|---------|
 | `usage.recorded` | Usage data received | `{customer_external_id, subscription_external_id, metric_code, quantity, properties, timestamp}` |
 
+### Expense-side Events (QuickBooks Online et al.)
+
+These are emitted by `ExpenseConnector` subclasses (today: QuickBooks Online; future: Xero, FreshBooks, Wave, Sage). For these events `Event.customer_id` carries the **realm/tenant ID** of the accounting source so events for the same QBO company stay on one Kafka partition.
+
+| Type | Trigger | Payload |
+|------|---------|---------|
+| `vendor.created` | Vendor created in source | `{external_id, name, email, country, currency, active, metadata}` |
+| `vendor.updated` | Vendor edited | Same fields as `vendor.created` |
+| `vendor.deleted` | Vendor deleted | `{external_id}` |
+| `account.created` | Chart-of-accounts entry created | `{external_id, name, account_type, account_subtype, parent_external_id, currency, active, metadata}` |
+| `account.updated` | Account edited | Same fields as `account.created` |
+| `bill.created` | New A/P bill | `{external_id, vendor_external_id, status, doc_number, currency, subtotal_cents, tax_cents, total_cents, txn_date, due_date, memo, lines: [{account_external_id, description, amount_cents, currency, dimensions}]}` |
+| `bill.updated` | Bill modified | Same shape as `bill.created` |
+| `bill.paid` | Bill marked paid | `{external_id, paid_at}` |
+| `bill.voided` | Bill voided | `{external_id, voided_at}` |
+| `expense.created` | Direct purchase recorded | `{external_id, vendor_external_id, payment_type, doc_number, currency, total_cents, txn_date, memo, lines: [...]}` |
+| `expense.updated` | Direct purchase edited | Same shape as `expense.created` |
+| `expense.voided` | Direct purchase voided | `{external_id, voided_at}` |
+| `bill_payment.created` | Payment applied to a bill | `{external_id, bill_external_id, paid_at, amount_cents, currency}` |
+
+`account_type` is one of the canonical enums (see [expenses.md](expenses.md#canonical-enums)). Native source values are preserved on `metadata`.
+
 ## Kafka Topics
 
 | Topic | Partition Key | Description |

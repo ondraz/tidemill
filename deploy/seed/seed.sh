@@ -105,7 +105,28 @@ uv run python "$ROOT/deploy/seed/stripe_seed.py" \
     --customers "$SEED_CUSTOMERS" --months "$SEED_MONTHS"
 
 echo ""
-echo "=== Waiting for webhook processing (30s) ==="
+echo "=== Seeding QuickBooks expense data (sandbox) ==="
+# Optional: requires sandbox OAuth credentials (one-time setup — see
+# docs/development/testing.md). When unset, skip the QBO seed so
+# contributors with only Stripe configured aren't blocked.
+if [[ -n "${QUICKBOOKS_SANDBOX_REFRESH_TOKEN:-}" && -n "${QUICKBOOKS_SANDBOX_REALM_ID:-}" ]]; then
+    uv run python "$ROOT/deploy/seed/quickbooks_seed.py" --months "$SEED_MONTHS" \
+        || echo "WARN: quickbooks_seed.py failed (continuing — Stripe data still present)"
+
+    # QBO seed inserts entities directly via API — they must be backfilled
+    # into Tidemill's Kafka pipeline so state consumers populate the base
+    # tables and the expenses metric returns non-zero results.
+    echo ""
+    echo "=== Triggering QuickBooks backfill ==="
+    QBO_SOURCE_ID="quickbooks-${QUICKBOOKS_SANDBOX_REALM_ID}"
+    curl -sf -X POST "$API/api/sources/$QBO_SOURCE_ID/backfill" \
+        || echo "WARN: backfill trigger failed (source row may not exist yet — complete the OAuth flow first)"
+else
+    echo "(skipped — set QUICKBOOKS_SANDBOX_REFRESH_TOKEN and QUICKBOOKS_SANDBOX_REALM_ID to enable)"
+fi
+
+echo ""
+echo "=== Waiting for webhook + backfill processing (30s) ==="
 sleep 30
 
 echo ""
@@ -183,10 +204,10 @@ else
     echo "PASS: Sources present"
 fi
 
-if [[ "$metrics" == '["churn","ltv","mrr","retention","trials"]' ]]; then
+if [[ "$metrics" == '["churn","expenses","ltv","mrr","retention","trials"]' ]]; then
     echo "PASS: All metrics registered"
 else
-    echo "FAIL: Expected [churn, ltv, mrr, retention, trials], got: $metrics"
+    echo "FAIL: Expected [churn, expenses, ltv, mrr, retention, trials], got: $metrics"
     errors=$((errors + 1))
 fi
 
@@ -195,6 +216,18 @@ if [[ "$mrr" != "0" && "$mrr" != '"0"' && "$mrr" != "null" ]]; then
 else
     echo "FAIL: MRR is zero or null"
     errors=$((errors + 1))
+fi
+
+# Expense data only checked when the QBO seed actually ran.
+if [[ -n "${QUICKBOOKS_SANDBOX_REFRESH_TOKEN:-}" ]]; then
+    expenses=$(curl -sf "$API/api/metrics/expenses?start=2025-09-01&end=2026-03-31" || echo "CURL_FAILED")
+    expenses_total=$(echo "$expenses" | python3 -c "import json,sys; print(json.load(sys.stdin).get('total_base_cents', 0))" 2>/dev/null || echo "0")
+    if [[ "$expenses_total" != "0" && "$expenses_total" != "null" ]]; then
+        echo "PASS: Expense data present ($expenses_total cents)"
+    else
+        echo "FAIL: No expense data — QBO seed may have failed or backfill is still running"
+        errors=$((errors + 1))
+    fi
 fi
 
 echo ""

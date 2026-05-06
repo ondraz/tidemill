@@ -418,6 +418,74 @@ Kill Bill can also operate in ingestion mode via `ExtBusEvent` webhooks:
 | `INVOICE_PAYMENT_SUCCESS` | `invoice.paid` + `payment.succeeded` | |
 | `INVOICE_PAYMENT_FAILED` | `payment.failed` | |
 
+## QuickBooks Online Connector (P1) — Expense Source
+
+QuickBooks is fundamentally an accounting platform, not a billing one. We integrate it as Tidemill's first **expense data source** so customers can compute burn rate, runway, gross margin, and cash-flow forecasts alongside Stripe revenue. Subscription/MRR concepts are intentionally absent.
+
+### Integration Architecture
+
+```
+Tidemill   ←OAuth2 ↔ QBO Auth Server (token refresh)
+   │
+   │ webhook notifications (entity IDs only)
+   │
+QBO Sandbox/Production ──API── REST ─→ QuickBooksClient ─→ Event(s) ─→ Kafka
+                              fetch
+```
+
+QBO webhooks are **notifications**, not full payloads — they only carry `{realmId, name, id, operation}`. The route handler must call the QBO REST API to fetch the full entity, then translate. For that reason `translate()` returns `[]`; `fetch_and_translate()` is the entry point.
+
+### `ExpenseConnector` ABC
+
+Lives in `tidemill.connectors.base`. Every expense-side connector (QBO today; Xero / FreshBooks / Wave / Sage tomorrow) implements four methods to map its native vocabulary onto Tidemill's canonical enums:
+
+| Method | Returns one of |
+|---|---|
+| `normalize_account_type(native)` | `expense, cogs, income, asset, liability, equity, other` |
+| `normalize_bill_status(native)` | `open, partial, paid, voided` |
+| `normalize_payment_type(native)` | `cash, credit_card, check, bank_transfer, other` |
+| `extract_dimensions(line)` | `dict` with `class` / `department` / `project` keys (any subset) |
+
+Native values are always preserved on `metadata_` (`native_account_type`, etc.) so connector-level audits can recover the original string.
+
+### Cross-platform mapping
+
+| Concept | QuickBooks Online | Xero | FreshBooks |
+|---|---|---|---|
+| Vendor | `Vendor` | `Contact` (`IsSupplier=true`) | `Vendor` |
+| Chart of accounts | `Account` (`AccountType`) | `Account` (`Type`) | `Category` |
+| Accrual payable | `Bill` | `Invoice` (`Type=ACCPAY`) | `Bill` |
+| Cash purchase | `Purchase` | `BankTransaction` (`Type=SPEND`) | `Expense` |
+| Bill payment | `BillPayment` | `Payment` against ACCPAY | `Payment` |
+| Tagging | `Class` + `Department` | `TrackingCategory` (×2) | `Project` |
+
+A future Xero connector reuses the **entire schema, event types, state handlers, and expenses metric** — only the `XeroConnector` class itself is new code.
+
+### OAuth 2.0 Flow
+
+QBO requires OAuth 2.0 with refresh tokens (~1h access, ~100d refresh). One Intuit Developer app can connect to many QBO companies (`realmId`s); we materialise each as a separate `connector_source` row keyed `quickbooks-{realmId}`.
+
+```
+GET  /api/connectors/quickbooks/oauth/start    → redirect to Intuit
+GET  /api/connectors/quickbooks/oauth/callback → exchange code, persist
+                                                 tokens in connector_source.config
+POST /api/webhooks/quickbooks?source_id=...    → Intuit-signed webhooks
+```
+
+Token refresh is automatic in `QuickBooksClient`; the latest access/refresh tokens are written back to `connector_source.config` after every refresh.
+
+### Backfill
+
+Order matters because state handlers resolve FKs by `(source_id, external_id)`:
+
+1. `Vendor`
+2. `Account`
+3. `Bill`
+4. `Purchase`
+5. `BillPayment`
+
+Each is paginated via QBO's Query endpoint (`SELECT * FROM <Entity>` with `STARTPOSITION` / `MAXRESULTS`) and yielded as canonical events.
+
 ## Connector Registry
 
 ```python
@@ -462,3 +530,14 @@ mrr = await lago.get_mrr_usd_cents()
 3. Implement `get_active_subscriptions()`, `get_mrr_cents()`, `get_subscription_changes()`, etc.
 4. Write SQL queries against the billing engine's tables
 5. Decorate with `@register("myplatform")`
+
+### Expense Connector (for accounting platforms)
+
+1. Create `tidemill/connectors/myplatform/`
+2. Subclass `ExpenseConnector` (inherits `WebhookConnector`)
+3. Implement the four normalize/extract methods (`normalize_account_type`, `normalize_bill_status`, `normalize_payment_type`, `extract_dimensions`)
+4. Implement `translate()` + `backfill()` (or `fetch_and_translate()` for ID-only webhooks)
+5. Emit canonical event types: `vendor.*`, `account.*`, `bill.*`, `expense.*`, `bill_payment.*`
+6. Decorate with `@register("myplatform")`
+
+The schema, state handlers, expenses metric, and Kafka topics are all platform-neutral — no schema changes are needed for any accounting platform that fits the canonical model.

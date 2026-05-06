@@ -1,4 +1,5 @@
 import tidemill.metrics.churn.metric as _churn  # noqa: F401
+import tidemill.metrics.expenses.metric as _expenses  # noqa: F401
 
 # Import concrete metrics so @register decorators execute.
 import tidemill.metrics.ltv.metric as _ltv  # noqa: F401

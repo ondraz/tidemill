@@ -37,6 +37,11 @@ _CONSTRAINT_COLS = {
     "uq_retention_activity": "(source_id, customer_id, active_month)",
     "uq_trial_sub": "(source_id, subscription_id)",
     "uq_customer_attr_source_cust_key": "(source_id, customer_id, key)",
+    "uq_vendor_source": "(source_id, external_id)",
+    "uq_account_source": "(source_id, external_id)",
+    "uq_bill_source": "(source_id, external_id)",
+    "uq_expense_source": "(source_id, external_id)",
+    "uq_bill_payment_source": "(source_id, external_id)",
 }
 
 _PG_CONSTRAINT_RE = re.compile(

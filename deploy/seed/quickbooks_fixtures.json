@@ -1,0 +1,41 @@
+{
+    "_comment": "Static fixtures used by quickbooks_seed.py. Names match the SEED_PREFIX convention so cleanup can find them. Edit freely — every entity is namespaced under 'SEED-' so re-runs are idempotent.",
+    "vendors": [
+        {"name": "Hetzner",          "email": "billing@hetzner.com",       "country": "DE", "currency": "EUR"},
+        {"name": "AWS",              "email": "aws-receipts@amazon.com",   "country": "US", "currency": "USD"},
+        {"name": "GitHub",           "email": "billing@github.com",        "country": "US", "currency": "USD"},
+        {"name": "ContractorCo",     "email": "invoices@contractor.co.uk", "country": "GB", "currency": "GBP"},
+        {"name": "Intuit",           "email": "billing@intuit.com",        "country": "US", "currency": "USD"},
+        {"name": "WeWork Paris",     "email": "billing@wework.com",        "country": "FR", "currency": "EUR"}
+    ],
+    "accounts": [
+        {"name": "Hosting",                "account_type": "Expense",            "account_subtype": "UtilitiesPayable"},
+        {"name": "Software & Subscriptions","account_type": "Expense",           "account_subtype": "DuesAndSubscriptions"},
+        {"name": "Salaries",               "account_type": "Expense",            "account_subtype": "PayrollExpenses"},
+        {"name": "Office Rent",            "account_type": "Expense",            "account_subtype": "Rent"},
+        {"name": "Professional Services",  "account_type": "Expense",            "account_subtype": "ProfessionalFees"},
+        {"name": "Marketing",              "account_type": "Expense",            "account_subtype": "AdvertisingPromotional"},
+        {"name": "Travel",                 "account_type": "Expense",            "account_subtype": "Travel"},
+        {"name": "Meals",                  "account_type": "Expense",            "account_subtype": "MealsAndEntertainment"},
+        {"name": "Office Supplies",        "account_type": "Expense",            "account_subtype": "OfficeExpenses"},
+        {"name": "Bank Fees",              "account_type": "Expense",            "account_subtype": "BankCharges"},
+        {"name": "Cost of Goods Sold",     "account_type": "Cost of Goods Sold", "account_subtype": null}
+    ],
+    "recurring_bills": [
+        {"vendor": "AWS",          "account": "Hosting",                 "amount": 4200.00, "currency": "USD", "day_of_month": 5,  "description": "AWS hosting"},
+        {"vendor": "Hetzner",      "account": "Hosting",                 "amount":  180.00, "currency": "EUR", "day_of_month": 8,  "description": "Hetzner servers"},
+        {"vendor": "GitHub",       "account": "Software & Subscriptions","amount":  250.00, "currency": "USD", "day_of_month": 10, "description": "GitHub Enterprise"},
+        {"vendor": "Intuit",       "account": "Software & Subscriptions","amount":   80.00, "currency": "USD", "day_of_month": 12, "description": "QuickBooks subscription"},
+        {"vendor": "WeWork Paris", "account": "Office Rent",             "amount": 2400.00, "currency": "EUR", "day_of_month": 1,  "description": "Coworking space"},
+        {"vendor": "ContractorCo", "account": "Professional Services",   "amount": 3500.00, "currency": "GBP", "day_of_month": 25, "description": "Contractor monthly retainer"}
+    ],
+    "one_off_purchases": [
+        {"vendor": "AWS",          "account": "Hosting",          "amount":  450.00, "currency": "USD", "payment_type": "CreditCard", "days_ago":  10, "description": "AWS reserved-instance bump"},
+        {"vendor": null,           "account": "Marketing",        "amount": 1200.00, "currency": "USD", "payment_type": "CreditCard", "days_ago":  45, "description": "Conference sponsorship"},
+        {"vendor": null,           "account": "Office Supplies",  "amount":  320.00, "currency": "USD", "payment_type": "CreditCard", "days_ago":  90, "description": "Standing desks"},
+        {"vendor": null,           "account": "Travel",           "amount":  890.00, "currency": "USD", "payment_type": "CreditCard", "days_ago": 120, "description": "Customer trip — flights"},
+        {"vendor": null,           "account": "Meals",            "amount":  220.00, "currency": "USD", "payment_type": "Cash",       "days_ago": 130, "description": "Customer dinner"},
+        {"vendor": null,           "account": "Bank Fees",        "amount":   30.00, "currency": "USD", "payment_type": "CreditCard", "days_ago": 200, "description": "Wire fees"},
+        {"vendor": "GitHub",       "account": "Software & Subscriptions","amount": 600.00, "currency": "USD", "payment_type": "CreditCard", "days_ago": 250, "description": "GitHub seat top-up"}
+    ]
+}

@@ -34,7 +34,8 @@ def registered_names() -> list[str]:
 def metric_primary_cube(name: str) -> type[Cube] | None:
     """Resolve *name* to its metric's :attr:`Metric.primary_cube`.
 
-    Returns ``None`` for unknown metrics.  Used by generic routers (the
+    Returns ``None`` for unknown metrics or metrics that don't expose a Cube
+    (e.g. raw-SQL metrics like ``expenses``).  Used by generic routers (the
     ``/fields`` discovery endpoint, segment validation) so they stay
     plugin-agnostic — each metric advertises its own filter surface via
     the base-class contract rather than the router hard-coding a lookup.
@@ -42,7 +43,13 @@ def metric_primary_cube(name: str) -> type[Cube] | None:
     cls = _REGISTRY.get(name)
     if cls is None:
         return None
-    return cls().primary_cube
+    try:
+        return cls().primary_cube
+    except NotImplementedError:
+        # Metric doesn't expose a Cube (raw-SQL implementation). Generic
+        # filter/segment endpoints aren't applicable; metric-specific
+        # routes still work.
+        return None
 
 
 def resolve_dependencies(metrics: list[Metric]) -> list[Metric]:

@@ -220,6 +220,25 @@ erDiagram
 
 The `fx_rate` table stores official daily exchange rates used to populate `*_base_cents` columns at ingest time. See [Money Handling](#money-handling) below.
 
+## Expense Tables
+
+Platform-neutral expense schema populated by `ExpenseConnector` subclasses (today: QuickBooks Online; future: Xero, FreshBooks, Wave, Sage). All tables follow the standard `(source_id, external_id)` uniqueness convention and the dual `*_cents` / `*_base_cents` money pattern. Connector-specific values live in `metadata_` JSON; cross-cutting tagging dimensions (project / class / department) live in `*_line.dimensions` JSON. Full design rationale: [expenses.md](expenses.md).
+
+| Table | Purpose | Key columns |
+|---|---|---|
+| `vendor` | Counterparty (supplier) — mirror of `customer` | `external_id, name, email, country, currency, active, metadata_` |
+| `account` | Chart of accounts (hierarchical via `parent_external_id`) | `external_id, name, account_type` (canonical), `account_subtype, parent_external_id, currency, active, metadata_` |
+| `bill` | Accrual-side payable (A/P) | `external_id, vendor_id, status` (canonical), `doc_number, currency, subtotal_cents, tax_cents, total_cents` (+ `*_base_cents`), `txn_date, due_date, paid_at, voided_at, memo, metadata_` |
+| `bill_line` | Line item on a bill | `bill_id, account_id, description, quantity, amount_cents, amount_base_cents, currency, dimensions` |
+| `expense` | Direct cash/credit/check expense (no A/P) | `external_id, vendor_id, payment_type` (canonical), `doc_number, currency, subtotal_cents, tax_cents, total_cents` (+ `*_base_cents`), `txn_date, voided_at, memo, metadata_` |
+| `expense_line` | Line item on an expense | `expense_id, account_id, description, quantity, amount_cents, amount_base_cents, currency, dimensions` |
+| `bill_payment` | Payment applied to one or more bills | `external_id, bill_id, paid_at, amount_cents, amount_base_cents, currency, metadata_` |
+
+Canonical enums (see [expenses.md](expenses.md#canonical-enums)):
+- `account.account_type` ∈ `{expense, cogs, income, asset, liability, equity, other}`
+- `bill.status` ∈ `{open, partial, paid, voided}`
+- `expense.payment_type` ∈ `{cash, credit_card, check, bank_transfer, other}`
+
 ## Metric Tables
 
 Each metric creates its own tables, prefixed with `metric_`. Monetary columns in metric tables follow the same dual-column convention (`*_cents` + `*_base_cents`). These are documented in [Metrics](metrics.md). Summary:
@@ -231,6 +250,7 @@ Each metric creates its own tables, prefixed with `metric_`. Monetary columns in
 | Retention | `metric_retention_cohort`, `metric_retention_activity` | Cohort membership, monthly activity |
 | LTV | `metric_ltv_customer_revenue` | Cumulative revenue per customer |
 | Trials | `metric_trial`, `metric_trial_event` | Per-trial outcome (cohort queries); append-only lifecycle log |
+| Expenses | (none — reads `bill_line` / `expense_line`) | Total expense by account type / vendor / period |
 
 ## Segments & Attributes
 
