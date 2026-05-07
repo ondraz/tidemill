@@ -179,7 +179,7 @@ def instrument_fastapi(app: object) -> None:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     except ImportError:
         return
-    FastAPIInstrumentor.instrument_app(app)  # type: ignore[arg-type]
+    FastAPIInstrumentor.instrument_app(app)
 
 
 def _package_version() -> str:

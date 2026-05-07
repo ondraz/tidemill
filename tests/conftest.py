@@ -33,6 +33,7 @@ _CONSTRAINT_COLS = {
     "uq_fx_rate": "(date, from_currency, to_currency)",
     "uq_mrr_snapshot_sub": "(source_id, subscription_id)",
     "uq_churn_state_customer": "(source_id, customer_id)",
+    "uq_churn_active_sub": "(source_id, customer_id, subscription_id)",
     "uq_retention_cohort_customer": "(source_id, customer_id)",
     "uq_retention_activity": "(source_id, customer_id, active_month)",
     "uq_trial_sub": "(source_id, subscription_id)",
