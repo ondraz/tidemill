@@ -65,6 +65,225 @@ class TestEventLog:
         assert rows == 1
 
 
+# ── product / plan ───────────────────────────────────────────────────────
+
+
+class TestProductHandler:
+    @pytest.mark.asyncio
+    async def test_create(self, db):
+        await handle_state_event(
+            db,
+            _evt(
+                "product.created",
+                {
+                    "external_id": "prod_1",
+                    "name": "Pro",
+                    "description": "Pro tier",
+                    "active": True,
+                    "metadata": {"tier": "pro"},
+                },
+                customer_id="",
+                external_id="prod_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(
+                text("SELECT name, description, active FROM product WHERE external_id = 'prod_1'")
+            )
+        ).fetchone()
+        assert row is not None
+        assert row[0] == "Pro"
+        assert row[1] == "Pro tier"
+        assert row[2] is True or row[2] == 1  # SQLite returns 1 for true
+
+    @pytest.mark.asyncio
+    async def test_update_idempotent(self, db):
+        payload = {"external_id": "prod_1", "name": "Pro", "active": True}
+        await handle_state_event(
+            db, _evt("product.created", payload, customer_id="", external_id="prod_1")
+        )
+        await db.commit()
+        await handle_state_event(
+            db,
+            _evt(
+                "product.updated",
+                {"external_id": "prod_1", "name": "Pro v2", "active": True},
+                customer_id="",
+                external_id="prod_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(text("SELECT name FROM product WHERE external_id = 'prod_1'"))
+        ).fetchone()
+        assert row is not None
+        assert row[0] == "Pro v2"
+        count = (await db.execute(text("SELECT COUNT(*) FROM product"))).scalar()
+        assert count == 1
+
+    @pytest.mark.asyncio
+    async def test_delete_marks_inactive(self, db):
+        await handle_state_event(
+            db,
+            _evt(
+                "product.created",
+                {"external_id": "prod_1", "name": "Pro", "active": True},
+                customer_id="",
+                external_id="prod_1",
+            ),
+        )
+        await db.commit()
+        await handle_state_event(
+            db,
+            _evt(
+                "product.deleted",
+                {"external_id": "prod_1"},
+                customer_id="",
+                external_id="prod_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(text("SELECT active FROM product WHERE external_id = 'prod_1'"))
+        ).fetchone()
+        assert row is not None
+        # SQLite returns 0 for false
+        assert row[0] in (False, 0)
+
+
+class TestPlanHandler:
+    async def _seed_product(self, db) -> None:
+        await handle_state_event(
+            db,
+            _evt(
+                "product.created",
+                {"external_id": "prod_1", "name": "Pro", "active": True},
+                customer_id="",
+                external_id="prod_1",
+            ),
+        )
+        await db.commit()
+
+    @pytest.mark.asyncio
+    async def test_create_with_product(self, db):
+        await self._seed_product(db)
+
+        await handle_state_event(
+            db,
+            _evt(
+                "plan.created",
+                {
+                    "external_id": "price_1",
+                    "product_external_id": "prod_1",
+                    "name": "Pro Monthly",
+                    "interval": "month",
+                    "interval_count": 1,
+                    "amount_cents": 9900,
+                    "currency": "USD",
+                    "billing_scheme": "per_unit",
+                    "usage_type": "licensed",
+                    "trial_period_days": 14,
+                    "active": True,
+                    "metadata": {},
+                },
+                customer_id="",
+                external_id="price_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(
+                text(
+                    'SELECT name, "interval", amount_cents, currency,'
+                    "  billing_scheme, usage_type, trial_period_days, product_id"
+                    " FROM plan WHERE external_id = 'price_1'"
+                )
+            )
+        ).fetchone()
+        assert row is not None
+        assert row[0] == "Pro Monthly"
+        assert row[1] == "month"
+        assert row[2] == 9900
+        assert row[3] == "USD"
+        assert row[4] == "per_unit"
+        assert row[5] == "licensed"
+        assert row[6] == 14
+        assert row[7] is not None  # product_id resolved via lookup
+
+    @pytest.mark.asyncio
+    async def test_create_unknown_product_keeps_null_fk(self, db):
+        await handle_state_event(
+            db,
+            _evt(
+                "plan.created",
+                {
+                    "external_id": "price_1",
+                    "product_external_id": "missing",
+                    "interval": "month",
+                    "interval_count": 1,
+                    "amount_cents": 1000,
+                    "currency": "USD",
+                    "active": True,
+                    "metadata": {},
+                },
+                customer_id="",
+                external_id="price_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(text("SELECT product_id FROM plan WHERE external_id = 'price_1'"))
+        ).fetchone()
+        assert row is not None
+        assert row[0] is None
+
+    @pytest.mark.asyncio
+    async def test_delete_marks_inactive(self, db):
+        await self._seed_product(db)
+        await handle_state_event(
+            db,
+            _evt(
+                "plan.created",
+                {
+                    "external_id": "price_1",
+                    "product_external_id": "prod_1",
+                    "interval": "month",
+                    "interval_count": 1,
+                    "amount_cents": 1000,
+                    "currency": "USD",
+                    "active": True,
+                    "metadata": {},
+                },
+                customer_id="",
+                external_id="price_1",
+            ),
+        )
+        await db.commit()
+
+        await handle_state_event(
+            db,
+            _evt(
+                "plan.deleted",
+                {"external_id": "price_1"},
+                customer_id="",
+                external_id="price_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(text("SELECT active FROM plan WHERE external_id = 'price_1'"))
+        ).fetchone()
+        assert row is not None
+        assert row[0] in (False, 0)
+
+
 # ── customer ─────────────────────────────────────────────────────────────
 
 

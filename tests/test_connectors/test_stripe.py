@@ -179,6 +179,140 @@ def _sub_wh(
     return wh
 
 
+# ── Product / Price translations ─────────────────────────────────────────
+
+
+def _product_wh(event_type: str, prod_id: str = "prod_1", **extra) -> dict:
+    obj = {
+        "id": prod_id,
+        "object": "product",
+        "name": "Pro",
+        "description": "Pro tier",
+        "active": True,
+        "created": 1700000000,
+        "metadata": {"tier": "pro"},
+        **extra,
+    }
+    return {"type": event_type, "data": {"object": obj}, "created": 1700000000}
+
+
+def _price_wh(
+    event_type: str,
+    price_id: str = "price_1",
+    product_id: str = "prod_1",
+    **extra,
+) -> dict:
+    obj = {
+        "id": price_id,
+        "object": "price",
+        "active": True,
+        "created": 1700000000,
+        "currency": "usd",
+        "unit_amount": 9900,
+        "billing_scheme": "per_unit",
+        "nickname": "Pro Monthly",
+        "product": product_id,
+        "recurring": {
+            "interval": "month",
+            "interval_count": 1,
+            "usage_type": "licensed",
+            "trial_period_days": 14,
+        },
+        "metadata": {},
+        **extra,
+    }
+    return {"type": event_type, "data": {"object": obj}, "created": 1700000000}
+
+
+class TestProductTranslation:
+    def test_created(self, connector: StripeConnector):
+        events = connector.translate(_product_wh("product.created"))
+        assert len(events) == 1
+        assert events[0].type == "product.created"
+        assert events[0].customer_id == ""
+        assert events[0].payload["external_id"] == "prod_1"
+        assert events[0].payload["name"] == "Pro"
+        assert events[0].payload["active"] is True
+        assert events[0].payload["metadata"] == {"tier": "pro"}
+
+    def test_updated(self, connector: StripeConnector):
+        events = connector.translate(_product_wh("product.updated", active=False))
+        assert len(events) == 1
+        assert events[0].type == "product.updated"
+        assert events[0].payload["active"] is False
+
+    def test_updated_uses_webhook_event_time(self, connector: StripeConnector):
+        """Use webhook event time for product.updated, not the product's original ``created``."""
+        wh = _product_wh("product.updated", created=1700000000)
+        wh["created"] = 1700100000  # webhook event time, later than product.created
+        events = connector.translate(wh)
+        assert events[0].occurred_at.timestamp() == 1700100000
+
+    def test_deleted(self, connector: StripeConnector):
+        events = connector.translate(_product_wh("product.deleted"))
+        assert len(events) == 1
+        assert events[0].type == "product.deleted"
+        assert events[0].payload == {"external_id": "prod_1"}
+
+
+class TestPriceTranslation:
+    def test_created(self, connector: StripeConnector):
+        events = connector.translate(_price_wh("price.created"))
+        assert len(events) == 1
+        assert events[0].type == "plan.created"
+        assert events[0].customer_id == ""
+        p = events[0].payload
+        assert p["external_id"] == "price_1"
+        assert p["product_external_id"] == "prod_1"
+        assert p["interval"] == "month"
+        assert p["interval_count"] == 1
+        assert p["amount_cents"] == 9900
+        assert p["currency"] == "usd"
+        assert p["billing_scheme"] == "per_unit"
+        assert p["usage_type"] == "licensed"
+        assert p["trial_period_days"] == 14
+        assert p["name"] == "Pro Monthly"
+
+    def test_created_metered_no_unit_amount(self, connector: StripeConnector):
+        wh = _price_wh(
+            "price.created",
+            unit_amount=None,
+            billing_scheme="tiered",
+            recurring={"interval": "month", "interval_count": 1, "usage_type": "metered"},
+        )
+        events = connector.translate(wh)
+        assert events[0].payload["amount_cents"] is None
+        assert events[0].payload["billing_scheme"] == "tiered"
+        assert events[0].payload["usage_type"] == "metered"
+        assert events[0].payload["trial_period_days"] is None
+
+    def test_updated(self, connector: StripeConnector):
+        events = connector.translate(_price_wh("price.updated", active=False))
+        assert events[0].type == "plan.updated"
+        assert events[0].payload["active"] is False
+
+    def test_updated_uses_webhook_event_time(self, connector: StripeConnector):
+        """Use webhook event time for price.updated, not the price's original ``created``."""
+        wh = _price_wh("price.updated", created=1700000000)
+        wh["created"] = 1700100000  # webhook event time, later than price.created
+        events = connector.translate(wh)
+        assert events[0].occurred_at.timestamp() == 1700100000
+
+    def test_deleted(self, connector: StripeConnector):
+        events = connector.translate(_price_wh("price.deleted"))
+        assert events[0].type == "plan.deleted"
+        assert events[0].payload == {"external_id": "price_1"}
+
+    def test_non_recurring_price_emits_no_event(self, connector: StripeConnector):
+        """One-time Stripe Prices (no ``recurring`` block) emit no plan.* events."""
+        wh_created = _price_wh("price.created", recurring=None)
+        wh_updated = _price_wh("price.updated", recurring=None)
+        wh_deleted = _price_wh("price.deleted", recurring=None)
+        assert connector.translate(wh_created) == []
+        assert connector.translate(wh_updated) == []
+        assert connector.translate(wh_deleted) == []
+
+
 # ── Customer translations ────────────────────────────────────────────────
 
 

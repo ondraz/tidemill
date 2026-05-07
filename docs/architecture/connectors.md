@@ -147,6 +147,12 @@ Stripe is the primary connector. It uses the webhook/Kafka ingestion architectur
 | `customer.created` | `customer.created` | Copies `address.country` onto the payload so segmentation by country works out of the box |
 | `customer.updated` | `customer.updated` | |
 | `customer.deleted` | `customer.deleted` | |
+| `product.created` | `product.created` | Catalog sync — populates the `product` table used as a dimension in MRR / Churn cubes |
+| `product.updated` | `product.updated` | |
+| `product.deleted` | `product.deleted` | Marks the row inactive (plans may still reference it) |
+| `price.created` | `plan.created` | Stripe Prices map onto the `plan` table; populates `interval`, `billing_scheme`, `usage_type`, etc. |
+| `price.updated` | `plan.updated` | |
+| `price.deleted` | `plan.deleted` | Marks the row inactive (subscriptions may still reference it) |
 | `customer.subscription.created` | `subscription.created`, optionally `subscription.trial_started` | If `status=trialing`, also emit trial event |
 | `customer.subscription.updated` | Depends on what changed (see below) | Most complex translation |
 | `customer.subscription.deleted` | `subscription.churned` | Forwards `cancellation_details.feedback` as `cancel_reason` |
@@ -225,24 +231,48 @@ On first deployment, the analytics database is empty — no customers, no subscr
 async def backfill(self, since: datetime | None = None) -> AsyncIterator[Event]:
     """Pull historical data from the Stripe API.
 
-    Paginates through all objects and yields internal events in
-    chronological order. The caller publishes them to Kafka; from
-    there the normal consumer pipeline (core state + metrics) processes
-    them exactly like live webhooks.
+    Paginates through all objects and yields internal events. The caller
+    publishes them to Kafka; from there the normal consumer pipeline
+    (core state + metrics) processes them exactly like live webhooks.
 
-    Order: customers → subscriptions → invoices → payments.
-    Within each type, objects are yielded oldest-first.
+    Order across types: products → prices (plans) → customers →
+    subscriptions → invoices → payments.  Catalog objects come first so
+    subscription rows can resolve their plan_id foreign key when the
+    state consumer upserts them.
+
+    Within each type the connector relies on Stripe's ``auto_paging_iter``,
+    which streams pages **newest-first**.  Downstream handlers are
+    idempotent and order-independent for catalog and entity events
+    (``ON CONFLICT DO UPDATE`` upserts), so the iteration order does not
+    affect the final state.  If a feature later requires strict
+    chronological replay, sort each list locally before yielding.
     """
     stripe.api_key = self.config["api_key"]
 
-    # 1. Customers
+    # 1a. Products (catalog — populates the `product` table)
+    for prod in await self._paginate(stripe.Product.list):
+        yield self._make_event("product.created",
+            customer_id="",
+            payload=self._product_payload(prod),
+            occurred_at=datetime.fromtimestamp(prod["created"], tz=UTC))
+
+    # 1b. Prices (catalog — emitted as `plan.*` internally, recurring only)
+    for price in await self._paginate(stripe.Price.list):
+        if not price.get("recurring"):
+            continue  # one-time charges aren't plans
+        yield self._make_event("plan.created",
+            customer_id="",
+            payload=self._price_payload(price),
+            occurred_at=datetime.fromtimestamp(price["created"], tz=UTC))
+
+    # 2. Customers
     for customer in await self._paginate(stripe.Customer.list, created={"gte": since}):
         yield self._make_event("customer.created",
             customer_id=customer["id"],
             payload=self._extract_customer(customer),
             occurred_at=datetime.fromtimestamp(customer["created"], tz=UTC))
 
-    # 2. Subscriptions (includes current state + computed MRR)
+    # 3. Subscriptions (includes current state + computed MRR)
     for sub in await self._paginate(stripe.Subscription.list, created={"gte": since}):
         yield self._make_event("subscription.created",
             customer_id=sub["customer"],
@@ -258,13 +288,13 @@ async def backfill(self, since: datetime | None = None) -> AsyncIterator[Event]:
         elif sub["status"] == "canceled":
             yield self._make_event("subscription.churned", ...)
 
-    # 3. Invoices
+    # 4. Invoices
     for invoice in await self._paginate(stripe.Invoice.list, created={"gte": since}):
         yield self._make_event("invoice.created", ...)
         if invoice["status"] == "paid":
             yield self._make_event("invoice.paid", ...)
 
-    # 4. Payments
+    # 5. Payments
     for pi in await self._paginate(stripe.PaymentIntent.list, created={"gte": since}):
         if pi["status"] == "succeeded":
             yield self._make_event("payment.succeeded", ...)

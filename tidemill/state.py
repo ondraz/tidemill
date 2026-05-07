@@ -54,6 +54,116 @@ async def _log_event(session: AsyncSession, event: Event) -> None:
     )
 
 
+# ── product ──────────────────────────────────────────────────────────────
+
+
+async def _handle_product(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+    match event.type:
+        case "product.created" | "product.updated":
+            await session.execute(
+                text(
+                    "INSERT INTO product"
+                    " (id, source_id, external_id, name, description,"
+                    "  active, metadata_, created_at, updated_at)"
+                    " VALUES (:id, :src, :eid, :name, :description,"
+                    "  :active, :meta, :now, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_product_source DO UPDATE SET"
+                    "  name = COALESCE(EXCLUDED.name, product.name),"
+                    "  description = COALESCE(EXCLUDED.description, product.description),"
+                    "  active = EXCLUDED.active,"
+                    "  metadata_ = COALESCE(EXCLUDED.metadata_, product.metadata_),"
+                    "  updated_at = EXCLUDED.updated_at"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "name": p.get("name"),
+                    "description": p.get("description"),
+                    "active": p.get("active", True),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "now": event.occurred_at,
+                },
+            )
+        case "product.deleted":
+            # Mark inactive instead of deleting — plans may still reference it.
+            await session.execute(
+                text(
+                    "UPDATE product SET active = FALSE, updated_at = :now"
+                    " WHERE source_id = :src AND external_id = :eid"
+                ),
+                {"src": event.source_id, "eid": p["external_id"], "now": event.occurred_at},
+            )
+
+
+# ── plan (Stripe price) ──────────────────────────────────────────────────
+
+
+async def _handle_plan(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+    match event.type:
+        case "plan.created" | "plan.updated":
+            # The connector filters non-recurring Stripe Prices, so
+            # ``interval`` should always be set.  Skip defensively
+            # rather than coercing to a default that would distort
+            # the ``plan_interval`` analytics dimension.
+            if not p.get("interval"):
+                return
+            await session.execute(
+                text(
+                    "INSERT INTO plan"
+                    " (id, source_id, external_id, product_id, name,"
+                    '  "interval", interval_count, amount_cents, currency,'
+                    "  billing_scheme, usage_type, trial_period_days,"
+                    "  metadata_, active, created_at)"
+                    " VALUES (:id, :src, :eid,"
+                    "  (SELECT id FROM product WHERE source_id = :src"
+                    "     AND external_id = :prod_eid LIMIT 1),"
+                    "  :name, :interval, :ic, :amount, :currency,"
+                    "  :scheme, :usage, :trial, :meta, :active, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_plan_source DO UPDATE SET"
+                    "  product_id = COALESCE(EXCLUDED.product_id, plan.product_id),"
+                    "  name = COALESCE(EXCLUDED.name, plan.name),"
+                    '  "interval" = COALESCE(EXCLUDED."interval", plan."interval"),'
+                    "  interval_count = EXCLUDED.interval_count,"
+                    "  amount_cents = COALESCE(EXCLUDED.amount_cents, plan.amount_cents),"
+                    "  currency = COALESCE(EXCLUDED.currency, plan.currency),"
+                    "  billing_scheme = COALESCE(EXCLUDED.billing_scheme, plan.billing_scheme),"
+                    "  usage_type = COALESCE(EXCLUDED.usage_type, plan.usage_type),"
+                    "  trial_period_days = COALESCE("
+                    "    EXCLUDED.trial_period_days, plan.trial_period_days),"
+                    "  metadata_ = COALESCE(EXCLUDED.metadata_, plan.metadata_),"
+                    "  active = EXCLUDED.active"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "prod_eid": p.get("product_external_id", ""),
+                    "name": p.get("name"),
+                    "interval": p["interval"],
+                    "ic": p.get("interval_count") or 1,
+                    "amount": p.get("amount_cents"),
+                    "currency": normalize_currency(p.get("currency")),
+                    "scheme": p.get("billing_scheme"),
+                    "usage": p.get("usage_type"),
+                    "trial": p.get("trial_period_days"),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "active": p.get("active", True),
+                    "now": event.occurred_at,
+                },
+            )
+        case "plan.deleted":
+            # Mark inactive — subscriptions may still reference this plan.
+            await session.execute(
+                text(
+                    "UPDATE plan SET active = FALSE WHERE source_id = :src AND external_id = :eid"
+                ),
+                {"src": event.source_id, "eid": p["external_id"]},
+            )
+
+
 # ── customer ─────────────────────────────────────────────────────────────
 
 
@@ -510,6 +620,8 @@ async def _handle_payment(session: AsyncSession, event: Event) -> None:
 # ── dispatch table ───────────────────────────────────────────────────────
 
 _HANDLERS: dict[str, Any] = {
+    "product": _handle_product,
+    "plan": _handle_plan,
     "customer": _handle_customer,
     "subscription": _handle_subscription,
     "invoice": _handle_invoice,

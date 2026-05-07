@@ -40,6 +40,25 @@ class Event:
 | `customer.updated` | Customer details changed | `{external_id, changed_fields}` |
 | `customer.deleted` | Customer removed | `{external_id}` |
 
+### Catalog Events
+
+Catalog events (products and plans) are global — they are not tied to a single
+customer. Connectors set ``customer_id`` to the empty string, so all catalog
+events land on the same Kafka partition (volume is low compared to
+subscriptions). They are emitted by webhook (`product.*` / `price.*` from
+Stripe) and by `backfill()` on first sync, and they populate the `product`
+and `plan` core tables that the MRR / Churn cubes use as dimensions
+(plan name, interval, billing scheme, usage type, product name).
+
+| Type | Trigger | Payload |
+|------|---------|---------|
+| `product.created` | New product in catalog | `{external_id, name, description, active, metadata}` |
+| `product.updated` | Product fields changed | `{external_id, name, description, active, metadata}` |
+| `product.deleted` | Product removed | `{external_id}` — handler marks the row inactive (plans may still reference it) |
+| `plan.created` | New price/plan in catalog | `{external_id, product_external_id, name, interval, interval_count, amount_cents, currency, billing_scheme, usage_type, trial_period_days, active, metadata}` |
+| `plan.updated` | Price/plan fields changed | Same as `plan.created` |
+| `plan.deleted` | Price/plan archived | `{external_id}` — handler marks the row inactive (subscriptions may still reference it) |
+
 ### Subscription Events
 
 The most important events for metric computation.
@@ -98,7 +117,7 @@ For high-volume deployments, events can be split into separate topics per entity
 
 | Group | Consumes | Purpose |
 |-------|----------|---------|
-| `tidemill.state` | All events | Updates core PostgreSQL tables (current state) |
+| `tidemill.state` | All events | Updates core PostgreSQL tables (current state — including `product` / `plan` catalog) |
 | `tidemill.metric.mrr` | `subscription.*`, `invoice.paid` | MRR metric (subscription lifecycle + trailing-3m usage component) |
 | `tidemill.metric.churn` | `subscription.*`, `customer.*` | Churn metric |
 | `tidemill.metric.retention` | `subscription.*`, `customer.*` | Retention metric |
