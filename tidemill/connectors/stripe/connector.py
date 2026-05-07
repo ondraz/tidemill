@@ -679,9 +679,13 @@ class StripeConnector(WebhookConnector):
             for cust in stripe.Customer.list(**params).auto_paging_iter():
                 address: dict[str, Any] = cust.address.to_dict() if cust.address else {}
                 metadata_obj = cust.metadata
-                metadata: dict[str, Any] = (
-                    metadata_obj.to_dict() if metadata_obj is not None else {}
-                )
+                metadata: dict[str, Any]
+                if metadata_obj is None:
+                    metadata = {}
+                elif isinstance(metadata_obj, dict):
+                    metadata = dict(metadata_obj)
+                else:
+                    metadata = metadata_obj.to_dict()
                 yield self._make_event(
                     "customer.created",
                     customer_id=str(cust.id),
