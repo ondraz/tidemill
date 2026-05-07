@@ -141,6 +141,22 @@ from tidemill.api.routers.dashboards import router as dashboards_router  # noqa:
 # Public routers
 app.include_router(health.router)
 app.include_router(auth_router)
+
+# Connector-specific routers MUST be registered before the generic
+# ``/webhooks/{source_type}`` fallback below — otherwise the path
+# parameter would catch concrete paths like ``/webhooks/stripe`` first
+# and we'd lose connector-specific signature verification. They are
+# also intentionally mounted *without* ``_auth_deps``: webhooks come
+# from third parties that can't carry a Tidemill bearer, and OAuth
+# callback redirects land without session context. Per-route auth
+# (signature verification, OAuth state) is the connector's job.
+from tidemill.connectors.registry import get_registry  # noqa: E402
+
+for _conn_cls in get_registry().values():
+    _router = _conn_cls.router()
+    if _router is not None:
+        app.include_router(_router, prefix="/api")
+
 app.include_router(webhooks.router, prefix="/api")
 
 # Protected routers
@@ -167,21 +183,6 @@ for _metric in discover_metrics():
             tags=[f"metric:{_metric.name}"],
             dependencies=_auth_deps,
         )
-
-# Discover and mount per-connector routers.
-# These are intentionally mounted *without* `_auth_deps`: connector
-# routes are either webhooks (called by Stripe / Intuit, which can't
-# present a Tidemill bearer token) or OAuth callbacks (the redirect
-# from Intuit lands without any session context). Each connector's
-# router is responsible for its own per-route authentication —
-# e.g. webhook signature verification — rather than relying on the
-# global auth dependency.
-from tidemill.connectors.registry import get_registry  # noqa: E402
-
-for _conn_cls in get_registry().values():
-    _router = _conn_cls.router()
-    if _router is not None:
-        app.include_router(_router, prefix="/api")
 
 
 @app.get("/", include_in_schema=False)

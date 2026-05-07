@@ -1122,6 +1122,15 @@ async def _handle_bill_payment(session: AsyncSession, event: Event) -> None:
                     "now": event.occurred_at,
                 },
             )
+        case "bill_payment.deleted":
+            # QBO emits Delete/Void for a payment when the user reverses it.
+            # Drop the row so trailing-A/P analytics don't keep counting an
+            # already-reversed payment. (No FK risk — bill_payment is a
+            # leaf table; nothing references it.)
+            await session.execute(
+                text("DELETE FROM bill_payment WHERE source_id = :src AND external_id = :eid"),
+                {"src": event.source_id, "eid": p["external_id"]},
+            )
 
 
 # ── dispatch table ───────────────────────────────────────────────────────

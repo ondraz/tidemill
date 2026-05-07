@@ -354,6 +354,20 @@ class QuickBooksConnector(ExpenseConnector):
                         },
                     )
                 ]
+            case "BillPayment":
+                # Voiding a BillPayment in QBO unlinks it from the bill;
+                # the row should disappear so trailing-A/P analytics don't
+                # double-count an already-reversed payment. The state
+                # handler issues a DELETE on receipt.
+                return [
+                    self._make_event(
+                        "bill_payment.deleted",
+                        customer_id=realm_id,
+                        external_id=qbo_id,
+                        occurred_at=datetime.now(UTC),
+                        payload={"external_id": qbo_id},
+                    )
+                ]
         return []
 
     def _translate_vendor(
