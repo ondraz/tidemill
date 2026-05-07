@@ -107,7 +107,7 @@ erDiagram
         int interval_count "1 = monthly, 3 = quarterly, etc."
         bigint amount_cents
         text currency
-        text billing_scheme "per_unit | tiered"
+        text pricing_model "flat | tiered | volume | usage_based (canonical)"
         text usage_type "licensed | metered"
         int trial_period_days
         jsonb metadata

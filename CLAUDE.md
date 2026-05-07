@@ -78,6 +78,7 @@ Each metric (MRR, Churn, Retention) is a self-contained class (`Metric` subclass
 Start with `docs/architecture/overview.md` for the full system design. Key files:
 
 - **Connectors:** `connectors.md` — `WebhookConnector` (Stripe) vs `DatabaseConnector` (Lago/Kill Bill) patterns
+- **Canonical vocabulary:** `canonical-vocabulary.md` — provider-agnostic enums every connector must map onto (interval, pricing model, status, line item type, payment status)
 - **Metrics:** `metrics.md` — `Metric` base class, built-in metrics (MRR, Churn, Retention, LTV, Trials) with SQL
 - **Query Algebra:** `cubes.md` — Cubes, `QueryFragment` composition, declarative SQL building
 - **Segmentation:** `segments.md` — customer attribute EAV, segment DSL, compare-mode compilation

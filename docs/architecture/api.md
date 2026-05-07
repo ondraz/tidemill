@@ -199,7 +199,7 @@ All metric endpoints share a common `QuerySpec` contract built from three query-
 | `filter` | `string[]` | Repeated `key=value` filters, e.g. `filter=customer_country=US&filter=currency=USD` |
 | `granularity` | `string` | Time bucketing for series queries — `day`, `week`, `month`, `quarter`, or `year` |
 
-Invalid dimension/filter names raise a `400` with the list of available options for that metric's cube. Dimensions that reach through the `plan` / `product` joins (`plan_interval`, `plan_name`, `product_name`, `billing_scheme`, `collection_method`) are declared on the MRR cubes but will return no rows until the Stripe connector ingests `plan.*` / `product.*` events (see `docs/architecture/connectors.md`).
+Invalid dimension/filter names raise a `400` with the list of available options for that metric's cube. Dimensions that reach through the `plan` / `product` joins (`plan_interval`, `plan_name`, `product_name`, `pricing_model`, `collection_method`) are declared on the MRR cubes but will return no rows until the Stripe connector ingests `plan.*` / `product.*` events (see `docs/architecture/connectors.md`).
 
 When `start` and `end` are provided, the endpoint returns a time series. Otherwise it returns a single value.
 

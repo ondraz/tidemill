@@ -82,7 +82,10 @@ plan = Table(
     Column("interval_count", Integer, nullable=False, default=1),
     Column("amount_cents", BigInteger),
     Column("currency", Text),
-    Column("billing_scheme", Text),
+    # Canonical pricing model — connectors normalize provider-specific values
+    # (Stripe ``billing_scheme``, Lago ``charge_model``, Kill Bill billing
+    # mode) into one of: ``flat`` | ``tiered`` | ``volume`` | ``usage_based``.
+    Column("pricing_model", Text),
     Column("usage_type", Text),
     Column("trial_period_days", Integer),
     Column("metadata_", Text),
