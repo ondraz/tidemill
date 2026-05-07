@@ -218,8 +218,9 @@ else
     errors=$((errors + 1))
 fi
 
-# Expense data only checked when the QBO seed actually ran.
-if [[ -n "${QUICKBOOKS_SANDBOX_REFRESH_TOKEN:-}" ]]; then
+# Expense data only checked when the QBO seed actually ran (matches the
+# gating condition in the seed step above — both env vars are required).
+if [[ -n "${QUICKBOOKS_SANDBOX_REFRESH_TOKEN:-}" && -n "${QUICKBOOKS_SANDBOX_REALM_ID:-}" ]]; then
     expenses=$(curl -sf "$API/api/metrics/expenses?start=2025-09-01&end=2026-03-31" || echo "CURL_FAILED")
     expenses_total=$(echo "$expenses" | python3 -c "import json,sys; print(json.load(sys.stdin).get('total_base_cents', 0))" 2>/dev/null || echo "0")
     if [[ "$expenses_total" != "0" && "$expenses_total" != "null" ]]; then

@@ -12,6 +12,7 @@ excluded.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, time
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import text
@@ -23,6 +24,27 @@ if TYPE_CHECKING:
     from datetime import date
 
     from fastapi import APIRouter
+
+
+def _start_of_day(d: date | None) -> datetime | None:
+    """Coerce a bare ``date`` to its UTC midnight timestamp.
+
+    The ``txn_date`` column is ``TIMESTAMPTZ``; comparing it directly to a
+    ``date`` in PostgreSQL silently casts the date to midnight, which would
+    drop any rows occurring later that same day. We coerce the bound to a
+    full timestamp here so the documented inclusive ``[start, end]`` window
+    holds regardless of time-of-day. (Matches ``cubes.py`` for cube metrics.)
+    """
+    if d is None:
+        return None
+    return datetime.combine(d, time.min, tzinfo=UTC)
+
+
+def _end_of_day(d: date | None) -> datetime | None:
+    """Coerce a bare ``date`` to its UTC end-of-day (``23:59:59.999999``)."""
+    if d is None:
+        return None
+    return datetime.combine(d, time.max, tzinfo=UTC)
 
 
 # Lines from both bills and direct expenses, with the parent header's
@@ -93,10 +115,10 @@ class ExpensesMetric(Metric):
         where = []
         if start is not None:
             where.append("el.txn_date >= :start")
-            params["start"] = start
+            params["start"] = _start_of_day(start)
         if end is not None:
             where.append("el.txn_date <= :end")
-            params["end"] = end
+            params["end"] = _end_of_day(end)
         clause = (" WHERE " + " AND ".join(where)) if where else ""
         sql = (
             _EXPENSE_LINES_CTE
@@ -122,7 +144,10 @@ class ExpensesMetric(Metric):
             " GROUP BY 1"
             " ORDER BY amount_base_cents DESC"
         )
-        result = await self.db.execute(text(sql), {"start": start, "end": end})
+        result = await self.db.execute(
+            text(sql),
+            {"start": _start_of_day(start), "end": _end_of_day(end)},
+        )
         return [
             {
                 "account_type": r["account_type"],
@@ -144,7 +169,10 @@ class ExpensesMetric(Metric):
             " GROUP BY 1, 2"
             " ORDER BY amount_base_cents DESC"
         )
-        result = await self.db.execute(text(sql), {"start": start, "end": end})
+        result = await self.db.execute(
+            text(sql),
+            {"start": _start_of_day(start), "end": _end_of_day(end)},
+        )
         return [
             {
                 "vendor_id": r["vendor_id"],
@@ -170,7 +198,10 @@ class ExpensesMetric(Metric):
             " GROUP BY 1, 2"
             " ORDER BY 1, 2"
         )
-        result = await self.db.execute(text(sql), {"start": start, "end": end})
+        result = await self.db.execute(
+            text(sql),
+            {"start": _start_of_day(start), "end": _end_of_day(end)},
+        )
         return [
             {
                 "period": r["period"].isoformat() if r["period"] else None,

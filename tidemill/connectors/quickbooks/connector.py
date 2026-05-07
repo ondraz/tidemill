@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 from typing import TYPE_CHECKING, Any
 
 from tidemill.connectors.base import ExpenseConnector
@@ -77,10 +78,15 @@ def _date_to_iso(date_str: str | None) -> str | None:
 
 
 def _to_cents(amount: Any) -> int:
-    """QBO uses decimal Amount fields. Convert to integer cents."""
+    """Convert a QBO decimal Amount to integer cents.
+
+    Uses ``Decimal(str(amount))`` rather than ``float(amount)`` so we don't
+    inherit binary-float rounding artifacts (e.g., 0.1 + 0.2 ≠ 0.3) on edge
+    cases that would otherwise produce off-by-one cent totals.
+    """
     if amount is None:
         return 0
-    return int(round(float(amount) * 100))
+    return int(Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) * 100)
 
 
 @register("quickbooks")
@@ -184,11 +190,21 @@ class QuickBooksConnector(ExpenseConnector):
         """
         from tidemill.connectors.quickbooks.client import QuickBooksClient
 
+        # Filter to the realm this connector is configured for. Intuit
+        # registers each Developer-app webhook against a specific realm,
+        # but defensive filtering protects us if a payload ever batches
+        # notifications for other realms — those would otherwise be
+        # ingested under this connector's source_id with the wrong tokens.
+        configured_realm = str(self.config.get("realm_id") or "")
+
         events: list[Event] = []
         client = QuickBooksClient(self.config, source_id=self.source_id)
         try:
             for notif in payload.get("eventNotifications", []):
-                realm_id = notif.get("realmId", "")
+                realm_id = str(notif.get("realmId", ""))
+                if configured_realm and realm_id and realm_id != configured_realm:
+                    # Wrong realm — skip silently rather than misroute.
+                    continue
                 entities = (notif.get("dataChangeEvent") or {}).get("entities", [])
                 for entity in entities:
                     name = entity.get("name", "")
@@ -224,7 +240,9 @@ class QuickBooksConnector(ExpenseConnector):
             raise ValueError("quickbooks connector config missing 'realm_id'")
         since_clause = ""
         if since is not None:
-            since_clause = f" WHERE Metadata.LastUpdatedTime > '{since.isoformat()}'"
+            # QBO Query Language is case-sensitive; the field name is
+            # ``MetaData.LastUpdatedTime`` (matches the entity JSON key).
+            since_clause = f" WHERE MetaData.LastUpdatedTime > '{since.isoformat()}'"
 
         client = QuickBooksClient(self.config, source_id=self.source_id)
         try:
@@ -406,13 +424,22 @@ class QuickBooksConnector(ExpenseConnector):
             )
         )
         if status == "paid":
+            # QBO doesn't expose a payment-effective time on the Bill itself;
+            # use MetaData.LastUpdatedTime (the time QBO last touched the
+            # row, typically the payment) and fall back to TxnDate. Avoids
+            # writing wall-clock now() into bill.paid_at on backfill / replay,
+            # which would scramble historical paid-on-time analytics.
+            paid_iso = (obj.get("MetaData") or {}).get("LastUpdatedTime") or _date_to_iso(
+                obj.get("TxnDate")
+            )
+            paid_dt = _ts(paid_iso) or datetime.now(UTC)
             events.append(
                 self._make_event(
                     "bill.paid",
                     customer_id=realm_id,
                     external_id=ext_id,
-                    occurred_at=datetime.now(UTC),
-                    payload={"external_id": ext_id, "paid_at": datetime.now(UTC).isoformat()},
+                    occurred_at=paid_dt,
+                    payload={"external_id": ext_id, "paid_at": paid_dt.isoformat()},
                 )
             )
         return events

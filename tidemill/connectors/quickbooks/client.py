@@ -70,6 +70,11 @@ class QuickBooksClient:
                 expiry = datetime.fromisoformat(expires_at)
             except ValueError:
                 expiry = datetime.now(UTC) - timedelta(seconds=1)
+            # Manually-provisioned configs may store a naive ISO timestamp;
+            # treat naive values as UTC so the comparison below doesn't
+            # raise TypeError and crash every QBO API call.
+            if expiry.tzinfo is None:
+                expiry = expiry.replace(tzinfo=UTC)
             if expiry > datetime.now(UTC) + timedelta(seconds=60):
                 return str(access)
         return await self._refresh()

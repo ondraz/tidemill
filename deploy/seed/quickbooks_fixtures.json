@@ -1,5 +1,5 @@
 {
-    "_comment": "Static fixtures used by quickbooks_seed.py. Names match the SEED_PREFIX convention so cleanup can find them. Edit freely — every entity is namespaced under 'SEED-' so re-runs are idempotent.",
+    "_comment": "Static fixtures used by quickbooks_seed.py. Names are namespaced under the 'SEED-' prefix so quickbooks_seed.py --cleanup can find and void them. Re-running the seed without --cleanup will create additional copies — clean up first if you want a fresh sandbox. Edit freely.",
     "vendors": [
         {"name": "Hetzner",          "email": "billing@hetzner.com",       "country": "DE", "currency": "EUR"},
         {"name": "AWS",              "email": "aws-receipts@amazon.com",   "country": "US", "currency": "USD"},

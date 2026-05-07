@@ -98,7 +98,7 @@ These are emitted by `ExpenseConnector` subclasses (today: QuickBooks Online; fu
 | `bill.updated` | Bill modified | Same shape as `bill.created` |
 | `bill.paid` | Bill marked paid | `{external_id, paid_at}` |
 | `bill.voided` | Bill voided | `{external_id, voided_at}` |
-| `expense.created` | Direct purchase recorded | `{external_id, vendor_external_id, payment_type, doc_number, currency, total_cents, txn_date, memo, lines: [...]}` |
+| `expense.created` | Direct purchase recorded | `{external_id, vendor_external_id, payment_type, doc_number, currency, subtotal_cents, tax_cents, total_cents, txn_date, memo, lines: [{account_external_id, description, amount_cents, currency, dimensions}]}` |
 | `expense.updated` | Direct purchase edited | Same shape as `expense.created` |
 | `expense.voided` | Direct purchase voided | `{external_id, voided_at}` |
 | `bill_payment.created` | Payment applied to a bill | `{external_id, bill_external_id, paid_at, amount_cents, currency}` |

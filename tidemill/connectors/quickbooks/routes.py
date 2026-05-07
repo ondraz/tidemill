@@ -33,7 +33,12 @@ async def receive_quickbooks_webhook(
     from tidemill.connectors import get_connector
 
     body = await request.body()
-    payload = await request.json()
+    try:
+        payload = json.loads(body) if body else {}
+    except json.JSONDecodeError as exc:
+        return Response(status_code=400, content=f"Invalid JSON body: {exc}")
+    if not isinstance(payload, dict):
+        return Response(status_code=400, content="JSON body must be an object")
 
     source_id = request.query_params.get("source_id") or _source_id_from_payload(payload)
     if not source_id:
