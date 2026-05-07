@@ -7,8 +7,9 @@ Entity events upsert the corresponding core tables.
 from __future__ import annotations
 
 import json
+import os
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import text
@@ -27,24 +28,67 @@ if TYPE_CHECKING:
 _DEFAULT_CURRENCY = "USD"
 
 
+def _base_currency() -> str:
+    """Read the configured base currency (matches ``tidemill.fx_sync``)."""
+    return os.environ.get("BASE_CURRENCY", "USD").upper()
+
+
+class _FxCache:
+    """Per-handler cache so a bill with N lines doesn't trigger N FX lookups.
+
+    ``to_base_cents`` runs a SELECT against ``fx_rate`` for every non-base
+    amount; bills/expenses commonly batch many lines on the same
+    ``(currency, txn_date)`` pair, which made the line-level conversion
+    pattern an N+1. The cache is held only for the lifetime of one handler
+    invocation, so it doesn't fight concurrent FX-rate updates.
+    """
+
+    def __init__(self) -> None:
+        # Stores already-converted-to-base values keyed by the integer
+        # amount, currency, and date — equivalent to caching the rate
+        # without exposing the raw multiplier.
+        self._results: dict[tuple[int, str, str], int] = {}
+
+    async def to_base(
+        self,
+        session: AsyncSession,
+        amount_cents: int | None,
+        currency: str | None,
+        on_date: datetime | None,
+        base_currency: str,
+    ) -> int:
+        if not amount_cents:
+            return 0
+        cur = normalize_currency(currency) or _DEFAULT_CURRENCY
+        when = on_date.date() if on_date is not None else datetime.now(UTC).date()
+        key = (amount_cents, cur, when.isoformat())
+        if key in self._results:
+            return self._results[key]
+        result = await to_base_cents(amount_cents, cur, when, session, base_currency=base_currency)
+        self._results[key] = result
+        return result
+
+
 async def _to_base(
     session: AsyncSession,
     amount_cents: int | None,
     currency: str | None,
     on_date: datetime | None,
+    fx_cache: _FxCache | None = None,
 ) -> int:
-    """Convert *amount_cents* to base currency for the FX-rate row at *on_date*.
+    """Convert *amount_cents* to base currency using the FX rate at *on_date*.
 
     Same-currency values pass through; missing FX rates raise
     ``FxRateMissingError``, which the consumer worker dead-letters. ``None``
     inputs are coerced to 0 / BASE / today so a partial payload doesn't crash
-    the handler.
+    the handler. ``fx_cache`` (when provided) deduplicates lookups across
+    a bill/expense with many same-day, same-currency lines.
     """
     if not amount_cents:
         return 0
-    cur = normalize_currency(currency) or _DEFAULT_CURRENCY
-    when = on_date.date() if on_date is not None else datetime.now().date()
-    return await to_base_cents(amount_cents, cur, when, session)
+    base = _base_currency()
+    cache = fx_cache or _FxCache()
+    return await cache.to_base(session, amount_cents, currency, on_date, base)
 
 
 async def handle_state_event(session: AsyncSession, event: Event) -> None:
@@ -541,6 +585,7 @@ async def _upsert_lines(
     parent_id: str,
     lines: list[dict[str, Any]],
     on_date: datetime | None = None,
+    fx_cache: _FxCache | None = None,
 ) -> None:
     """Replace all line rows for a bill/expense with the freshly translated set.
 
@@ -548,16 +593,19 @@ async def _upsert_lines(
     accounting systems regenerate line IDs on every update. Replacing in
     bulk (DELETE + INSERT) is simpler and idempotent than diff-based upserts.
     Always called (even with an empty list) so stale lines are removed when
-    a header is updated to a smaller line set.
+    a header is updated to a smaller line set. ``fx_cache`` (when provided)
+    avoids an N+1 ``fx_rate`` lookup pattern across same-day same-currency
+    line items.
     """
     await session.execute(
         text(f"DELETE FROM {table} WHERE {parent_col} = :pid"),
         {"pid": parent_id},
     )
+    cache = fx_cache or _FxCache()
     for line in lines:
         amount = line.get("amount_cents", 0)
         currency = line.get("currency")
-        amount_base = await _to_base(session, amount, currency, on_date)
+        amount_base = await _to_base(session, amount, currency, on_date, fx_cache=cache)
         await session.execute(
             text(
                 f"INSERT INTO {table}"
@@ -605,9 +653,12 @@ async def _handle_bill(session: AsyncSession, event: Event) -> None:
             sub = p.get("subtotal_cents", 0)
             tax = p.get("tax_cents", 0)
             total = p.get("total_cents", 0)
-            sub_base = await _to_base(session, sub, currency, txn_date)
-            tax_base = await _to_base(session, tax, currency, txn_date)
-            total_base = await _to_base(session, total, currency, txn_date)
+            # Single FX cache for header + every line item — deduplicates
+            # the (currency, txn_date) lookup across all conversions.
+            fx_cache = _FxCache()
+            sub_base = await _to_base(session, sub, currency, txn_date, fx_cache=fx_cache)
+            tax_base = await _to_base(session, tax, currency, txn_date, fx_cache=fx_cache)
+            total_base = await _to_base(session, total, currency, txn_date, fx_cache=fx_cache)
 
             await session.execute(
                 text(
@@ -674,6 +725,7 @@ async def _handle_bill(session: AsyncSession, event: Event) -> None:
                     parent_id=bill_id,
                     lines=lines,
                     on_date=txn_date,
+                    fx_cache=fx_cache,
                 )
         case "bill.paid":
             await session.execute(
@@ -719,9 +771,10 @@ async def _handle_expense(session: AsyncSession, event: Event) -> None:
             sub = p.get("subtotal_cents", 0)
             tax = p.get("tax_cents", 0)
             total = p.get("total_cents", 0)
-            sub_base = await _to_base(session, sub, currency, txn_date)
-            tax_base = await _to_base(session, tax, currency, txn_date)
-            total_base = await _to_base(session, total, currency, txn_date)
+            fx_cache = _FxCache()
+            sub_base = await _to_base(session, sub, currency, txn_date, fx_cache=fx_cache)
+            tax_base = await _to_base(session, tax, currency, txn_date, fx_cache=fx_cache)
+            total_base = await _to_base(session, total, currency, txn_date, fx_cache=fx_cache)
 
             await session.execute(
                 text(
@@ -786,6 +839,7 @@ async def _handle_expense(session: AsyncSession, event: Event) -> None:
                     parent_id=expense_id,
                     lines=lines,
                     on_date=txn_date,
+                    fx_cache=fx_cache,
                 )
         case "expense.voided":
             await session.execute(

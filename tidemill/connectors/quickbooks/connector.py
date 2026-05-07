@@ -218,7 +218,7 @@ class QuickBooksConnector(ExpenseConnector):
                     obj = await client.get_entity(realm_id, name, qbo_id)
                     if obj is None:
                         continue
-                    events.extend(self._translate_entity(name, obj, realm_id))
+                    events.extend(self._translate_entity(name, obj, realm_id, operation=op))
         finally:
             await client.close()
         return events
@@ -261,17 +261,30 @@ class QuickBooksConnector(ExpenseConnector):
 
     # ── per-entity translation ───────────────────────────────────────────
 
-    def _translate_entity(self, name: str, obj: dict[str, Any], realm_id: str) -> list[Event]:
+    def _translate_entity(
+        self,
+        name: str,
+        obj: dict[str, Any],
+        realm_id: str,
+        *,
+        operation: str | None = None,
+    ) -> list[Event]:
+        # QBO operation is "Create" / "Update" / "Merge" / "Void" / "Delete".
+        # Backfill calls without an operation; treat that as "Create" so
+        # historical entities materialize cleanly.
+        is_update = (operation or "").lower() == "update"
         match name:
             case "Vendor":
-                return [self._translate_vendor(obj, realm_id)]
+                return [self._translate_vendor(obj, realm_id, is_update=is_update)]
             case "Account":
-                return [self._translate_account(obj, realm_id)]
+                return [self._translate_account(obj, realm_id, is_update=is_update)]
             case "Bill":
-                return self._translate_bill(obj, realm_id)
+                return self._translate_bill(obj, realm_id, is_update=is_update)
             case "Purchase":
-                return [self._translate_purchase(obj, realm_id)]
+                return [self._translate_purchase(obj, realm_id, is_update=is_update)]
             case "BillPayment":
+                # bill_payment has no canonical "updated" event — payments
+                # are immutable in the canonical model. Always emit .created.
                 return [self._translate_bill_payment(obj, realm_id)]
         return []
 
@@ -315,15 +328,21 @@ class QuickBooksConnector(ExpenseConnector):
                 ]
         return []
 
-    def _translate_vendor(self, obj: dict[str, Any], realm_id: str) -> Event:
+    def _translate_vendor(
+        self, obj: dict[str, Any], realm_id: str, *, is_update: bool = False
+    ) -> Event:
         ext_id = obj["Id"]
         primary_email = (obj.get("PrimaryEmailAddr") or {}).get("Address")
         bill_addr = obj.get("BillAddr") or {}
+        meta = obj.get("MetaData") or {}
+        # Updates carry through with LastUpdatedTime so consumer logs
+        # reflect the actual edit moment, not the original create time.
+        occurred_iso = meta.get("LastUpdatedTime") if is_update else meta.get("CreateTime")
         return self._make_event(
-            "vendor.created",
+            "vendor.updated" if is_update else "vendor.created",
             customer_id=realm_id,
             external_id=ext_id,
-            occurred_at=_ts(obj.get("MetaData", {}).get("CreateTime")) or datetime.now(UTC),
+            occurred_at=_ts(occurred_iso) or datetime.now(UTC),
             payload={
                 "external_id": ext_id,
                 "name": obj.get("DisplayName") or obj.get("CompanyName"),
@@ -335,15 +354,19 @@ class QuickBooksConnector(ExpenseConnector):
             },
         )
 
-    def _translate_account(self, obj: dict[str, Any], realm_id: str) -> Event:
+    def _translate_account(
+        self, obj: dict[str, Any], realm_id: str, *, is_update: bool = False
+    ) -> Event:
         ext_id = obj["Id"]
         native_type = obj.get("AccountType", "")
         parent_ref = obj.get("ParentRef") or {}
+        meta = obj.get("MetaData") or {}
+        occurred_iso = meta.get("LastUpdatedTime") if is_update else meta.get("CreateTime")
         return self._make_event(
-            "account.created",
+            "account.updated" if is_update else "account.created",
             customer_id=realm_id,
             external_id=ext_id,
-            occurred_at=_ts(obj.get("MetaData", {}).get("CreateTime")) or datetime.now(UTC),
+            occurred_at=_ts(occurred_iso) or datetime.now(UTC),
             payload={
                 "external_id": ext_id,
                 "name": obj.get("Name"),
@@ -361,16 +384,25 @@ class QuickBooksConnector(ExpenseConnector):
 
     @staticmethod
     def _compute_bill_status(obj: dict[str, Any]) -> str:
-        """Derive status from Balance / TotalAmt. QBO has no explicit field."""
-        total = float(obj.get("TotalAmt", 0) or 0)
-        balance = float(obj.get("Balance", total) or 0)
-        if balance <= 0:
+        """Derive status from Balance / TotalAmt. QBO has no explicit field.
+
+        Compares integer cents (via :func:`_to_cents`) so the status doesn't
+        flip between ``paid`` / ``partial`` / ``open`` because of float
+        rounding on amounts with >2 decimal places or very large values.
+        """
+        total_cents = _to_cents(obj.get("TotalAmt", 0))
+        balance_cents = _to_cents(
+            obj.get("Balance") if obj.get("Balance") is not None else obj.get("TotalAmt", 0)
+        )
+        if balance_cents <= 0:
             return "paid"
-        if balance < total:
+        if balance_cents < total_cents:
             return "partial"
         return "open"
 
-    def _translate_bill(self, obj: dict[str, Any], realm_id: str) -> list[Event]:
+    def _translate_bill(
+        self, obj: dict[str, Any], realm_id: str, *, is_update: bool = False
+    ) -> list[Event]:
         ext_id = obj["Id"]
         currency = (obj.get("CurrencyRef") or {}).get("value")
         total_cents = _to_cents(obj.get("TotalAmt"))
@@ -399,13 +431,20 @@ class QuickBooksConnector(ExpenseConnector):
                 }
             )
 
+        meta = obj.get("MetaData") or {}
+        # For updates, prefer LastUpdatedTime so the event log captures the
+        # actual edit moment instead of the original transaction date.
+        occurred_iso = (
+            meta.get("LastUpdatedTime") if is_update else _date_to_iso(obj.get("TxnDate"))
+        )
+
         events: list[Event] = []
         events.append(
             self._make_event(
-                "bill.created",
+                "bill.updated" if is_update else "bill.created",
                 customer_id=realm_id,
                 external_id=ext_id,
-                occurred_at=_ts(_date_to_iso(obj.get("TxnDate"))) or datetime.now(UTC),
+                occurred_at=_ts(occurred_iso) or datetime.now(UTC),
                 payload={
                     "external_id": ext_id,
                     "vendor_external_id": (obj.get("VendorRef") or {}).get("value"),
@@ -444,7 +483,9 @@ class QuickBooksConnector(ExpenseConnector):
             )
         return events
 
-    def _translate_purchase(self, obj: dict[str, Any], realm_id: str) -> Event:
+    def _translate_purchase(
+        self, obj: dict[str, Any], realm_id: str, *, is_update: bool = False
+    ) -> Event:
         """QBO ``Purchase`` = direct cash/credit/check expense (no bill)."""
         ext_id = obj["Id"]
         currency = (obj.get("CurrencyRef") or {}).get("value")
@@ -476,11 +517,16 @@ class QuickBooksConnector(ExpenseConnector):
         entity_ref = obj.get("EntityRef") or {}
         vendor_ext_id = entity_ref.get("value") if entity_ref.get("type") == "Vendor" else None
 
+        meta = obj.get("MetaData") or {}
+        occurred_iso = (
+            meta.get("LastUpdatedTime") if is_update else _date_to_iso(obj.get("TxnDate"))
+        )
+
         return self._make_event(
-            "expense.created",
+            "expense.updated" if is_update else "expense.created",
             customer_id=realm_id,
             external_id=ext_id,
-            occurred_at=_ts(_date_to_iso(obj.get("TxnDate"))) or datetime.now(UTC),
+            occurred_at=_ts(occurred_iso) or datetime.now(UTC),
             payload={
                 "external_id": ext_id,
                 "vendor_external_id": vendor_ext_id,
