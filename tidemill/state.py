@@ -17,15 +17,11 @@ from sqlalchemy import text
 from tidemill.fx import FxRateMissingError, normalize_currency, to_base_cents
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from tidemill.events import Event
-
-
-# Default currency to assume when an expense-side payload arrives without
-# one — only happens for connector bugs / partial payloads. USD matches
-# the default BASE_CURRENCY.
-_DEFAULT_CURRENCY = "USD"
 
 
 def _base_currency() -> str:
@@ -34,20 +30,21 @@ def _base_currency() -> str:
 
 
 class _FxCache:
-    """Per-handler cache so a bill with N lines doesn't trigger N FX lookups.
+    """Per-handler cache that stores ``fx_rate`` rows by (currency, date, base).
 
     ``to_base_cents`` runs a SELECT against ``fx_rate`` for every non-base
-    amount; bills/expenses commonly batch many lines on the same
-    ``(currency, txn_date)`` pair, which made the line-level conversion
-    pattern an N+1. The cache is held only for the lifetime of one handler
-    invocation, so it doesn't fight concurrent FX-rate updates.
+    conversion; bills/expenses commonly batch many lines on the same
+    ``(currency, txn_date)`` pair. We cache the *rate* itself (keyed
+    independent of amount) so a multi-line bill triggers exactly one SELECT
+    per ``(currency, date)`` pair, then applies the rate locally to each
+    line. Missing rates raise ``FxRateMissingError`` (consumer dead-letters).
     """
 
     def __init__(self) -> None:
-        # Stores already-converted-to-base values keyed by the integer
-        # amount, currency, and date — equivalent to caching the rate
-        # without exposing the raw multiplier.
-        self._results: dict[tuple[int, str, str], int] = {}
+        # Cached rate per (from_currency, ISO date, base_currency).
+        # ``None`` means same-currency passthrough; an absent key means
+        # we haven't looked it up yet.
+        self._rates: dict[tuple[str, str, str], Decimal | None] = {}
 
     async def to_base(
         self,
@@ -59,14 +56,28 @@ class _FxCache:
     ) -> int:
         if not amount_cents:
             return 0
-        cur = normalize_currency(currency) or _DEFAULT_CURRENCY
+        # Missing currency falls back to the configured base — assuming USD
+        # would be wrong on a deployment with a non-USD BASE_CURRENCY.
+        cur = (normalize_currency(currency) or base_currency).upper()
+        base = base_currency.upper()
         when = on_date.date() if on_date is not None else datetime.now(UTC).date()
-        key = (amount_cents, cur, when.isoformat())
-        if key in self._results:
-            return self._results[key]
-        result = await to_base_cents(amount_cents, cur, when, session, base_currency=base_currency)
-        self._results[key] = result
-        return result
+        if cur == base:
+            return amount_cents
+        key = (cur, when.isoformat(), base)
+        if key not in self._rates:
+            result = await session.execute(
+                text(
+                    "SELECT rate FROM fx_rate"
+                    " WHERE from_currency = :c AND to_currency = :base"
+                    " AND date <= :d ORDER BY date DESC LIMIT 1"
+                ),
+                {"c": cur, "base": base, "d": when},
+            )
+            self._rates[key] = result.scalar()
+        rate = self._rates[key]
+        if rate is None:
+            raise FxRateMissingError(cur, base, when)
+        return int(amount_cents * rate)
 
 
 async def _to_base(

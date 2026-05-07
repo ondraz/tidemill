@@ -161,10 +161,11 @@ async def oauth_callback(
         return Response(status_code=400, content="Token exchange failed")
     body = resp.json()
     expires_at = datetime.now(UTC) + timedelta(seconds=int(body.get("expires_in", 3600)))
-    config = {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "webhook_verifier_token": os.environ.get("QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN", ""),
+    # Persist only the per-realm dynamic fields (tokens, realm/environment).
+    # client_id / client_secret / webhook_verifier_token are always read
+    # from env via app.state.connector_configs, so we never write them to
+    # connector_source.config — keeping the durable secret surface env-only.
+    persisted = {
         "environment": environment,
         "realm_id": realmId,
         "access_token": body["access_token"],
@@ -184,7 +185,7 @@ async def oauth_callback(
             {
                 "id": source_id,
                 "name": f"QuickBooks ({realmId})",
-                "cfg": json.dumps(config),
+                "cfg": json.dumps(persisted),
                 "now": datetime.now(UTC),
             },
         )
@@ -201,19 +202,35 @@ async def oauth_callback(
 # ── helpers ──────────────────────────────────────────────────────────────
 
 
+# Fields that flow from the DB into the runtime config. Everything else
+# (client_id / client_secret / webhook_verifier_token / redirect_uri) is
+# treated as env-only — those values must come from ``connector_configs``
+# at request time so a stale or empty DB row can't disable signature
+# verification or shadow rotated secrets.
+_DB_OWNED_FIELDS: set[str] = {
+    "access_token",
+    "refresh_token",
+    "access_token_expires_at",
+    "realm_id",
+    "environment",
+}
+
+
 async def _load_source_config(app: Any, source_id: str) -> dict[str, Any]:
     """Read ``connector_source.config`` JSON for *source_id*.
 
-    Falls back to the static env-var config in ``app.state.connector_configs``
-    so a developer who hasn't yet completed the OAuth dance can still see
-    the route handlers respond.
+    Env config (``app.state.connector_configs['quickbooks']``) is the
+    baseline; the DB row only contributes the per-realm dynamic fields
+    (tokens, realm/environment). This way an empty or stale DB value can
+    never override an env-provided secret.
     """
     from sqlalchemy import text
 
     factory = getattr(app.state, "session_factory", None)
     fallback: dict[str, Any] = getattr(app.state, "connector_configs", {}).get("quickbooks", {})
+    merged: dict[str, Any] = dict(fallback)
     if factory is None:
-        return fallback
+        return merged
     async with factory() as session:
         result = await session.execute(
             text("SELECT config FROM connector_source WHERE id = :id"),
@@ -226,5 +243,7 @@ async def _load_source_config(app: Any, source_id: str) -> dict[str, Any]:
         except json.JSONDecodeError:
             logger.warning("connector_source.config not JSON for %s", source_id)
         else:
-            return {**fallback, **parsed}
-    return fallback
+            for key in _DB_OWNED_FIELDS:
+                if key in parsed and parsed[key]:
+                    merged[key] = parsed[key]
+    return merged

@@ -29,6 +29,7 @@ from tidemill.events import Event, make_event_id
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
+    from datetime import date
 
     from fastapi import APIRouter
 
@@ -145,6 +146,29 @@ class QuickBooksConnector(ExpenseConnector):
                 dims["department_name"] = dept_ref["name"]
         return dims
 
+    # ── billing-side stubs (ExpenseConnector ABC) ─────────────────────────
+    # QBO is an *expense* source — vendors, bills, purchases, payments. The
+    # billing-side abstract methods on ``ExpenseConnector`` exist for
+    # connectors that also expose subscription/MRR data via direct query
+    # (none today). For QBO we return empty results: callers querying
+    # subscription-side data through this connector get nothing rather
+    # than an exception, matching the "no subscription data here" intent.
+
+    async def get_active_subscriptions(self, at: date | None = None) -> list[dict[str, Any]]:
+        return []
+
+    async def get_mrr_cents(self, at: date | None = None) -> int:
+        return 0
+
+    async def get_subscription_changes(self, start: date, end: date) -> list[dict[str, Any]]:
+        return []
+
+    async def get_customers(self, at: date | None = None) -> list[dict[str, Any]]:
+        return []
+
+    async def get_invoices(self, start: date, end: date) -> list[dict[str, Any]]:
+        return []
+
     # ── translate / verify_signature ─────────────────────────────────────
 
     def translate(self, webhook_payload: dict[str, Any]) -> list[Event]:
@@ -209,10 +233,14 @@ class QuickBooksConnector(ExpenseConnector):
                 for entity in entities:
                     name = entity.get("name", "")
                     qbo_id = entity.get("id", "")
-                    op = entity.get("operation", "")
-                    if op == "Delete":
-                        # QBO deletes are rare for expense entities; emit a
-                        # voided event so downstream can react.
+                    op = entity.get("operation", "") or ""
+                    op_lower = op.lower()
+                    # QBO emits "Delete" for entities that have been removed,
+                    # and "Void" for transactional entities (Bill / Purchase /
+                    # BillPayment) that were voided in QBO. Both should drop
+                    # the row from analytics — handle them identically and
+                    # match case-insensitively for safety.
+                    if op_lower in ("delete", "void"):
                         events.extend(self._build_delete_events(name, qbo_id, realm_id))
                         continue
                     obj = await client.get_entity(realm_id, name, qbo_id)

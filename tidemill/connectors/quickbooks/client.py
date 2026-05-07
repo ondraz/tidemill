@@ -107,12 +107,25 @@ class QuickBooksClient:
         await self._persist_tokens()
         return access_token
 
-    async def _persist_tokens(self) -> None:
-        """Write refreshed token state back to ``connector_source.config``.
+    # Per-realm dynamic config — these are the only fields the client
+    # writes back to ``connector_source.config``. Long-lived secrets
+    # (``client_id`` / ``client_secret`` / ``webhook_verifier_token``)
+    # stay env-only so a DB compromise doesn't leak them.
+    _PERSISTED_FIELDS: tuple[str, ...] = (
+        "access_token",
+        "refresh_token",
+        "access_token_expires_at",
+        "realm_id",
+        "environment",
+    )
 
-        We keep this best-effort — if the DB session isn't available (e.g.
-        unit tests, seed scripts that bypass the API), we just log and
-        keep the in-memory config; the next refresh will work the same way.
+    async def _persist_tokens(self) -> None:
+        """Update the per-realm token row in ``connector_source.config``.
+
+        Reads the existing JSON, overlays our refreshed token fields, then
+        writes back. Best-effort — if no app session is available (unit
+        tests, seed scripts), the in-memory config is still updated and
+        the next refresh will succeed the same way.
         """
         try:
             from tidemill.api.app import app as fastapi_app
@@ -122,10 +135,33 @@ class QuickBooksClient:
                 return
             from sqlalchemy import text
 
+            updates = {k: self.config[k] for k in self._PERSISTED_FIELDS if k in self.config}
             async with factory() as session:
+                existing_row = await session.execute(
+                    text("SELECT config FROM connector_source WHERE id = :sid"),
+                    {"sid": self.source_id},
+                )
+                existing_cfg: dict[str, Any] = {}
+                row = existing_row.mappings().first()
+                if row and row["config"]:
+                    try:
+                        existing_cfg = json.loads(row["config"])
+                    except json.JSONDecodeError:
+                        existing_cfg = {}
+                # Defensive: strip env-only secrets if a previous version
+                # accidentally persisted them, so they get cleaned up over
+                # time without a manual migration.
+                for env_only in (
+                    "client_id",
+                    "client_secret",
+                    "webhook_verifier_token",
+                    "redirect_uri",
+                ):
+                    existing_cfg.pop(env_only, None)
+                existing_cfg.update(updates)
                 await session.execute(
                     text("UPDATE connector_source SET config = :cfg WHERE id = :sid"),
-                    {"cfg": json.dumps(self.config), "sid": self.source_id},
+                    {"cfg": json.dumps(existing_cfg), "sid": self.source_id},
                 )
                 await session.commit()
         except Exception:  # pragma: no cover — non-fatal
