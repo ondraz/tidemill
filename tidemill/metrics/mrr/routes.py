@@ -28,6 +28,14 @@ async def get_mrr(
     return await query_metric("mrr", params, spec)
 
 
+@router.get("/metrics/mrr/components")
+async def get_mrr_components(
+    spec: QuerySpec | None = Depends(parse_spec),
+) -> Any:
+    """Current MRR split into ``subscription_mrr`` + ``usage_mrr`` (cents)."""
+    return await query_metric("mrr", {"query_type": "components"}, spec)
+
+
 @router.get("/metrics/mrr/breakdown")
 async def get_mrr_breakdown(
     start: date,

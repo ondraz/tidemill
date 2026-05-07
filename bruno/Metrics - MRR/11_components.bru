@@ -1,0 +1,29 @@
+meta {
+  name: MRR — components (subscription vs usage)
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/metrics/mrr/components
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+docs {
+  Splits current MRR into its two components in cents:
+
+  - `subscription_mrr` — committed licensed-recurring portion (Stripe
+    non-metered subscription items, normalized to monthly).
+  - `usage_mrr` — trailing 3-month average of finalized usage charges
+    (drives the smoothed metered contribution to MRR — see
+    `docs/definitions.md#usage-component-trailing-3-month-average`).
+  - `mrr` — sum of the two; matches `/api/metrics/mrr` headline.
+
+  Useful for sanity-checking how much of headline MRR comes from
+  metered usage vs. licensed subscriptions.
+}

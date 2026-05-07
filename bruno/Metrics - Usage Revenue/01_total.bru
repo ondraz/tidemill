@@ -1,0 +1,28 @@
+meta {
+  name: Usage revenue — total
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/metrics/usage-revenue?start={{start}}&end={{end}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  start: {{start}}
+  end: {{end}}
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+docs {
+  Total finalized usage revenue (cents) for the period — sum of every
+  `kind='usage'` invoice line item bucketed into [start, end] (closed-
+  closed). This is **actuals**, not the smoothed trailing-3m component
+  baked into MRR. Use `/api/metrics/mrr/components` to see the smoothed
+  side-by-side.
+}

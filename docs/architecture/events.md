@@ -79,9 +79,9 @@ The most important events for metric computation.
 
 ### Usage Events
 
-| Type | Trigger | Payload |
-|------|---------|---------|
-| `usage.recorded` | Usage data received | `{customer_external_id, subscription_external_id, metric_code, quantity, properties, timestamp}` |
+Tidemill does **not** emit a dedicated `usage.recorded` event today. For Stripe (the reference connector), metered usage rolls onto invoice line items at billing finalization, so the same `invoice.created` / `invoice.paid` flow that drives LTV also drives the trailing-3m usage component of MRR — see `tidemill/metrics/mrr/usage.py` and the [MRR usage component spec](../definitions.md#usage-component-trailing-3-month-average).
+
+If a future connector exposes raw meter events (Lago has structured `events`), a `usage.recorded` event with payload `{customer_external_id, subscription_external_id, metric_code, quantity, timestamp}` would be the place to add them. Treated as a future hook; not currently produced or consumed.
 
 ## Kafka Topics
 
@@ -99,11 +99,12 @@ For high-volume deployments, events can be split into separate topics per entity
 | Group | Consumes | Purpose |
 |-------|----------|---------|
 | `tidemill.state` | All events | Updates core PostgreSQL tables (current state) |
-| `tidemill.metric.mrr` | `subscription.*` | MRR metric |
+| `tidemill.metric.mrr` | `subscription.*`, `invoice.paid` | MRR metric (subscription lifecycle + trailing-3m usage component) |
 | `tidemill.metric.churn` | `subscription.*`, `customer.*` | Churn metric |
 | `tidemill.metric.retention` | `subscription.*`, `customer.*` | Retention metric |
 | `tidemill.metric.ltv` | `subscription.*`, `invoice.*`, `payment.*` | LTV metric |
 | `tidemill.metric.trials` | `subscription.trial_*`, `subscription.activated` | Trials metric |
+| `tidemill.metric.usage_revenue` | (no events) | Reads `metric_mrr_usage_component` populated by MRR's `invoice.paid` handler — no own event consumption |
 
 Each metric runs in its own consumer group, so it maintains its own offset. This means:
 

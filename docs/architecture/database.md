@@ -186,7 +186,8 @@ erDiagram
         uuid id PK
         uuid invoice_id FK
         uuid subscription_id FK
-        text type "subscription | usage | addon | proration | tax | credit | adjustment"
+        text type "subscription | invoiceitem (Stripe-level type)"
+        text kind "subscription | usage | discount | other (Tidemill classification)"
         text description
         bigint amount_cents
         bigint amount_base_cents
@@ -226,11 +227,12 @@ Each metric creates its own tables, prefixed with `metric_`. Monetary columns in
 
 | Metric | Tables | Purpose |
 |--------|--------|---------|
-| MRR | `metric_mrr_snapshot`, `metric_mrr_movement` | Current MRR per subscription, MRR change log |
+| MRR | `metric_mrr_snapshot`, `metric_mrr_movement`, `metric_mrr_usage_component` | Current MRR per subscription (split into subscription + usage components), MRR change log, per-(subscription, month) usage bucket feeding the trailing-3m component |
 | Churn | `metric_churn_customer_state`, `metric_churn_event` | Customer activity tracking, churn events |
 | Retention | `metric_retention_cohort`, `metric_retention_activity` | Cohort membership, monthly activity |
 | LTV | `metric_ltv_customer_revenue` | Cumulative revenue per customer |
 | Trials | `metric_trial`, `metric_trial_event` | Per-trial outcome (cohort queries); append-only lifecycle log |
+| Usage Revenue | (none — reads `metric_mrr_usage_component`) | Sibling metric over the canonical usage store; raw monthly actuals |
 
 ## Segments & Attributes
 

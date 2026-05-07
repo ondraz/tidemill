@@ -81,6 +81,34 @@ class TidemillClient:
             self.get("/api/metrics/mrr/waterfall", start=start, end=end, interval=interval),
         )
 
+    def mrr_components(self) -> dict[str, int]:
+        """Current MRR split into ``subscription_mrr`` + ``usage_mrr`` (cents)."""
+        return self.get("/api/metrics/mrr/components")
+
+    # ── Usage revenue ────────────────────────────────────────────────
+
+    def usage_revenue(self, start: str, end: str) -> int:
+        """Total finalized usage revenue (cents) for the period."""
+        return self.get("/api/metrics/usage-revenue", start=start, end=end)
+
+    def usage_revenue_series(
+        self,
+        start: str,
+        end: str,
+        interval: str = "month",
+    ) -> list[dict[str, Any]]:
+        """Usage revenue per period (cents)."""
+        return self.get(
+            "/api/metrics/usage-revenue/series",
+            start=start,
+            end=end,
+            interval=interval,
+        )
+
+    def usage_revenue_by_customer(self, start: str, end: str) -> list[dict[str, Any]]:
+        """Per-customer usage revenue for the period (cents)."""
+        return self.get("/api/metrics/usage-revenue/by-customer", start=start, end=end)
+
     # ── Churn ────────────────────────────────────────────────────────
 
     def churn(

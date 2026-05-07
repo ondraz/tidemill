@@ -93,6 +93,13 @@ class MRRSnapshotCube(Cube):
     class Measures:
         mrr = Sum("s.mrr_base_cents", label="mrr")
         mrr_original = Sum("s.mrr_cents", label="mrr_original")
+        # Component breakdown (subscription_mrr + usage_mrr = mrr).
+        subscription_mrr = Sum("s.subscription_mrr_base_cents", label="subscription_mrr")
+        subscription_mrr_original = Sum(
+            "s.subscription_mrr_cents", label="subscription_mrr_original"
+        )
+        usage_mrr = Sum("s.usage_mrr_base_cents", label="usage_mrr")
+        usage_mrr_original = Sum("s.usage_mrr_cents", label="usage_mrr_original")
         count = CountDistinct("s.subscription_id", label="subscription_count")
         customer_count = CountDistinct("s.customer_id", label="customer_count")
 
@@ -169,6 +176,10 @@ class MRRMovementCube(Cube):
         customer_id = Dim("m.customer_id")
         currency = Dim("m.currency")
         movement_type = Dim("m.movement_type")
+        # Origin: 'subscription' (licensed plan changes/lifecycle) or
+        # 'usage' (trailing-3m component shifts). Lets the waterfall
+        # split expansion/contraction by source.
+        movement_source = Dim("m.source", label="movement_source")
         # Plan
         plan_id = Dim("sub.plan_id", join="subscription")
         plan_name = Dim("p.name", join="plan", label="plan_name")

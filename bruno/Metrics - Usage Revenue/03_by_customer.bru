@@ -1,0 +1,27 @@
+meta {
+  name: Usage revenue — per customer
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/metrics/usage-revenue/by-customer?start={{start}}&end={{end}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  start: {{start}}
+  end: {{end}}
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+docs {
+  Per-customer usage revenue (cents) for the period — drops a
+  `customer_id` dimension on the same query. Combine with `dimensions=`
+  / `filter=` to slice further (e.g.
+  `dimensions=customer_country&filter=plan_name=Professional`).
+}
