@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
+from pandas.io.formats.style import Styler
 
 from tidemill.reports._style import COLORS, apply_period_xaxis, format_period, format_periods
 
 if TYPE_CHECKING:
-    from pandas.io.formats.style import Styler
-
     from tidemill.reports.client import TidemillClient
 
 
@@ -61,7 +60,7 @@ def cohort(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     pivot.insert(0, "cohort_size", size_by_cohort.reindex(all_months).fillna(0).astype(int))
     pivot.index = [format_period(p.to_timestamp(), "month") for p in pivot.index]
     pivot.index.name = "cohort_month"
-    return cast("pd.DataFrame", pivot)
+    return cast(pd.DataFrame, pivot)
 
 
 def nrr_grr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:

@@ -23,7 +23,7 @@ def _to_month(value: Any) -> date:
     """Normalize a value to the first day of its month."""
     if isinstance(value, datetime):
         value = value.date()
-    return cast("date", value.replace(day=1))
+    return cast(date, value.replace(day=1))
 
 
 def _filter_only(spec: QuerySpec | None) -> QuerySpec | None:

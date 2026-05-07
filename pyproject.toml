@@ -90,6 +90,7 @@ ignore = [
     "D105",  # missing docstring in magic method
     "D106",  # missing docstring in public nested class
     "D107",  # missing docstring in __init__
+    "TC006", # quote types in cast() — we prefer bare type expressions
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -103,6 +104,8 @@ convention = "google"
 "tidemill/cli/*.py" = ["B008"]
 "tidemill/segments/routes.py" = ["B008", "TC001"]
 "tidemill/attributes/routes.py" = ["B008", "TC001"]
+# Styler is imported at runtime so cast(Styler, ...) works
+"tidemill/reports/*.py" = ["TC002"]
 
 [tool.mypy]
 python_version = "3.13"

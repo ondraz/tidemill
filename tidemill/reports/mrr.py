@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
+from pandas.io.formats.style import Styler
 
 from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
 
 if TYPE_CHECKING:
-    from pandas.io.formats.style import Styler
-
     from tidemill.reports.client import TidemillClient
 
 
@@ -77,14 +76,18 @@ def style_usage_breakdown(data: dict[str, Any]) -> pd.io.formats.style.Styler:
             }
         ]
     )
-    return df.style.format(
-        {
-            "Subscription MRR": "${:,.2f}",
-            "Usage MRR": "${:,.2f}",
-            "Total MRR": "${:,.2f}",
-            "Usage share": "{:.1%}",
-        }
-    ).hide(axis="index")
+    styler = cast(
+        Styler,
+        df.style.format(
+            {
+                "Subscription MRR": "${:,.2f}",
+                "Usage MRR": "${:,.2f}",
+                "Total MRR": "${:,.2f}",
+                "Usage share": "{:.1%}",
+            }
+        ),
+    )
+    return styler.hide(axis="index")
 
 
 def breakdown(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
@@ -174,7 +177,7 @@ def movement_log(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     type_order = {"new": 0, "expansion": 1, "reactivation": 2, "contraction": 3, "churn": 4}
     df["_order"] = df["movement_type"].map(type_order).fillna(5)
     df = df.sort_values(["date", "_order", "customer_name"]).reset_index(drop=True)
-    return cast("pd.DataFrame", df[cols])
+    return cast(pd.DataFrame, df[cols])
 
 
 def style_movement_log(df: pd.DataFrame) -> Styler:
@@ -348,7 +351,7 @@ def style_snapshot(data: dict[str, Any]) -> Styler:
         data: Dict from :func:`snapshot`.
     """
     df = pd.DataFrame([{"MRR": data["mrr"], "ARR": data["arr"]}])
-    styler = cast("Styler", df.style.format("${:,.2f}"))
+    styler = cast(Styler, df.style.format("${:,.2f}"))
     return styler.hide(axis="index")
 
 
@@ -372,7 +375,7 @@ def style_waterfall(df: pd.DataFrame) -> Styler:
     display = df.copy()
     display["period"] = format_periods(display["period"], interval)
     styled = display.set_index("period")[display_cols]
-    return cast("Styler", styled.style.format("${:,.2f}"))
+    return cast(Styler, styled.style.format("${:,.2f}"))
 
 
 # ── charts ───────────────────────────────────────────────────────────

@@ -176,7 +176,7 @@ async def get_summary(
     losses = abs(amounts.get("churn", 0)) + abs(amounts.get("contraction", 0))
     result["quick_ratio"] = gains / losses if losses > 0 else None
 
-    return cast("dict[str, Any]", coerce_numerics(result))
+    return cast(dict[str, Any], coerce_numerics(result))
 
 
 @router.get("/metrics/{metric}/fields")

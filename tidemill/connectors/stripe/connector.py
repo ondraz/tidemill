@@ -854,13 +854,14 @@ class StripeConnector(WebhookConnector):
             line_items: list[dict[str, Any]] = []
             try:
                 for li in inv.lines.auto_paging_iter():
-                    line_items.append(_serialize_line(dict(li)))
+                    line_items.append(_serialize_line(li.to_dict()))
             except Exception:  # noqa: BLE001
                 # Older Stripe API versions or unusual invoice states may not
                 # expose paginated lines; fall back to whatever the first page
                 # surfaced so we at least get partial usage classification.
                 line_items = [
-                    _serialize_line(dict(li)) for li in (getattr(inv.lines, "data", None) or [])
+                    _serialize_line(li.to_dict())
+                    for li in (getattr(inv.lines, "data", None) or [])
                 ]
             yield self._make_event(
                 "invoice.created",
