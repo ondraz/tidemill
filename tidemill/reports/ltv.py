@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
+from pandas.io.formats.style import Styler
 
 from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
 
@@ -102,7 +103,7 @@ def cohort(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
 # ── style ────────────────────────────────────────────────────────────
 
 
-def style_overview(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+def style_overview(data: dict[str, Any]) -> Styler:
     """Format LTV overview as a styled table.
 
     Args:
@@ -117,16 +118,20 @@ def style_overview(data: dict[str, Any]) -> pd.io.formats.style.Styler:
             }
         ]
     )
-    return df.style.format(
-        {
-            "ARPU": lambda v: f"${v:,.2f}" if v is not None else "N/A",
-            "Simple LTV": lambda v: f"${v:,.2f}" if v is not None else "N/A",
-            "Implied Monthly Churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
-        }
-    ).hide(axis="index")
+    styler = cast(
+        "Styler",
+        df.style.format(
+            {
+                "ARPU": lambda v: f"${v:,.2f}" if v is not None else "N/A",
+                "Simple LTV": lambda v: f"${v:,.2f}" if v is not None else "N/A",
+                "Implied Monthly Churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
+            }
+        ),
+    )
+    return styler.hide(axis="index")
 
 
-def style_arpu_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_arpu_timeline(df: pd.DataFrame) -> Styler:
     """Format monthly ARPU timeline as a styled table.
 
     Args:
@@ -136,20 +141,20 @@ def style_arpu_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     interval = df.attrs.get("interval", "month")
     display = df.copy()
     display["month"] = format_periods(display["month"], interval)
-    return (
-        display[cols]
-        .style.format(
+    styler = cast(
+        "Styler",
+        display[cols].style.format(
             {
                 "active_customers": lambda v: f"{v:,}" if v is not None else "N/A",
                 "mrr_dollars": lambda v: f"${v:,.2f}" if v is not None else "N/A",
                 "arpu_dollars": lambda v: f"${v:,.2f}" if v is not None else "N/A",
             }
-        )
-        .hide(axis="index")
+        ),
     )
+    return styler.hide(axis="index")
 
 
-def style_cohort(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_cohort(df: pd.DataFrame) -> Styler:
     """Format cohort LTV as a styled table.
 
     Args:
@@ -160,16 +165,16 @@ def style_cohort(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     cols = ["cohort_month", "customer_count", "avg_dollars", "total_dollars"]
     display = df.copy()
     display["cohort_month"] = format_periods(display["cohort_month"], "month")
-    return (
-        display[cols]
-        .style.format(
+    styler = cast(
+        "Styler",
+        display[cols].style.format(
             {
                 "avg_dollars": "${:,.2f}",
                 "total_dollars": "${:,.2f}",
             }
-        )
-        .hide(axis="index")
+        ),
     )
+    return styler.hide(axis="index")
 
 
 # ── charts ───────────────────────────────────────────────────────────

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
+from pandas.io.formats.style import Styler
 
 from tidemill.reports._style import COLORS, apply_period_xaxis, format_period, format_periods
 
@@ -59,7 +60,7 @@ def cohort(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     pivot.insert(0, "cohort_size", size_by_cohort.reindex(all_months).fillna(0).astype(int))
     pivot.index = [format_period(p.to_timestamp(), "month") for p in pivot.index]
     pivot.index.name = "cohort_month"
-    return pivot
+    return cast(pd.DataFrame, pivot)
 
 
 def nrr_grr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
@@ -97,7 +98,7 @@ def nrr_grr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
 # ── style ────────────────────────────────────────────────────────────
 
 
-def style_cohort(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_cohort(df: pd.DataFrame) -> Styler:
     """Format cohort retention as a styled heatmap-like table.
 
     Args:
@@ -107,19 +108,19 @@ def style_cohort(df: pd.DataFrame) -> pd.io.formats.style.Styler:
         return df.style
     pct_cols = [c for c in df.columns if c.startswith("M")]
     fmt_pct = lambda v: f"{v:.0%}" if pd.notna(v) else ""  # noqa: E731
-    return (
-        df.style.format({c: fmt_pct for c in pct_cols})
-        .format({"cohort_size": "{:,.0f}"})
-        .background_gradient(
-            subset=pct_cols,
-            cmap="Greens",
-            vmin=0,
-            vmax=1,
-        )
+    styler = cast(
+        "Styler",
+        df.style.format({c: fmt_pct for c in pct_cols}).format({"cohort_size": "{:,.0f}"}),
+    )
+    return styler.background_gradient(
+        subset=pct_cols,
+        cmap="Greens",
+        vmin=0,
+        vmax=1,
     )
 
 
-def style_nrr_grr(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_nrr_grr(df: pd.DataFrame) -> Styler:
     """Format NRR/GRR as a styled table with percentage formatting.
 
     Args:
@@ -129,7 +130,9 @@ def style_nrr_grr(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     interval = df.attrs.get("interval", "month")
     display = df.copy()
     display["month"] = format_periods(display["month"], interval)
-    return display.set_index("month").style.format({"nrr": fmt_pct, "grr": fmt_pct})
+    return cast(
+        "Styler", display.set_index("month").style.format({"nrr": fmt_pct, "grr": fmt_pct})
+    )
 
 
 # ── charts ───────────────────────────────────────────────────────────

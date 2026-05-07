@@ -8,9 +8,12 @@ at install time when the user opts in.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tidemill.config import OtelConfig
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +171,7 @@ def _attach_param_listener(sync_engine: Any) -> None:
         span.set_attribute("db.statement.parameters", repr(parameters))
 
 
-def instrument_fastapi(app: object) -> None:
+def instrument_fastapi(app: FastAPI) -> None:
     """Install FastAPI request/response span instrumentation.
 
     Called after ``FastAPI()`` is constructed. No-op when OTEL is disabled.
@@ -179,7 +182,7 @@ def instrument_fastapi(app: object) -> None:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     except ImportError:
         return
-    FastAPIInstrumentor.instrument_app(app)  # type: ignore[arg-type]
+    FastAPIInstrumentor.instrument_app(app)
 
 
 def _package_version() -> str:

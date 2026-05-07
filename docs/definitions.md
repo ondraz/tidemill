@@ -51,12 +51,39 @@ $$
 where $S_{\text{active}}$ is the set of subscriptions with $\text{mrr} > 0$ at the query date, and:
 
 $$
-\text{mrr}(s) = \begin{cases}
+\text{mrr}(s) = \text{subscription\_mrr}(s) + \text{usage\_mrr}(s)
+$$
+
+#### Subscription component (committed recurring)
+
+For licensed (non-metered) subscription items:
+
+$$
+\text{subscription\_mrr}(s) = \begin{cases}
 \text{amount} & \text{if interval = month} \\
 \text{amount} / 12 & \text{if interval = year} \\
 \text{amount} \times 52 / 12 & \text{if interval = week}
 \end{cases}
 $$
+
+Computed at subscription-event time from `price.unit_amount × quantity`. Metered items are excluded here — they feed the usage component below.
+
+#### Usage component (trailing 3-month average)
+
+For metered/usage-based billing, Tidemill uses the **trailing 3-month average** of finalized usage charges as the customer's recurring usage MRR — the same convention as ChartMogul / Baremetrics. This smooths month-to-month spikes and produces a stable expansion / contraction signal for bursty workloads.
+
+$$
+\text{usage\_mrr}(s) = \frac{1}{n} \sum_{m \in M_n(s)} \text{usage}(s, m)
+$$
+
+where:
+
+- $M_n(s)$ = the most recent $n \le 3$ finalized billing months for subscription $s$
+- $\text{usage}(s, m)$ = sum of `kind='usage'` invoice line items for $s$ in month $m$
+- For subscriptions with fewer than 3 months of history, the mean is taken over what's present (so a month-1 customer with $40 of usage carries $40 of usage MRR rather than $13.33).
+- A change in $\text{usage\_mrr}(s)$ between recomputes (one per `invoice.paid`) emits a `source='usage'` MRR movement of type `expansion` or `contraction`.
+
+**Why trailing-3 specifically:** smoothing gives investors and operators a number that doesn't whipsaw with seasonal or one-off usage events. The 1.5-month lag is the cost; the alternative ("most recent invoice's usage") is more current but too volatile to drive churn-rate or LTV calculations.
 
 ### ARR — Annual Recurring Revenue
 
@@ -130,6 +157,20 @@ where:
 - $C_{\text{start}}$ = customers active at period start (`first_active_at` $< \text{start}$)
 
 As with logo churn, only revenue lost from customers active at period start is counted.
+
+**Pure-usage customers and churn:** A customer on a metered-only plan has zero subscription MRR but accumulates a positive usage MRR component once their first invoice with usage charges is paid. Such customers are "active" for churn purposes the same way licensed customers are — and on subscription cancellation, the churn-MRR amount is `subscription_mrr + usage_mrr` at the moment of cancellation, so revenue churn captures both components.
+
+---
+
+## Usage Revenue
+
+Distinct from MRR's usage component (which is smoothed). Usage Revenue reports the **raw monthly usage charges** as actuals, summed from `kind='usage'` invoice line items.
+
+$$
+\text{Usage Revenue}(P) = \sum_{m \in P} \sum_{s} \text{usage}(s, m)
+$$
+
+Useful for auditing meter events, reconciling against Stripe invoices, and reporting "what customers actually paid for usage this month" without the trailing-3 smoothing. Backed by the same `metric_mrr_usage_component` table — no duplicate ingestion.
 
 ---
 

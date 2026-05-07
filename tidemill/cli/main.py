@@ -214,17 +214,35 @@ def backfill(
 
 @app.command("fx-sync")
 def fx_sync(
-    days: int = typer.Option(
-        730,
-        help="Lookback window when the table is empty. Ignored if rates exist.",
+    since: str | None = typer.Option(
+        None,
+        "--since",
+        help=(
+            "ISO date (YYYY-MM-DD) to backfill from, overriding the per-currency"
+            " last-synced cursor. Use this when seeding historical data — the"
+            " default incremental sync only pulls forward from the most recent"
+            " stored rate, which leaves older gaps unfilled."
+        ),
     ),
 ) -> None:
     """Fetch missing FX rates from Frankfurter and upsert into ``fx_rate``.
 
-    Safe to run repeatedly: only days after the last stored rate are
-    fetched. Use this from seed scripts before generating historical data
-    and from cron for redundancy with the API/worker background loop.
+    Default behavior is incremental: only days after each currency's most
+    recent stored rate are fetched. Pass ``--since`` to force a backfill
+    from a specific date (idempotent — existing rows are upserted).
+
+    Use this from seed scripts before generating historical data and from
+    cron for redundancy with the API/worker background loop.
     """
+    from datetime import date as _date
+
+    parsed_since: _date | None = None
+    if since:
+        try:
+            parsed_since = _date.fromisoformat(since)
+        except ValueError as exc:
+            typer.echo(f"Invalid --since (expected YYYY-MM-DD): {exc}", err=True)
+            raise typer.Exit(2) from exc
 
     async def _run() -> None:
         from tidemill.database import make_engine, make_session_factory
@@ -233,7 +251,7 @@ def fx_sync(
         engine = make_engine(_db_url())
         factory = make_session_factory(engine)
         async with factory() as session:
-            n = await sync_fx_rates(session)
+            n = await sync_fx_rates(session, since=parsed_since)
             await session.commit()
         await engine.dispose()
         typer.echo(f"fx-sync: wrote {n} rows")

@@ -96,7 +96,13 @@ echo ""
 echo "=== Pre-seeding fx_rate (Frankfurter / ECB) ==="
 # Populate fx_rate before generating subscriptions so historical billing
 # dates can resolve EUR/GBP → USD without dead-lettering metric events.
-$COMPOSE exec -T api tidemill fx-sync \
+# Force a 2-year backfill: the API's periodic sync may have already pulled
+# the last few days, in which case an unqualified fx-sync would skip older
+# gaps and the seed's 18-month history would dead-letter.
+# `tidemill` lives in the container's uv-managed venv (not on PATH), so
+# go through `uv run`.
+FX_SINCE=$(python3 -c 'from datetime import date,timedelta; print((date.today()-timedelta(days=730)).isoformat())')
+$COMPOSE exec -T api uv run tidemill fx-sync --since "$FX_SINCE" \
     || echo "WARN: fx-sync failed (continuing — events may dead-letter on FxRateMissingError)"
 
 echo ""

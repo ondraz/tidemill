@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
+from pandas.io.formats.style import Styler
 
 from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
 
@@ -60,7 +61,7 @@ def timeline(
 # ── style ────────────────────────────────────────────────────────────
 
 
-def style_funnel(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+def style_funnel(data: dict[str, Any]) -> Styler:
     """Format funnel dict as a styled table.
 
     Args:
@@ -76,14 +77,18 @@ def style_funnel(data: dict[str, Any]) -> pd.io.formats.style.Styler:
             }
         ]
     )
-    return df.style.format(
-        {
-            "Conversion Rate": lambda v: f"{v:.1%}" if v is not None else "N/A",
-        }
-    ).hide(axis="index")
+    styler = cast(
+        "Styler",
+        df.style.format(
+            {
+                "Conversion Rate": lambda v: f"{v:.1%}" if v is not None else "N/A",
+            }
+        ),
+    )
+    return styler.hide(axis="index")
 
 
-def style_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_timeline(df: pd.DataFrame) -> Styler:
     """Format monthly trial metrics as a styled table.
 
     Args:
@@ -95,7 +100,10 @@ def style_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     interval = df.attrs.get("interval", "month")
     display = df.copy()
     display["period"] = format_periods(display["period"], interval)
-    return display.set_index("period").style.format({"conversion_rate": fmt_rate})
+    return cast(
+        "Styler",
+        display.set_index("period").style.format({"conversion_rate": fmt_rate}),
+    )
 
 
 # ── charts ───────────────────────────────────────────────────────────

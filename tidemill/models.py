@@ -170,6 +170,9 @@ invoice_line_item = Table(
     Column("invoice_id", Text, ForeignKey("invoice.id"), nullable=False),
     Column("subscription_id", Text, ForeignKey("subscription.id")),
     Column("type", Text),
+    # Tidemill classification: 'subscription' | 'usage' | 'discount' | 'other'.
+    # Drives the trailing-3m usage component of MRR (see metrics/mrr/usage.py).
+    Column("kind", Text),
     Column("description", Text),
     Column("amount_cents", BigInteger),
     Column("amount_base_cents", BigInteger),
@@ -177,6 +180,8 @@ invoice_line_item = Table(
     Column("quantity", Numeric),
     Column("period_start", DateTime(timezone=True)),
     Column("period_end", DateTime(timezone=True)),
+    Index("ix_invoice_line_item_invoice", "invoice_id"),
+    Index("ix_invoice_line_item_kind_subscription", "kind", "subscription_id"),
 )
 
 payment = Table(

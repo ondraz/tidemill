@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import text
 
-from tidemill.fx import normalize_currency
+from tidemill.fx import FxRateMissingError, normalize_currency, to_base_cents
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -328,6 +328,8 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
                     "  status = 'canceled',"
                     "  cancel_at_period_end = TRUE,"
                     "  canceled_at = :canceled,"
+                    "  cancel_reason = COALESCE(:reason, cancel_reason),"
+                    "  cancel_feedback = COALESCE(:feedback, cancel_feedback),"
                     "  updated_at = :now"
                     " WHERE source_id = :src AND external_id = :eid"
                 ),
@@ -335,6 +337,8 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
                     "src": event.source_id,
                     "eid": ext_id,
                     "canceled": _parse_ts(p.get("canceled_at")) or event.occurred_at,
+                    "reason": p.get("cancel_reason"),
+                    "feedback": p.get("cancel_feedback"),
                     "now": event.occurred_at,
                 },
             )
@@ -345,10 +349,18 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
                     "  status = 'canceled',"
                     "  mrr_cents = 0,"
                     "  ended_at = :now,"
+                    "  cancel_reason = COALESCE(:reason, cancel_reason),"
+                    "  cancel_feedback = COALESCE(:feedback, cancel_feedback),"
                     "  updated_at = :now"
                     " WHERE source_id = :src AND external_id = :eid"
                 ),
-                {"src": event.source_id, "eid": ext_id, "now": event.occurred_at},
+                {
+                    "src": event.source_id,
+                    "eid": ext_id,
+                    "reason": p.get("cancel_reason"),
+                    "feedback": p.get("cancel_feedback"),
+                    "now": event.occurred_at,
+                },
             )
         case "subscription.paused":
             await session.execute(
@@ -366,12 +378,86 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
 # ── invoice ──────────────────────────────────────────────────────────────
 
 
+async def _replace_invoice_line_items(
+    session: AsyncSession,
+    *,
+    event: Event,
+    invoice_id: str,
+    invoice_currency: str | None,
+    line_items: list[dict[str, Any]],
+) -> None:
+    """Re-materialize the line items for an invoice.
+
+    Stripe is the source of truth for line composition, so we delete and
+    re-insert rather than diff. Line counts are small (typically <10), so
+    the rewrite is cheap and keeps the schema free of surrogate external IDs.
+
+    Args:
+        session: Active database session for the consumer transaction.
+        event: The invoice event being handled (used for occurred_at and source).
+        invoice_id: Internal UUID of the invoice row.
+        invoice_currency: Fallback currency when a line omits its own (taxes
+            sometimes do). Already normalized to uppercase.
+        line_items: Connector-serialized lines, each carrying ``kind``,
+            ``amount_cents``, ``currency``, etc.
+
+    Raises:
+        FxRateMissingError: When a non-base-currency line lacks an FX rate.
+            The worker dead-letters the event so it can be replayed once
+            the rate is backfilled.
+    """
+    await session.execute(
+        text("DELETE FROM invoice_line_item WHERE invoice_id = :iid"),
+        {"iid": invoice_id},
+    )
+    if not line_items:
+        return
+
+    on_date = event.occurred_at.date()
+    for li in line_items:
+        amount_cents = li.get("amount_cents", 0) or 0
+        line_currency = normalize_currency(li.get("currency")) or invoice_currency or "USD"
+        try:
+            amount_base_cents = await to_base_cents(amount_cents, line_currency, on_date, session)
+        except FxRateMissingError:
+            # Re-raise so the worker DLQs — same contract as MRR/LTV handlers.
+            raise
+        await session.execute(
+            text(
+                "INSERT INTO invoice_line_item"
+                " (id, invoice_id, subscription_id, type, kind, description,"
+                "  amount_cents, amount_base_cents, currency, quantity,"
+                "  period_start, period_end)"
+                " VALUES (:id, :iid,"
+                "  (SELECT id FROM subscription WHERE source_id = :src"
+                "     AND external_id = :sub_eid LIMIT 1),"
+                "  :type, :kind, :desc, :amt, :amtb, :cur, :qty, :ps, :pe)"
+            ),
+            {
+                "id": str(uuid.uuid4()),
+                "iid": invoice_id,
+                "src": event.source_id,
+                "sub_eid": li.get("subscription_external_id") or "",
+                "type": li.get("type"),
+                "kind": li.get("kind"),
+                "desc": li.get("description"),
+                "amt": amount_cents,
+                "amtb": amount_base_cents,
+                "cur": line_currency,
+                "qty": li.get("quantity"),
+                "ps": _parse_ts(li.get("period_start")),
+                "pe": _parse_ts(li.get("period_end")),
+            },
+        )
+
+
 async def _handle_invoice(session: AsyncSession, event: Event) -> None:
     p = event.payload
 
     match event.type:
         case "invoice.created":
-            await session.execute(
+            invoice_currency = normalize_currency(p.get("currency"))
+            result = await session.execute(
                 text(
                     "INSERT INTO invoice"
                     " (id, source_id, external_id, customer_id, subscription_id,"
@@ -387,6 +473,7 @@ async def _handle_invoice(session: AsyncSession, event: Event) -> None:
                     " ON CONFLICT ON CONSTRAINT uq_invoice_source DO UPDATE SET"
                     "  status = EXCLUDED.status,"
                     "  total_cents = EXCLUDED.total_cents"
+                    " RETURNING id"
                 ),
                 {
                     "id": str(uuid.uuid4()),
@@ -395,7 +482,7 @@ async def _handle_invoice(session: AsyncSession, event: Event) -> None:
                     "cust_eid": p.get("customer_external_id", event.customer_id),
                     "sub_eid": p.get("subscription_external_id", ""),
                     "status": p.get("status"),
-                    "cur": normalize_currency(p.get("currency")),
+                    "cur": invoice_currency,
                     "sub_cents": p.get("subtotal_cents", 0),
                     "tax": p.get("tax_cents", 0),
                     "total": p.get("total_cents", 0),
@@ -404,6 +491,15 @@ async def _handle_invoice(session: AsyncSession, event: Event) -> None:
                     "now": event.occurred_at,
                 },
             )
+            invoice_row = result.mappings().first()
+            if invoice_row is not None:
+                await _replace_invoice_line_items(
+                    session,
+                    event=event,
+                    invoice_id=invoice_row["id"],
+                    invoice_currency=invoice_currency,
+                    line_items=p.get("line_items") or [],
+                )
         case "invoice.paid":
             await session.execute(
                 text(

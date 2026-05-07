@@ -84,7 +84,7 @@ class Metric(ABC):
         should override to pick the one that carries the richest dimension
         set for end-user filtering.
         """
-        model = getattr(self, "model", None)
+        model: type[Cube] | None = getattr(self, "model", None)
         if model is None:
             raise NotImplementedError(
                 f"{type(self).__name__} must define `model` or override `primary_cube`"

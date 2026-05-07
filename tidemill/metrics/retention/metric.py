@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import text
 
@@ -23,7 +23,7 @@ def _to_month(value: Any) -> date:
     """Normalize a value to the first day of its month."""
     if isinstance(value, datetime):
         value = value.date()
-    return value.replace(day=1)
+    return cast(date, value.replace(day=1))
 
 
 def _filter_only(spec: QuerySpec | None) -> QuerySpec | None:
@@ -287,7 +287,7 @@ class RetentionMetric(Metric):
                 by_seg_type.setdefault(r["segment_id"], {})[r["movement_type"]] = float(
                     r["amount_base"] or 0
                 )
-            out = []
+            out: list[dict[str, Any]] = []
             for seg_id, _ in spec.compare:
                 s_mrr = start_by_seg.get(seg_id, 0.0)
                 if s_mrr <= 0:
