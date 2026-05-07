@@ -1,0 +1,2226 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/architecture/events/">
+      
+      
+        <link rel="prev" href="../overview/">
+      
+      
+        <link rel="next" href="../database/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Events - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#events" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Events
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Envelope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customer-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customer Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catalog-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catalog Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subscription-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscription Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#payment-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payment Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expense-side-events-quickbooks-online-et-al" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expense-side Events (QuickBooks Online et al.)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kafka-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kafka Topics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consumer-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consumer Groups
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Idempotency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Persistence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dead-letter-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dead-Letter Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-envelope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Envelope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Types
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Event Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#customer-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customer Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#catalog-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catalog Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subscription-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscription Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoice-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invoice Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#payment-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payment Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expense-side-events-quickbooks-online-et-al" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expense-side Events (QuickBooks Online et al.)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kafka-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kafka Topics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consumer-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consumer Groups
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Idempotency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Persistence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dead-letter-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dead-Letter Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="events">Events<a class="headerlink" href="#events" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Internal event schema and Kafka topics.
+Last updated: March 2026</p>
+</blockquote>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Every change in a billing system is translated by a <a href="../connectors/">connector</a> into an internal event, published to Kafka, and consumed by the core state manager and <a href="../metrics/">metrics</a>.</p>
+<p>Internal events are the single source of truth for the ingestion architecture (Stripe). They are immutable, ordered, and replayable.</p>
+<div class="admonition note">
+<p class="admonition-title">Same-database mode (Lago, Kill Bill)</p>
+<p>When using same-database connectors, metrics query the billing engine's PostgreSQL directly and do not consume Kafka events. The event schema below applies to ingestion-mode connectors (Stripe and any future webhook-based connector). See <a href="../connectors/">Connectors</a> for details.</p>
+</div>
+<h2 id="event-envelope">Event Envelope<a class="headerlink" href="#event-envelope" title="Permanent link">&para;</a></h2>
+<p>Every event has the same envelope:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Event</span><span class="p">:</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="n">UUID</span>                    <span class="c1"># unique event ID (idempotency key)</span>
+    <span class="n">source_id</span><span class="p">:</span> <span class="n">UUID</span>             <span class="c1"># which connector_source produced this</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>                   <span class="c1"># e.g. &quot;subscription.activated&quot;</span>
+    <span class="n">occurred_at</span><span class="p">:</span> <span class="n">datetime</span>       <span class="c1"># when it happened in the billing system</span>
+    <span class="n">published_at</span><span class="p">:</span> <span class="n">datetime</span>      <span class="c1"># when we published to Kafka</span>
+    <span class="n">customer_id</span><span class="p">:</span> <span class="nb">str</span>            <span class="c1"># external customer ID (Kafka partition key)</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span>               <span class="c1"># type-specific data (see below)</span>
+</code></pre></div>
+<p><code>customer_id</code> is the Kafka partition key. All events for a given customer land on the same partition, preserving ordering per customer.</p>
+<h2 id="event-types">Event Types<a class="headerlink" href="#event-types" title="Permanent link">&para;</a></h2>
+<h3 id="customer-events">Customer Events<a class="headerlink" href="#customer-events" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Trigger</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>customer.created</code></td>
+<td>New customer in billing system</td>
+<td><code>{external_id, name, email, currency, country, metadata}</code></td>
+</tr>
+<tr>
+<td><code>customer.updated</code></td>
+<td>Customer details changed</td>
+<td><code>{external_id, changed_fields}</code></td>
+</tr>
+<tr>
+<td><code>customer.deleted</code></td>
+<td>Customer removed</td>
+<td><code>{external_id}</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="catalog-events">Catalog Events<a class="headerlink" href="#catalog-events" title="Permanent link">&para;</a></h3>
+<p>Catalog events (products and plans) are global — they are not tied to a single
+customer. Connectors set <code>customer_id</code> to the empty string, so all catalog
+events land on the same Kafka partition (volume is low compared to
+subscriptions). They are emitted by webhook (<code>product.*</code> / <code>price.*</code> from
+Stripe) and by <code>backfill()</code> on first sync, and they populate the <code>product</code>
+and <code>plan</code> core tables that the MRR / Churn cubes use as dimensions
+(plan name, interval, billing scheme, usage type, product name).</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Trigger</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>product.created</code></td>
+<td>New product in catalog</td>
+<td><code>{external_id, name, description, active, metadata}</code></td>
+</tr>
+<tr>
+<td><code>product.updated</code></td>
+<td>Product fields changed</td>
+<td><code>{external_id, name, description, active, metadata}</code></td>
+</tr>
+<tr>
+<td><code>product.deleted</code></td>
+<td>Product removed</td>
+<td><code>{external_id}</code> — handler marks the row inactive (plans may still reference it)</td>
+</tr>
+<tr>
+<td><code>plan.created</code></td>
+<td>New price/plan in catalog</td>
+<td><code>{external_id, product_external_id, name, interval, interval_count, amount_cents, currency, billing_scheme, usage_type, trial_period_days, active, metadata}</code></td>
+</tr>
+<tr>
+<td><code>plan.updated</code></td>
+<td>Price/plan fields changed</td>
+<td>Same as <code>plan.created</code></td>
+</tr>
+<tr>
+<td><code>plan.deleted</code></td>
+<td>Price/plan archived</td>
+<td><code>{external_id}</code> — handler marks the row inactive (subscriptions may still reference it)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="subscription-events">Subscription Events<a class="headerlink" href="#subscription-events" title="Permanent link">&para;</a></h3>
+<p>The most important events for metric computation.</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Trigger</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subscription.created</code></td>
+<td>New subscription</td>
+<td><code>{external_id, customer_external_id, plan_external_id, status, mrr_cents, quantity, started_at, trial_start, trial_end, current_period_start, current_period_end}</code></td>
+</tr>
+<tr>
+<td><code>subscription.activated</code></td>
+<td>Trial → active, or pending → active</td>
+<td><code>{external_id, mrr_cents}</code></td>
+</tr>
+<tr>
+<td><code>subscription.changed</code></td>
+<td>Plan or quantity changed</td>
+<td><code>{external_id, prev_plan_external_id, new_plan_external_id, prev_mrr_cents, new_mrr_cents, prev_quantity, new_quantity}</code></td>
+</tr>
+<tr>
+<td><code>subscription.canceled</code></td>
+<td>Subscription set to cancel at period end</td>
+<td><code>{external_id, mrr_cents, canceled_at, ends_at, cancel_reason}</code></td>
+</tr>
+<tr>
+<td><code>subscription.churned</code></td>
+<td>Subscription ended (no longer active)</td>
+<td><code>{external_id, prev_mrr_cents, cancel_reason}</code></td>
+</tr>
+<tr>
+<td><code>subscription.reactivated</code></td>
+<td>Previously churned customer re-subscribes</td>
+<td><code>{external_id, mrr_cents}</code></td>
+</tr>
+<tr>
+<td><code>subscription.trial_started</code></td>
+<td>Free trial begins</td>
+<td><code>{external_id, trial_start, trial_end}</code></td>
+</tr>
+<tr>
+<td><code>subscription.trial_converted</code></td>
+<td>Trial → paid</td>
+<td><code>{external_id, mrr_cents}</code></td>
+</tr>
+<tr>
+<td><code>subscription.trial_expired</code></td>
+<td>Trial ended without conversion</td>
+<td><code>{external_id}</code></td>
+</tr>
+<tr>
+<td><code>subscription.paused</code></td>
+<td>Subscription paused</td>
+<td><code>{external_id, mrr_cents}</code></td>
+</tr>
+<tr>
+<td><code>subscription.resumed</code></td>
+<td>Subscription resumed from pause</td>
+<td><code>{external_id, mrr_cents}</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>MRR classification:</strong> The difference between <code>prev_mrr_cents</code> and <code>new_mrr_cents</code> in <code>subscription.changed</code> determines whether it's expansion (new &gt; prev) or contraction (new &lt; prev). The MRR metric uses this to compute net new MRR breakdown.</p>
+<h3 id="invoice-events">Invoice Events<a class="headerlink" href="#invoice-events" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Trigger</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>invoice.created</code></td>
+<td>New invoice generated</td>
+<td><code>{external_id, customer_external_id, subscription_external_id, status, currency, subtotal_cents, tax_cents, total_cents, period_start, period_end, line_items[]}</code></td>
+</tr>
+<tr>
+<td><code>invoice.paid</code></td>
+<td>Invoice payment succeeded</td>
+<td><code>{external_id, paid_at, amount_cents}</code></td>
+</tr>
+<tr>
+<td><code>invoice.voided</code></td>
+<td>Invoice canceled</td>
+<td><code>{external_id, voided_at}</code></td>
+</tr>
+<tr>
+<td><code>invoice.uncollectible</code></td>
+<td>Invoice marked uncollectible</td>
+<td><code>{external_id}</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="payment-events">Payment Events<a class="headerlink" href="#payment-events" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Trigger</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>payment.succeeded</code></td>
+<td>Payment completed</td>
+<td><code>{external_id, invoice_external_id, customer_external_id, amount_cents, currency, payment_method_type}</code></td>
+</tr>
+<tr>
+<td><code>payment.failed</code></td>
+<td>Payment attempt failed</td>
+<td><code>{external_id, invoice_external_id, customer_external_id, amount_cents, failure_reason, attempt_count}</code></td>
+</tr>
+<tr>
+<td><code>payment.refunded</code></td>
+<td>Payment refunded</td>
+<td><code>{external_id, amount_cents, refunded_at}</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="usage-events">Usage Events<a class="headerlink" href="#usage-events" title="Permanent link">&para;</a></h3>
+<p>Tidemill does <strong>not</strong> emit a dedicated <code>usage.recorded</code> event today. For Stripe (the reference connector), metered usage rolls onto invoice line items at billing finalization, so the same <code>invoice.created</code> / <code>invoice.paid</code> flow that drives LTV also drives the trailing-3m usage component of MRR — see <code>tidemill/metrics/mrr/usage.py</code> and the <a href="../../definitions/#usage-component-trailing-3-month-average">MRR usage component spec</a>.</p>
+<p>If a future connector exposes raw meter events (Lago has structured <code>events</code>), a <code>usage.recorded</code> event with payload <code>{customer_external_id, subscription_external_id, metric_code, quantity, timestamp}</code> would be the place to add them. Treated as a future hook; not currently produced or consumed.</p>
+<h3 id="expense-side-events-quickbooks-online-et-al">Expense-side Events (QuickBooks Online et al.)<a class="headerlink" href="#expense-side-events-quickbooks-online-et-al" title="Permanent link">&para;</a></h3>
+<p>These are emitted by <code>ExpenseConnector</code> subclasses (today: QuickBooks Online; future: Xero, FreshBooks, Wave, Sage). For these events <code>Event.customer_id</code> carries the <strong>realm/tenant ID</strong> of the accounting source so events for the same QBO company stay on one Kafka partition.</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Trigger</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vendor.created</code></td>
+<td>Vendor created in source</td>
+<td><code>{external_id, name, email, country, currency, active, metadata}</code></td>
+</tr>
+<tr>
+<td><code>vendor.updated</code></td>
+<td>Vendor edited</td>
+<td>Same fields as <code>vendor.created</code></td>
+</tr>
+<tr>
+<td><code>vendor.deleted</code></td>
+<td>Vendor deleted</td>
+<td><code>{external_id}</code></td>
+</tr>
+<tr>
+<td><code>account.created</code></td>
+<td>Chart-of-accounts entry created</td>
+<td><code>{external_id, name, account_type, account_subtype, parent_external_id, currency, active, metadata}</code></td>
+</tr>
+<tr>
+<td><code>account.updated</code></td>
+<td>Account edited</td>
+<td>Same fields as <code>account.created</code></td>
+</tr>
+<tr>
+<td><code>bill.created</code></td>
+<td>New A/P bill</td>
+<td><code>{external_id, vendor_external_id, status, doc_number, currency, subtotal_cents, tax_cents, total_cents, txn_date, due_date, memo, lines: [{account_external_id, description, amount_cents, currency, dimensions}]}</code></td>
+</tr>
+<tr>
+<td><code>bill.updated</code></td>
+<td>Bill modified</td>
+<td>Same shape as <code>bill.created</code></td>
+</tr>
+<tr>
+<td><code>bill.paid</code></td>
+<td>Bill marked paid</td>
+<td><code>{external_id, paid_at}</code></td>
+</tr>
+<tr>
+<td><code>bill.voided</code></td>
+<td>Bill voided</td>
+<td><code>{external_id, voided_at}</code></td>
+</tr>
+<tr>
+<td><code>expense.created</code></td>
+<td>Direct purchase recorded</td>
+<td><code>{external_id, vendor_external_id, payment_type, doc_number, currency, subtotal_cents, tax_cents, total_cents, txn_date, memo, lines: [{account_external_id, description, amount_cents, currency, dimensions}]}</code></td>
+</tr>
+<tr>
+<td><code>expense.updated</code></td>
+<td>Direct purchase edited</td>
+<td>Same shape as <code>expense.created</code></td>
+</tr>
+<tr>
+<td><code>expense.voided</code></td>
+<td>Direct purchase voided</td>
+<td><code>{external_id, voided_at}</code></td>
+</tr>
+<tr>
+<td><code>bill_payment.created</code></td>
+<td>Payment applied to a bill</td>
+<td><code>{external_id, bill_external_id, paid_at, amount_cents, currency}</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>account_type</code> is one of the canonical enums (see <a href="../expenses/#canonical-enums">expenses.md</a>). Native source values are preserved on <code>metadata</code>.</p>
+<h2 id="kafka-topics">Kafka Topics<a class="headerlink" href="#kafka-topics" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Partition Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tidemill.events</code></td>
+<td><code>customer_id</code></td>
+<td>All internal events (single topic)</td>
+</tr>
+<tr>
+<td><code>tidemill.events.dlq</code></td>
+<td><code>customer_id</code></td>
+<td>Dead letter queue for failed processing</td>
+</tr>
+</tbody>
+</table>
+<p>A single topic keeps event ordering simple. Consumers use the <code>type</code> field to filter.</p>
+<p>For high-volume deployments, events can be split into separate topics per entity type (<code>tidemill.events.subscription</code>, <code>tidemill.events.invoice</code>, etc.) at the cost of weaker cross-entity ordering guarantees.</p>
+<h2 id="consumer-groups">Consumer Groups<a class="headerlink" href="#consumer-groups" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Consumes</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tidemill.state</code></td>
+<td>All events</td>
+<td>Updates core PostgreSQL tables (current state — including <code>product</code> / <code>plan</code> catalog)</td>
+</tr>
+<tr>
+<td><code>tidemill.metric.mrr</code></td>
+<td><code>subscription.*</code>, <code>invoice.paid</code></td>
+<td>MRR metric (subscription lifecycle + trailing-3m usage component)</td>
+</tr>
+<tr>
+<td><code>tidemill.metric.churn</code></td>
+<td><code>subscription.*</code>, <code>customer.*</code></td>
+<td>Churn metric</td>
+</tr>
+<tr>
+<td><code>tidemill.metric.retention</code></td>
+<td><code>subscription.*</code>, <code>customer.*</code></td>
+<td>Retention metric</td>
+</tr>
+<tr>
+<td><code>tidemill.metric.ltv</code></td>
+<td><code>subscription.*</code>, <code>invoice.*</code>, <code>payment.*</code></td>
+<td>LTV metric</td>
+</tr>
+<tr>
+<td><code>tidemill.metric.trials</code></td>
+<td><code>subscription.trial_*</code>, <code>subscription.activated</code></td>
+<td>Trials metric</td>
+</tr>
+<tr>
+<td><code>tidemill.metric.usage_revenue</code></td>
+<td>(no events)</td>
+<td>Reads <code>metric_mrr_usage_component</code> populated by MRR's <code>invoice.paid</code> handler — no own event consumption</td>
+</tr>
+</tbody>
+</table>
+<p>Each metric runs in its own consumer group, so it maintains its own offset. This means:</p>
+<ul>
+<li>Metrics process events independently (a slow metric doesn't block others)</li>
+<li>A new metric can be added and replayed from offset 0 to backfill</li>
+<li>A metric can be reset (seek to beginning) to recompute from scratch</li>
+</ul>
+<h2 id="idempotency">Idempotency<a class="headerlink" href="#idempotency" title="Permanent link">&para;</a></h2>
+<p>Events carry a unique <code>id</code> (UUID). Consumers must be idempotent — processing the same event twice produces the same result. This is enforced by:</p>
+<ol>
+<li>Storing the last processed <code>event.id</code> per consumer group</li>
+<li>Using <code>INSERT ... ON CONFLICT DO NOTHING</code> for append-only tables</li>
+<li>Using <code>INSERT ... ON CONFLICT DO UPDATE</code> for current-state tables</li>
+</ol>
+<h2 id="event-persistence">Event Persistence<a class="headerlink" href="#event-persistence" title="Permanent link">&para;</a></h2>
+<p>Events are persisted in two places:</p>
+<ol>
+<li><strong>Kafka</strong> — the primary log, retained for a configurable period (default: 30 days)</li>
+<li><strong>PostgreSQL <code>event_log</code> table</strong> — permanent archive for replay and audit</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">event_log</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">          </span><span class="n">UUID</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">   </span><span class="n">UUID</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">connector_source</span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+<span class="w">    </span><span class="k">type</span><span class="w">        </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">occurred_at</span><span class="w"> </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">published_at</span><span class="w"> </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">payload</span><span class="w">     </span><span class="n">JSONB</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_event_log_type_time</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">event_log</span><span class="p">(</span><span class="k">type</span><span class="p">,</span><span class="w"> </span><span class="n">occurred_at</span><span class="p">);</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">ix_event_log_customer</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">event_log</span><span class="p">(</span><span class="n">customer_id</span><span class="p">,</span><span class="w"> </span><span class="n">occurred_at</span><span class="p">);</span>
+</code></pre></div>
+<p>When Kafka retention expires, or when bootstrapping a new deployment, the <code>event_log</code> table is the replay source.</p>
+<h2 id="dead-letter-handling">Dead-Letter Handling<a class="headerlink" href="#dead-letter-handling" title="Permanent link">&para;</a></h2>
+<p>Whenever a consumer's <code>handle_event</code> raises, the event is recorded in the
+<code>dead_letter_event</code> table (one row per <code>(event_id, consumer)</code> pair) and
+mirrored to the Kafka DLQ topic. The offset is then committed so the
+worker keeps making progress instead of getting stuck on the bad event.</p>
+<p>The most common case is <code>FxRateMissingError</code> — an MRR / LTV event whose
+currency has no <code>fx_rate</code> row yet. Once you backfill the rate:</p>
+<div class="highlight"><pre><span></span><code>tidemill<span class="w"> </span>dlq-list<span class="w"> </span>--error-type<span class="w"> </span>fx_rate_missing<span class="w">      </span><span class="c1"># confirm what&#39;s queued</span>
+tidemill<span class="w"> </span>dlq-replay<span class="w"> </span>--error-type<span class="w"> </span>fx_rate_missing<span class="w">    </span><span class="c1"># republish to Kafka</span>
+</code></pre></div>
+<p>The worker reprocesses the events normally; on success the consumer
+sets <code>dead_letter_event.resolved_at</code> so the rows drop out of the
+default <code>dlq-list</code> view.</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">dead_letter_event</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">id</span><span class="w">               </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_id</span><span class="w">         </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">source_id</span><span class="w">        </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_type</span><span class="w">       </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">consumer</span><span class="w">         </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">        </span><span class="c1">-- &#39;state&#39;, &#39;metric:mrr&#39;, …</span>
+<span class="w">    </span><span class="n">error_type</span><span class="w">       </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">        </span><span class="c1">-- &#39;fx_rate_missing&#39;, &#39;unknown&#39;, …</span>
+<span class="w">    </span><span class="n">error_message</span><span class="w">    </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">payload</span><span class="w">          </span><span class="n">JSONB</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">occurred_at</span><span class="w">      </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">dead_lettered_at</span><span class="w"> </span><span class="n">TIMESTAMPTZ</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">resolved_at</span><span class="w">      </span><span class="n">TIMESTAMPTZ</span><span class="p">,</span>
+<span class="w">    </span><span class="k">UNIQUE</span><span class="w"> </span><span class="p">(</span><span class="n">event_id</span><span class="p">,</span><span class="w"> </span><span class="n">consumer</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

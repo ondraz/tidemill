@@ -1,0 +1,2676 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/development/deployment/">
+      
+      
+        <link rel="prev" href="../testing/">
+      
+      
+        <link rel="next" href="../../research/market-overview/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Deployment - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#deployment" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Deployment
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment Modes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment Modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#full-deployment-stripe-ingestion-mode-primary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Deployment (Stripe / Ingestion Mode) — Primary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lago-companion-mode-same-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lago Companion Mode (Same-Database)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Image
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables-for-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables for Production
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment Variables for Production">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deploycomposeenv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        deploy/compose/.env
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clerk-setup-for-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clerk Setup for Production
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#option-a-single-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Single Server
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option A: Single Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-terraform-provisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Terraform Provisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#services-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Services (Docker Compose)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caddy-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caddy Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quickstart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quickstart
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-cloud-init-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What cloud-init Does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#destroy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Destroy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#option-b-kubernetes-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Kubernetes Cluster
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option B: Kubernetes Cluster">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-terraform-provisions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Terraform Provisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quickstart_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quickstart
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scaling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cost-estimate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost Estimate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#production-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production Hardening
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compose-kubernetes-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compose &lt;&gt; Kubernetes Mapping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backups
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backups">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#single-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single Server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kubernetes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kubernetes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-redpanda-over-apache-kafka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Redpanda over Apache Kafka
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment Modes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment Modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#full-deployment-stripe-ingestion-mode-primary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Deployment (Stripe / Ingestion Mode) — Primary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lago-companion-mode-same-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lago Companion Mode (Same-Database)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker Image
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables-for-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables for Production
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment Variables for Production">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deploycomposeenv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        deploy/compose/.env
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clerk-setup-for-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clerk Setup for Production
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#option-a-single-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Single Server
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option A: Single Server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-terraform-provisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Terraform Provisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#services-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Services (Docker Compose)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caddy-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caddy Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quickstart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quickstart
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-cloud-init-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What cloud-init Does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#destroy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Destroy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#option-b-kubernetes-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Kubernetes Cluster
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option B: Kubernetes Cluster">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-terraform-provisions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Terraform Provisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quickstart_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quickstart
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scaling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cost-estimate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost Estimate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#production-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production Hardening
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compose-kubernetes-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compose &lt;&gt; Kubernetes Mapping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backups
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backups">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#single-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single Server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kubernetes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kubernetes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-redpanda-over-apache-kafka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Redpanda over Apache Kafka
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Infrastructure as Code for single-server and Kubernetes deployments on Hetzner.</p>
+</blockquote>
+<p>All deployment files live in <a href="https://github.com/ondraz/tidemill/tree/main/deploy"><code>deploy/</code></a>:</p>
+<div class="highlight"><pre><span></span><code>deploy/
+├── compose/                          # Docker Compose (shared by both deployment modes)
+│   ├── docker-compose.yml
+│   ├── Dockerfile                    # Multi-stage: Node (frontend) + Python (backend)
+│   ├── Caddyfile                     # Serves frontend + proxies API
+│   └── .env.example
+├── seed/                             # Stripe test data generation
+│   ├── stripe_seed.py
+│   └── stripe_fixtures.json
+└── terraform/
+    ├── .gitignore
+    ├── single-server/                # Option A: one Hetzner server
+    │   ├── main.tf
+    │   ├── variables.tf
+    │   ├── server.tf
+    │   ├── firewall.tf
+    │   ├── dns.tf
+    │   ├── outputs.tf
+    │   ├── cloud-init.yml
+    │   └── terraform.tfvars.example
+    └── kubernetes/                   # Option B: k3s cluster
+        ├── main.tf
+        ├── variables.tf
+        ├── cluster.tf
+        ├── dns.tf
+        ├── app.tf
+        ├── outputs.tf
+        └── terraform.tfvars.example
+</code></pre></div>
+<h2 id="deployment-modes">Deployment Modes<a class="headerlink" href="#deployment-modes" title="Permanent link">&para;</a></h2>
+<p>The deployment depends on which <a href="../../architecture/connectors/">connector type</a> is used:</p>
+<h3 id="full-deployment-stripe-ingestion-mode-primary">Full Deployment (Stripe / Ingestion Mode) — Primary<a class="headerlink" href="#full-deployment-stripe-ingestion-mode-primary" title="Permanent link">&para;</a></h3>
+<p>For Stripe (and any webhook-based connector), the full stack is required: PostgreSQL + Kafka/Redpanda + API + Worker + Caddy (frontend). See Option A (single server) or Option B (Kubernetes) below.</p>
+<hr />
+<h3 id="lago-companion-mode-same-database">Lago Companion Mode (Same-Database)<a class="headerlink" href="#lago-companion-mode-same-database" title="Permanent link">&para;</a></h3>
+<p>For Lago or Kill Bill users, the analytics engine can run alongside the billing engine with <strong>no additional infrastructure</strong>:</p>
+<div class="highlight"><pre><span></span><code>┌────────────────────────────────────┐
+│  Existing Lago deployment          │
+│  ┌──────────┐  ┌────────────────┐  │
+│  │  Lago    │  │  PostgreSQL    │  │
+│  │  (API)   │  │  (shared)      │  │
+│  └──────────┘  └───────┬────────┘  │
+│                        │           │
+│  ┌─────────────────────┴────────┐  │
+│  │  tidemill                    │  │
+│  │  (analytics CLI / API)       │  │
+│  │  No Kafka. No worker.        │  │
+│  └──────────────────────────────┘  │
+└────────────────────────────────────┘
+</code></pre></div>
+<p><strong>Services:</strong> Just the <code>tidemill</code> container (or <code>pip install tidemill</code> directly). Connects to the billing engine's PostgreSQL.</p>
+<p><strong>No Kafka, no worker process, no event bus.</strong> The analytics engine queries billing tables directly at request time.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># docker-compose.yml addition for existing Lago deployment</span>
+<span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">analytics</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/ondraz/tidemill:latest</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">DATABASE_URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql://lago:password@postgres/lago</span>
+<span class="w">      </span><span class="nt">CONNECTOR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lago</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8000:8000&quot;</span>
+</code></pre></div>
+<p>Or simply install and use the CLI:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>tidemill
+<span class="nb">export</span><span class="w"> </span><span class="nv">TIDEMILL_DATABASE_URL</span><span class="o">=</span>postgresql://lago:password@postgres/lago
+<span class="nb">export</span><span class="w"> </span><span class="nv">TIDEMILL_CONNECTOR</span><span class="o">=</span>lago
+
+tidemill<span class="w"> </span>mrr
+<span class="c1"># $12,450.00</span>
+</code></pre></div>
+<hr />
+<h2 id="docker-image">Docker Image<a class="headerlink" href="#docker-image" title="Permanent link">&para;</a></h2>
+<p>The Dockerfile is a <strong>multi-stage build</strong>:</p>
+<ol>
+<li><strong>Stage 1 (Node 22):</strong> Builds the React frontend — <code>npm ci &amp;&amp; npm run build</code> produces static assets in <code>dist/</code></li>
+<li><strong>Stage 2 (Python 3.13):</strong> Installs the Python backend via <code>uv</code>, copies the built frontend to <code>/srv/frontend</code></li>
+</ol>
+<p>Caddy serves the frontend static files and proxies <code>/api/*</code>, <code>/auth/*</code>, <code>/healthz</code>, <code>/readyz</code> to the FastAPI backend.</p>
+<h2 id="environment-variables-for-production">Environment Variables for Production<a class="headerlink" href="#environment-variables-for-production" title="Permanent link">&para;</a></h2>
+<h3 id="deploycomposeenv"><code>deploy/compose/.env</code><a class="headerlink" href="#deploycomposeenv" title="Permanent link">&para;</a></h3>
+<p>Copy from <code>deploy/compose/.env.example</code> and fill in:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POSTGRES_PASSWORD</code></td>
+<td>Yes</td>
+<td>PostgreSQL password (no default — must be set)</td>
+</tr>
+<tr>
+<td><code>DOMAIN</code></td>
+<td>Yes</td>
+<td>Domain for Caddy TLS (e.g. <code>tidemill.xyz</code>)</td>
+</tr>
+<tr>
+<td><code>STRIPE_API_KEY</code></td>
+<td>No</td>
+<td>Stripe live key (<code>sk_live_...</code>)</td>
+</tr>
+<tr>
+<td><code>STRIPE_WEBHOOK_SECRET</code></td>
+<td>No</td>
+<td>Stripe webhook signing secret</td>
+</tr>
+<tr>
+<td><code>AUTH_ENABLED</code></td>
+<td>No</td>
+<td><code>true</code> (default) or <code>false</code> to disable auth</td>
+</tr>
+<tr>
+<td><code>CLERK_PUBLISHABLE_KEY</code></td>
+<td>If auth</td>
+<td>Clerk publishable key (<code>pk_live_...</code>)</td>
+</tr>
+<tr>
+<td><code>CLERK_SECRET_KEY</code></td>
+<td>If auth</td>
+<td>Clerk secret key (<code>sk_live_...</code>)</td>
+</tr>
+<tr>
+<td><code>CLERK_JWKS_URL</code></td>
+<td>If auth</td>
+<td>Clerk JWKS URL for JWT verification</td>
+</tr>
+</tbody>
+</table>
+<h3 id="clerk-setup-for-production">Clerk Setup for Production<a class="headerlink" href="#clerk-setup-for-production" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Create a <strong>production instance</strong> in Clerk Dashboard (not development)</li>
+<li>Set the allowed origins to your domain (e.g. <code>https://tidemill.xyz</code>)</li>
+<li>Configure OAuth providers (Google, GitHub, etc.) under <strong>User &amp; Authentication &gt; Social connections</strong></li>
+<li>Copy the <strong>live</strong> keys (<code>pk_live_...</code>, <code>sk_live_...</code>) to your <code>.env</code></li>
+<li>The JWKS URL format is <code>https://your-app.clerk.accounts.dev/.well-known/jwks.json</code></li>
+</ol>
+<p>The frontend reads <code>VITE_CLERK_PUBLISHABLE_KEY</code> at build time. In the Docker build, this is baked into the static assets. Set it as a build arg or in the Dockerfile if needed. The default Docker Compose setup passes <code>CLERK_PUBLISHABLE_KEY</code> to the API container — the frontend must be rebuilt if the key changes.</p>
+<hr />
+<h2 id="option-a-single-server">Option A: Single Server<a class="headerlink" href="#option-a-single-server" title="Permanent link">&para;</a></h2>
+<p>A single Hetzner CX22 (2 vCPU, 4 GB RAM, ~€4/mo) running Docker Compose. Good for getting started, small-to-medium workloads, or development.</p>
+<h3 id="what-terraform-provisions">What Terraform Provisions<a class="headerlink" href="#what-terraform-provisions" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hcloud_server</code></td>
+<td>Ubuntu 24.04 with Docker (via cloud-init)</td>
+</tr>
+<tr>
+<td><code>hcloud_ssh_key</code></td>
+<td>Your SSH key for server access</td>
+</tr>
+<tr>
+<td><code>hcloud_firewall</code></td>
+<td>Allows only SSH, HTTP, HTTPS, ICMP inbound</td>
+</tr>
+<tr>
+<td><code>hcloud_zone_rrset</code></td>
+<td>A + AAAA DNS records pointing to the server</td>
+</tr>
+</tbody>
+</table>
+<h3 id="services-docker-compose">Services (Docker Compose)<a class="headerlink" href="#services-docker-compose" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Role</th>
+<th>RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Caddy</strong></td>
+<td>Reverse proxy, auto-HTTPS, serves frontend</td>
+<td>~20 MB</td>
+</tr>
+<tr>
+<td><strong>API</strong></td>
+<td>FastAPI — metrics, webhooks, auth, dashboards</td>
+<td>~100 MB</td>
+</tr>
+<tr>
+<td><strong>Worker</strong></td>
+<td>Kafka consumers — core state + metrics</td>
+<td>~150 MB</td>
+</tr>
+<tr>
+<td><strong>Redpanda</strong></td>
+<td>Kafka-compatible bus (no JVM, no ZooKeeper)</td>
+<td>~256 MB</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>Primary database</td>
+<td>~256 MB</td>
+</tr>
+</tbody>
+</table>
+<p>Total: <strong>~800 MB</strong>. Fits on CX22 with headroom.</p>
+<h3 id="caddy-configuration">Caddy Configuration<a class="headerlink" href="#caddy-configuration" title="Permanent link">&para;</a></h3>
+<p>Caddy serves the React frontend as static files and reverse-proxies API requests:</p>
+<div class="highlight"><pre><span></span><code>{$DOMAIN:localhost} {
+    root * /srv/frontend
+    try_files {path} /index.html    # SPA fallback
+    file_server
+
+    handle /api/* {
+        reverse_proxy api:8000
+    }
+    handle /auth/* {
+        reverse_proxy api:8000
+    }
+    handle /healthz {
+        reverse_proxy api:8000
+    }
+    handle /readyz {
+        reverse_proxy api:8000
+    }
+}
+</code></pre></div>
+<p>The <code>try_files</code> directive sends all non-file paths to <code>index.html</code>, enabling React Router's client-side routing.</p>
+<h3 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Prerequisites</span>
+brew<span class="w"> </span>install<span class="w"> </span>terraform<span class="w">   </span><span class="c1"># or apt install terraform</span>
+
+<span class="c1"># 2. Configure secrets</span>
+<span class="nb">cd</span><span class="w"> </span>deploy/terraform/single-server
+cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<span class="c1"># Edit .env: set TF_VAR_hcloud_token, TF_VAR_tailscale_auth_key</span>
+
+<span class="c1"># 3. Configure Clerk + Stripe</span>
+<span class="nb">cd</span><span class="w"> </span>../../compose
+cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<span class="c1"># Edit .env: set POSTGRES_PASSWORD, DOMAIN, CLERK_*, STRIPE_* keys</span>
+
+<span class="c1"># 4. Deploy</span>
+<span class="nb">cd</span><span class="w"> </span>../terraform/single-server
+<span class="nb">set</span><span class="w"> </span>-a<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>.env<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>+a
+terraform<span class="w"> </span>init
+terraform<span class="w"> </span>plan<span class="w">     </span><span class="c1"># review what will be created</span>
+terraform<span class="w"> </span>apply<span class="w">    </span><span class="c1"># provision server, firewall, DNS zone</span>
+
+<span class="c1"># 5. Set nameservers at your domain registrar</span>
+terraform<span class="w"> </span>output<span class="w"> </span>nameservers
+<span class="c1"># → Set these as custom nameservers for tidemill.xyz at your registrar</span>
+
+<span class="c1"># 6. Verify (wait ~2 min for cloud-init + DNS propagation)</span>
+curl<span class="w"> </span>https://tidemill.xyz/healthz
+
+<span class="c1"># 7. Open the frontend</span>
+open<span class="w"> </span>https://tidemill.xyz
+</code></pre></div>
+<h3 id="what-cloud-init-does">What cloud-init Does<a class="headerlink" href="#what-cloud-init-does" title="Permanent link">&para;</a></h3>
+<p>The server bootstraps itself on first boot via <a href="https://github.com/ondraz/tidemill/tree/main/deploy/terraform/single-server/cloud-init.yml"><code>cloud-init.yml</code></a>:</p>
+<ol>
+<li>Updates packages and installs Docker</li>
+<li>Clones the repo to <code>/opt/tidemill</code></li>
+<li>Generates a random Postgres password</li>
+<li>Generates a random Grafana admin password (via Terraform <code>random_password</code>)</li>
+<li>Starts Docker Compose with both <code>docker-compose.yml</code> and <code>docker-compose.observability.yml</code></li>
+<li>Enables unattended security updates</li>
+<li>Reboots if the kernel was updated</li>
+</ol>
+<h3 id="observability">Observability<a class="headerlink" href="#observability" title="Permanent link">&para;</a></h3>
+<p>OpenTelemetry is enabled by default. The server runs a self-contained Grafana stack:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Exposure</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OTEL Collector</td>
+<td>internal only</td>
+<td>OTLP receiver, forwards to Tempo and Prometheus</td>
+</tr>
+<tr>
+<td>Tempo</td>
+<td>internal only</td>
+<td>Trace storage (24 h retention)</td>
+</tr>
+<tr>
+<td>Loki</td>
+<td>internal only</td>
+<td>Log storage (7 d retention)</td>
+</tr>
+<tr>
+<td>Prometheus</td>
+<td>internal only</td>
+<td>Metrics storage (15 d retention)</td>
+</tr>
+<tr>
+<td>Alloy</td>
+<td>internal only</td>
+<td>Scrapes Docker container logs → Loki</td>
+</tr>
+<tr>
+<td>Grafana</td>
+<td><code>grafana.&lt;domain&gt;</code></td>
+<td>Web UI (TLS via Caddy + Let's Encrypt)</td>
+</tr>
+</tbody>
+</table>
+<p>Fetch the Grafana admin password after <code>terraform apply</code>:</p>
+<div class="highlight"><pre><span></span><code>terraform<span class="w"> </span>output<span class="w"> </span>-raw<span class="w"> </span>grafana_admin_password
+</code></pre></div>
+<p>Open <code>https://grafana.&lt;domain&gt;</code> and log in as <code>admin</code>. Tempo, Loki, and Prometheus are pre-provisioned as datasources; the <code>Tidemill Overview</code> dashboard shows RED metrics for the API and worker.</p>
+<p>Disable the stack by setting <code>TIDEMILL_OTEL_ENABLED=false</code> in <code>.env</code> and restarting the api + worker containers (the observability services themselves can be left running or stopped with <code>docker compose -f docker-compose.observability.yml stop</code>).</p>
+<h3 id="destroy">Destroy<a class="headerlink" href="#destroy" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>terraform<span class="w"> </span>destroy<span class="w">   </span><span class="c1"># removes server, firewall, DNS records</span>
+</code></pre></div>
+<h2 id="option-b-kubernetes-cluster">Option B: Kubernetes Cluster<a class="headerlink" href="#option-b-kubernetes-cluster" title="Permanent link">&para;</a></h2>
+<p>A 3-node HA k3s cluster with separate worker nodes, running on Hetzner. For production workloads that need horizontal scaling and high availability.</p>
+<h3 id="what-terraform-provisions_1">What Terraform Provisions<a class="headerlink" href="#what-terraform-provisions_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>k3s cluster (via <code>kube-hetzner</code> module)</td>
+<td>3 control plane nodes + N worker nodes</td>
+</tr>
+<tr>
+<td><code>hcloud_load_balancer</code></td>
+<td>Ingress load balancer with public IP</td>
+</tr>
+<tr>
+<td><code>hcloud_zone_rrset</code></td>
+<td>DNS records pointing to the load balancer</td>
+</tr>
+<tr>
+<td><code>kubernetes_namespace</code></td>
+<td><code>tidemill</code> namespace</td>
+</tr>
+<tr>
+<td><code>kubernetes_secret</code></td>
+<td>Database credentials, Kafka config, Clerk keys</td>
+</tr>
+<tr>
+<td><code>kubernetes_stateful_set</code> x 2</td>
+<td>PostgreSQL + Redpanda with Hetzner CSI volumes</td>
+</tr>
+<tr>
+<td><code>kubernetes_deployment</code> x 2</td>
+<td>API (2 replicas) + Worker (2 replicas)</td>
+</tr>
+<tr>
+<td><code>kubernetes_ingress_v1</code></td>
+<td>Traefik ingress with TLS</td>
+</tr>
+</tbody>
+</table>
+<h3 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>                        Load Balancer (lb11)
+                              │
+               ┌──────────────┼──────────────┐
+               ▼              ▼              ▼
+          ┌─────────┐   ┌─────────┐   ┌─────────┐
+          │  CP #1  │   │  CP #2  │   │  CP #3  │   Control Plane (cx22 x 3)
+          │  k3s    │   │  k3s    │   │  k3s    │
+          └─────────┘   └─────────┘   └─────────┘
+               │              │              │
+          ┌─────────┐   ┌─────────┐
+          │Worker #1│   │Worker #2│   Worker Nodes (cx32 x N)
+          │ API     │   │ API     │
+          │ Worker  │   │ Worker  │
+          │ PG      │   │ Redpanda│
+          └─────────┘   └─────────┘
+</code></pre></div>
+<h3 id="quickstart_1">Quickstart<a class="headerlink" href="#quickstart_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Configure</span>
+<span class="nb">cd</span><span class="w"> </span>deploy/terraform/kubernetes
+cp<span class="w"> </span>terraform.tfvars.example<span class="w"> </span>terraform.tfvars
+<span class="c1"># Edit terraform.tfvars: set hcloud_token, domain, domain_zone</span>
+
+<span class="c1"># 2. Deploy (~5 min for cluster, ~2 min for app)</span>
+terraform<span class="w"> </span>init
+terraform<span class="w"> </span>plan
+terraform<span class="w"> </span>apply
+
+<span class="c1"># 3. Access the cluster</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span><span class="k">$(</span>terraform<span class="w"> </span>output<span class="w"> </span>-raw<span class="w"> </span>kubeconfig_path<span class="k">)</span>
+kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>tidemill
+
+<span class="c1"># 4. Verify</span>
+curl<span class="w"> </span>https://tidemill.xyz/healthz
+</code></pre></div>
+<h3 id="scaling">Scaling<a class="headerlink" href="#scaling" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Scale API replicas</span>
+kubectl<span class="w"> </span>scale<span class="w"> </span>deployment<span class="w"> </span>api<span class="w"> </span>-n<span class="w"> </span>tidemill<span class="w"> </span>--replicas<span class="o">=</span><span class="m">4</span>
+
+<span class="c1"># Scale workers (Kafka rebalances partitions automatically)</span>
+kubectl<span class="w"> </span>scale<span class="w"> </span>deployment<span class="w"> </span>worker<span class="w"> </span>-n<span class="w"> </span>tidemill<span class="w"> </span>--replicas<span class="o">=</span><span class="m">4</span>
+
+<span class="c1"># Add more Hetzner worker nodes — edit terraform.tfvars:</span>
+<span class="c1">#   worker_count = 4</span>
+terraform<span class="w"> </span>apply
+</code></pre></div>
+<h3 id="cost-estimate">Cost Estimate<a class="headerlink" href="#cost-estimate" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Type</th>
+<th>Count</th>
+<th>Monthly</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Control plane</td>
+<td>CX22 (2 vCPU, 4 GB)</td>
+<td>3</td>
+<td>~€12</td>
+</tr>
+<tr>
+<td>Workers</td>
+<td>CX32 (4 vCPU, 8 GB)</td>
+<td>2</td>
+<td>~€14</td>
+</tr>
+<tr>
+<td>Load balancer</td>
+<td>LB11</td>
+<td>1</td>
+<td>~€6</td>
+</tr>
+<tr>
+<td>Volumes</td>
+<td>10 GB x 2 (PG + Redpanda)</td>
+<td>2</td>
+<td>~€1</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td></td>
+<td></td>
+<td><strong>~€33/mo</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="production-hardening">Production Hardening<a class="headerlink" href="#production-hardening" title="Permanent link">&para;</a></h3>
+<p>For a production Kubernetes deployment, consider:</p>
+<ul>
+<li><strong>Managed PostgreSQL</strong> — replace the StatefulSet with Hetzner DBaaS or an external managed database. Remove the <code>kubernetes_stateful_set.postgres</code> resource and update <code>DATABASE_URL</code> in the secret.</li>
+<li><strong>Redpanda cluster</strong> — replace the single-node StatefulSet with the <a href="https://github.com/redpanda-data/helm-charts">Redpanda Helm chart</a> for a 3-broker cluster, or use Confluent Cloud / Amazon MSK.</li>
+<li><strong>Image registry</strong> — push to GitHub Container Registry (<code>ghcr.io/ondraz/tidemill</code>) and pin image tags instead of <code>latest</code>.</li>
+<li><strong>Secrets management</strong> — use <a href="https://github.com/bitnami-labs/sealed-secrets">Sealed Secrets</a> or <a href="https://external-secrets.io/">External Secrets Operator</a> instead of plain Kubernetes secrets. Store Clerk keys and Stripe keys here.</li>
+<li><strong>Monitoring</strong> — deploy Prometheus + Grafana via Helm for cluster and application metrics.</li>
+<li><strong>Backups</strong> — use <a href="https://velero.io/">Velero</a> for cluster backup, pg_dump CronJob for PostgreSQL.</li>
+</ul>
+<h2 id="compose-kubernetes-mapping">Compose &lt;&gt; Kubernetes Mapping<a class="headerlink" href="#compose-kubernetes-mapping" title="Permanent link">&para;</a></h2>
+<p>The Docker Compose and Kubernetes deployments use the same container images and environment variables. This table shows how each Compose concept translates:</p>
+<table>
+<thead>
+<tr>
+<th>Docker Compose</th>
+<th>Kubernetes</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>postgres</code> service</td>
+<td><code>StatefulSet</code> + <code>PersistentVolumeClaim</code></td>
+<td>Hetzner CSI volumes</td>
+</tr>
+<tr>
+<td><code>redpanda</code> service</td>
+<td><code>StatefulSet</code> + <code>PersistentVolumeClaim</code></td>
+<td>Or Redpanda Helm chart</td>
+</tr>
+<tr>
+<td><code>api</code> service</td>
+<td><code>Deployment</code> + <code>Service</code> + <code>Ingress</code></td>
+<td>Scales horizontally</td>
+</tr>
+<tr>
+<td><code>worker</code> service</td>
+<td><code>Deployment</code></td>
+<td>Kafka rebalances partitions across replicas</td>
+</tr>
+<tr>
+<td><code>caddy</code> service</td>
+<td>Traefik <code>Ingress</code> (built into kube-hetzner)</td>
+<td>TLS via Let's Encrypt</td>
+</tr>
+<tr>
+<td><code>.env</code> file</td>
+<td><code>Secret</code></td>
+<td>Includes Clerk + Stripe keys</td>
+</tr>
+<tr>
+<td>Docker <code>volumes</code></td>
+<td><code>PersistentVolumeClaim</code> + Hetzner CSI</td>
+<td></td>
+</tr>
+<tr>
+<td><code>ports: 80, 443</code></td>
+<td><code>LoadBalancer</code> service</td>
+<td>Hetzner Cloud LB</td>
+</tr>
+<tr>
+<td><code>frontend_assets</code> volume</td>
+<td>Init container or build stage</td>
+<td>Static files served by ingress</td>
+</tr>
+</tbody>
+</table>
+<h2 id="backups">Backups<a class="headerlink" href="#backups" title="Permanent link">&para;</a></h2>
+<h3 id="single-server">Single Server<a class="headerlink" href="#single-server" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># PostgreSQL dump (add to crontab on the server)</span>
+docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>postgres<span class="w"> </span>pg_dump<span class="w"> </span>-U<span class="w"> </span>tidemill<span class="w"> </span>tidemill<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="p">|</span><span class="w"> </span>gzip<span class="w"> </span>&gt;<span class="w"> </span>/opt/backups/tidemill-<span class="k">$(</span>date<span class="w"> </span>+%F<span class="k">)</span>.sql.gz
+
+<span class="c1"># Or use Hetzner server snapshots (~€0.01/GB/mo)</span>
+</code></pre></div>
+<h3 id="kubernetes">Kubernetes<a class="headerlink" href="#kubernetes" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># PostgreSQL dump via CronJob (or use Velero for full cluster backup)</span>
+kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-n<span class="w"> </span>tidemill<span class="w"> </span>postgres-0<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>pg_dump<span class="w"> </span>-U<span class="w"> </span>tidemill<span class="w"> </span>tidemill<span class="w"> </span><span class="p">|</span><span class="w"> </span>gzip<span class="w"> </span>&gt;<span class="w"> </span>backup.sql.gz
+</code></pre></div>
+<h2 id="why-redpanda-over-apache-kafka">Why Redpanda over Apache Kafka<a class="headerlink" href="#why-redpanda-over-apache-kafka" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Redpanda</th>
+<th>Apache Kafka</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runtime</td>
+<td>Single C++ binary</td>
+<td>JVM + ZooKeeper (or KRaft)</td>
+</tr>
+<tr>
+<td>Memory (1 broker)</td>
+<td>~256 MB</td>
+<td>~1-2 GB</td>
+</tr>
+<tr>
+<td>Startup time</td>
+<td>Seconds</td>
+<td>30+ seconds</td>
+</tr>
+<tr>
+<td>API</td>
+<td>Kafka-compatible</td>
+<td>Native</td>
+</tr>
+<tr>
+<td>Swap to Kafka</td>
+<td>Zero code changes</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>For single-server: Redpanda saves ~1 GB of RAM. For Kubernetes production: swap to the Redpanda Helm chart or a managed Kafka service with no application changes.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

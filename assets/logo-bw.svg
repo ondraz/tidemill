@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64">
+  <!-- Icon mark -->
+  <g>
+    <path d="M30.6 24.1 C28 18, 27 10, 29.6 4.1 A28 28 0 0 1 57.4 20.2 C52 24, 42 26, 33.4 24.1 A8 8 0 0 0 30.6 24.1Z"
+          fill="#1a1a1a"/>
+    <path d="M30.6 24.1 C28 18, 27 10, 29.6 4.1 A28 28 0 0 1 57.4 20.2 C52 24, 42 26, 33.4 24.1 A8 8 0 0 0 30.6 24.1Z"
+          fill="#1a1a1a" transform="rotate(120 32 32)"/>
+    <path d="M30.6 24.1 C28 18, 27 10, 29.6 4.1 A28 28 0 0 1 57.4 20.2 C52 24, 42 26, 33.4 24.1 A8 8 0 0 0 30.6 24.1Z"
+          fill="#1a1a1a" transform="rotate(240 32 32)"/>
+    <circle cx="32" cy="32" r="5" fill="#1a1a1a"/>
+  </g>
+  <text x="76" y="42" font-family="'Inter', 'SF Pro Display', system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="32" font-weight="600" letter-spacing="-0.5" fill="#1a1a1a">Tidemill</text>
+</svg>

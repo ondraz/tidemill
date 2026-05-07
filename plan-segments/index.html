@@ -1,0 +1,2222 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/plan-segments/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Customer Segmentation for Tidemill - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#customer-segmentation-for-tidemill" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Customer Segmentation for Tidemill
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/competitive-matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research/product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture at a glance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attribute_definition-attribute-schema-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        attribute_definition — attribute schema registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customer_attribute-eav-value-rows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        customer_attribute — EAV value rows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#segment-saved-segment-definitions-workspace-shared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        segment — saved segment definitions (workspace-shared)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ingestion-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ingestion paths
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ingestion paths">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-stripe-passthrough-automatic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Stripe passthrough (automatic)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-csv-upload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. CSV upload
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-rest-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. REST API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-computed-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Computed attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cube-layer-extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cube layer extensions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cube layer extensions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic_joins-on-queryfragment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dynamic_joins on QueryFragment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cubeattributekey-op-value-factory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cube.attribute(key, op, value) factory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expanded-operator-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expanded operator set
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#segmentto_fragmentcube" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Segment.to_fragment(cube)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare-mode-single-query-cross-join" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compare mode: single-query CROSS JOIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cube-audit-ensure-every-metric-joins-customer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cube audit: ensure every metric joins customer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#account-vs-contract-scope-deferred" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Account vs. contract scope (deferred)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metric-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metric API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Metric API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#existing-endpoints-additive-params" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Existing endpoints — additive params
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New endpoints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discovery-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discovery endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frontend-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frontend changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Frontend changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#drop-hardcoded-dimension-lists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drop hardcoded dimension lists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reuse-dimensionpicker-for-group-by" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reuse DimensionPicker for group-by
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-segmentbuilder-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New SegmentBuilder component
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-segmentpicker-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New SegmentPicker component
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wire-into-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wire into reports
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#critical-files-paths-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical files (paths + role)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#out-of-scope-follow-ups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out of scope (follow-ups)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="customer-segmentation-for-tidemill">Customer Segmentation for Tidemill<a class="headerlink" href="#customer-segmentation-for-tidemill" title="Permanent link">&para;</a></h1>
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>Today Tidemill lets users break down MRR and Churn by a tiny hard-coded list of dimensions (<code>currency</code>, <code>customer_country</code>, <code>cancel_reason</code>) and filter with a naive <code>key=value</code> query param. Retention, LTV, and Trials expose no breakdowns at all. There is no notion of customer attributes beyond what Stripe ships on the <code>customer</code> row, no way to save reusable filters, and no way to compare multiple customer groups on the same chart.</p>
+<p>The goal is a first-class <strong>customer segmentation</strong> layer, inspired by SaaSGrid and ChartMogul:</p>
+<ul>
+<li><strong>Segments</strong> are named, saved, declarative filters ("Enterprise US", "Churn risk", "Q4-24 cohort").</li>
+<li>Every metric can be <strong>filtered by</strong> a segment and/or <strong>compared across</strong> N segments (the two compose).</li>
+<li>The universe of things a segment can filter on is a union of (a) existing cube dimensions, (b) user-defined attributes ingested from Stripe metadata / CSV / API, and (c) computed attributes derived from existing data (MRR band, tenure, cohort).</li>
+<li>Segment definition must compile through the existing Cube / QueryFragment algebra — no parallel SQL paths, no raw <code>text()</code> (project convention per <code>memory/feedback_all_queries_via_cubes.md</code>).</li>
+</ul>
+<p>Competitor reference:
+- <strong>SaaSGrid</strong> — typed attributes (Number/Date/String), ~14 operators, account-vs-contract filter scope, computed attributes (Cohort, ACV), multi-segment compare.
+- <strong>ChartMogul</strong> — 6 attribute types, customer-scope filtering, CSV/API/AI enrichment, multi-segment compare.</p>
+<p>User decisions (captured 2026-04-24): all four enrichment sources in MVP, workspace-shared segments, all five metrics get segmentation, FE moves to a discovery endpoint.</p>
+<hr />
+<h2 id="architecture-at-a-glance">Architecture at a glance<a class="headerlink" href="#architecture-at-a-glance" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code> ┌───────────────┐   ┌────────────────┐   ┌──────────────────────┐
+ │ Stripe webhook│   │ CSV upload     │   │ REST /api/customers  │
+ │ customer.*    │   │ /api/attributes│   │   /{id}/attributes   │
+ └──────┬────────┘   └───────┬────────┘   └───────────┬──────────┘
+        │                    │                        │
+        └────────────┬───────┴─────────┬──────────────┘
+                     ▼                 ▼
+              attribute_definition   customer_attribute (EAV)
+                     │                 │
+                     └────────┬────────┘
+                              │
+                              ▼
+        ┌──────────────────────────────────────────────────┐
+        │ Cube extensions: dynamic_joins + .attribute()    │
+        │ Segment.to_fragment(cube) → QueryFragment        │
+        │ Compare.to_fragment(cube, [...]) → QueryFragment │
+        └──────────────────────────────────────────────────┘
+                              │
+                              ▼
+                 Existing QueryFragment + compile()
+                              │
+                              ▼
+                     SQLAlchemy Select → Postgres
+</code></pre></div>
+<p>Segments are compiled into <code>QueryFragment</code> objects that add filters and joins to the same composed SQL the metric already builds. No parallel path, no string SQL.</p>
+<hr />
+<h2 id="data-model">Data model<a class="headerlink" href="#data-model" title="Permanent link">&para;</a></h2>
+<p>All new tables live in <code>tidemill/models.py</code> (shared SQLAlchemy <code>metadata</code>), not <code>models_auth.py</code> — segments and attributes are workspace-scoped, not user-scoped.</p>
+<h3 id="attribute_definition-attribute-schema-registry"><code>attribute_definition</code> — attribute schema registry<a class="headerlink" href="#attribute_definition-attribute-schema-registry" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">attribute_definition</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+    <span class="s2">&quot;attribute_definition&quot;</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="p">,</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>          <span class="c1"># e.g. &quot;tier&quot;, &quot;account_manager&quot;</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>           <span class="c1"># human-readable</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>            <span class="c1"># &#39;string&#39;|&#39;number&#39;|&#39;boolean&#39;|&#39;timestamp&#39;</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>          <span class="c1"># &#39;stripe&#39;|&#39;csv&#39;|&#39;api&#39;|&#39;computed&#39;</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;updated_at&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Serves both as typed schema enforcement and as the source for the FE discovery endpoint.</p>
+<h3 id="customer_attribute-eav-value-rows"><code>customer_attribute</code> — EAV value rows<a class="headerlink" href="#customer_attribute-eav-value-rows" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">customer_attribute</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+    <span class="s2">&quot;customer_attribute&quot;</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="p">,</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;source_id&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;customer_id&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s2">&quot;attribute_definition.key&quot;</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;value_string&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;value_number&quot;</span><span class="p">,</span> <span class="n">Numeric</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;value_bool&quot;</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;value_timestamp&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>          <span class="c1"># which source wrote this row</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;updated_at&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">UniqueConstraint</span><span class="p">(</span><span class="s2">&quot;source_id&quot;</span><span class="p">,</span> <span class="s2">&quot;customer_id&quot;</span><span class="p">,</span> <span class="s2">&quot;key&quot;</span><span class="p">),</span>
+    <span class="n">Index</span><span class="p">(</span><span class="s2">&quot;ix_customer_attr_key_customer&quot;</span><span class="p">,</span> <span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;source_id&quot;</span><span class="p">,</span> <span class="s2">&quot;customer_id&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Only one <code>value_*</code> column is populated per row, determined by <code>attribute_definition.type</code>. The index order <code>(key, source_id, customer_id)</code> matches the typical segment query pattern (filter attribute first, then join to customer set).</p>
+<h3 id="segment-saved-segment-definitions-workspace-shared"><code>segment</code> — saved segment definitions (workspace-shared)<a class="headerlink" href="#segment-saved-segment-definitions-workspace-shared" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">segment</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+    <span class="s2">&quot;segment&quot;</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="p">,</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;definition&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>      <span class="c1"># JSON SegmentDef</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;created_by&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s2">&quot;app_user.id&quot;</span><span class="p">)),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">Column</span><span class="p">(</span><span class="s2">&quot;updated_at&quot;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><code>created_by</code> captures auditing, but segments are visible to all users (no ownership gate). Mirrors the <code>saved_chart</code> JSON-config pattern at <code>tidemill/models_auth.py:77</code>.</p>
+<hr />
+<h2 id="ingestion-paths">Ingestion paths<a class="headerlink" href="#ingestion-paths" title="Permanent link">&para;</a></h2>
+<h3 id="1-stripe-passthrough-automatic">1. Stripe passthrough (automatic)<a class="headerlink" href="#1-stripe-passthrough-automatic" title="Permanent link">&para;</a></h3>
+<p><code>tidemill/state.py:_handle_customer</code> currently stores Stripe <code>customer.metadata</code> as a JSON string in <code>customer.metadata_</code> (line 85). Extend it to additionally fan out into <code>customer_attribute</code> rows:</p>
+<ul>
+<li>On first sight of a new key, create an <code>attribute_definition(key=..., source='stripe', type=inferred)</code>. Type inference is simple: parse as int/float → <code>number</code>; ISO-8601 string → <code>timestamp</code>; <code>"true"/"false"</code> → <code>boolean</code>; else <code>string</code>.</li>
+<li>Upsert <code>customer_attribute</code> rows only for changed keys (diff against existing rows to avoid write amplification).</li>
+<li>Keep <code>customer.metadata_</code> populated for backwards compatibility / raw inspection.</li>
+</ul>
+<p>Same treatment for <code>subscription.metadata</code> once a <code>subscription_attribute</code> sibling table is added (P1, not MVP — Stripe subscription metadata is currently not persisted; skip for now).</p>
+<h3 id="2-csv-upload">2. CSV upload<a class="headerlink" href="#2-csv-upload" title="Permanent link">&para;</a></h3>
+<p>New endpoint <code>POST /api/attributes/import</code> in a new <code>tidemill/api/attributes.py</code> router:</p>
+<ul>
+<li>Accepts multipart CSV. First column is <code>customer_id</code> (or <code>customer_external_id</code> / <code>email</code>, chosen via form field). Other columns become attribute keys.</li>
+<li>User picks a declared type per new column (FE form), or accepts inferred types. Updates <code>attribute_definition</code>.</li>
+<li>Bulk <code>INSERT ... ON CONFLICT (source_id, customer_id, key) DO UPDATE</code>.</li>
+<li>Return a summary: rows upserted, unknown customers, type inference decisions.</li>
+</ul>
+<h3 id="3-rest-api">3. REST API<a class="headerlink" href="#3-rest-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>POST /api/customers/{customer_id}/attributes</code> — body <code>{"tier": "enterprise", "account_manager": "Alice"}</code>. Upserts rows; creates definitions on first sight.</li>
+<li><code>DELETE /api/customers/{customer_id}/attributes/{key}</code> — remove a row.</li>
+<li><code>POST /api/attributes</code> — create/update an attribute_definition explicitly (for type pinning before upload).</li>
+</ul>
+<h3 id="4-computed-attributes">4. Computed attributes<a class="headerlink" href="#4-computed-attributes" title="Permanent link">&para;</a></h3>
+<p>Declared on the <strong>cube side</strong>, not the ingestion side. Implemented by adding <code>Dim</code> entries whose <code>column</code> is an expression rather than a bare column reference. For example, on <code>MRRSnapshotCube</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">:</span>
+    <span class="n">mrr_band</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span>
+        <span class="n">column</span><span class="o">=</span><span class="s2">&quot;CASE WHEN s.mrr_base_cents &lt; 10000 THEN &#39;&lt;$100&#39; ... END&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;MRR band&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">tenure_months</span> <span class="o">=</span> <span class="n">Dim</span><span class="p">(</span>
+        <span class="n">column</span><span class="o">=</span><span class="s2">&quot;DATE_PART(&#39;month&#39;, AGE(CURRENT_DATE, c.created_at))&quot;</span><span class="p">,</span>
+        <span class="n">join</span><span class="o">=</span><span class="s2">&quot;customer&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Tenure (months)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>The existing <code>literal_column</code> path in <code>tidemill/metrics/query.py:249</code> already handles raw expressions. <code>attribute_definition</code> rows are also written for these with <code>source='computed'</code> so the FE picker surfaces them uniformly.</p>
+<p>MVP computed set: <code>mrr_band</code>, <code>arr_band</code>, <code>tenure_months</code>, <code>cohort_month</code> (harmonize with existing retention cohort assignment).</p>
+<hr />
+<h2 id="cube-layer-extensions">Cube layer extensions<a class="headerlink" href="#cube-layer-extensions" title="Permanent link">&para;</a></h2>
+<h3 id="dynamic_joins-on-queryfragment"><code>dynamic_joins</code> on QueryFragment<a class="headerlink" href="#dynamic_joins-on-queryfragment" title="Permanent link">&para;</a></h3>
+<p>Extend <code>QueryFragment</code> in <code>tidemill/metrics/query.py:187</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DynamicJoinExpr</span><span class="p">:</span>
+    <span class="n">alias</span><span class="p">:</span> <span class="nb">str</span>              <span class="c1"># e.g. &quot;ca_tier&quot;</span>
+    <span class="n">table</span><span class="p">:</span> <span class="nb">str</span>              <span class="c1"># &quot;customer_attribute&quot;</span>
+    <span class="n">on</span><span class="p">:</span> <span class="nb">str</span>                 <span class="c1"># &quot;ca_tier.customer_id = c.id AND ca_tier.key = &#39;tier&#39;&quot;</span>
+    <span class="n">depends_on</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QueryFragment</span><span class="p">:</span>
+    <span class="o">...</span>
+    <span class="n">dynamic_joins</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DynamicJoinExpr</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</code></pre></div>
+<p><code>__add__</code> deduplicates by alias. <code>_apply_joins</code> (line 351) is extended to merge <code>model._joins</code> with the fragment's <code>dynamic_joins</code> before topological ordering.</p>
+<h3 id="cubeattributekey-op-value-factory"><code>Cube.attribute(key, op, value)</code> factory<a class="headerlink" href="#cubeattributekey-op-value-factory" title="Permanent link">&para;</a></h3>
+<p>New classmethod:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">attribute</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QueryFragment</span><span class="p">:</span>
+    <span class="n">defn</span> <span class="o">=</span> <span class="n">attribute_registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c1"># cached lookup in attribute_definition</span>
+    <span class="n">alias</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ca_</span><span class="si">{</span><span class="n">_safe</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">value_col</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;string&quot;</span><span class="p">:</span> <span class="s2">&quot;value_string&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;number&quot;</span><span class="p">:</span> <span class="s2">&quot;value_number&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;boolean&quot;</span><span class="p">:</span> <span class="s2">&quot;value_bool&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="s2">&quot;value_timestamp&quot;</span><span class="p">,</span>
+    <span class="p">}[</span><span class="n">defn</span><span class="o">.</span><span class="n">type</span><span class="p">]</span>
+    <span class="n">join</span> <span class="o">=</span> <span class="n">DynamicJoinExpr</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="n">alias</span><span class="p">,</span>
+        <span class="n">table</span><span class="o">=</span><span class="s2">&quot;customer_attribute&quot;</span><span class="p">,</span>
+        <span class="n">on</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">alias</span><span class="si">}</span><span class="s2">.customer_id = c.id AND </span><span class="si">{</span><span class="n">alias</span><span class="si">}</span><span class="s2">.source_id = c.source_id &quot;</span>
+           <span class="sa">f</span><span class="s2">&quot;AND </span><span class="si">{</span><span class="n">alias</span><span class="si">}</span><span class="s2">.key = &#39;</span><span class="si">{</span><span class="n">_escape</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">,</span>
+        <span class="n">depends_on</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">,),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">QueryFragment</span><span class="p">(</span>
+        <span class="n">source</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">__source__</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">__alias__</span><span class="p">,</span>
+        <span class="n">dynamic_joins</span><span class="o">=</span><span class="p">(</span><span class="n">join</span><span class="p">,),</span>
+        <span class="n">filters</span><span class="o">=</span><span class="p">(</span><span class="n">FilterExpr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">alias</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">value_col</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;attr_</span><span class="si">{</span><span class="n">_safe</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<p>Alias is deterministic: two filters on the same key reuse the same join. Value is bound via the existing <code>_filter_clause</code> path — no new operators on the Cube side, just a new way to produce filters against an aliased joined table.</p>
+<h3 id="expanded-operator-set">Expanded operator set<a class="headerlink" href="#expanded-operator-set" title="Permanent link">&para;</a></h3>
+<p>Current ops: <code>=, !=, &gt;, &gt;=, &lt;, &lt;=, in, between</code>. Add these to <code>_filter_clause</code> (line 392):</p>
+<ul>
+<li><code>not in</code> — negate the existing <code>in</code> branch.</li>
+<li><code>contains</code>, <code>starts_with</code>, <code>ends_with</code>, <code>not_contains</code> — <code>ILIKE</code> with escaped patterns.</li>
+<li><code>is_empty</code>, <code>is_not_empty</code> — <code>IS NULL</code> / <code>IS NOT NULL</code> (no bind param).</li>
+</ul>
+<p>All operators map cleanly to SQLAlchemy Core without raw <code>text()</code>.</p>
+<h3 id="segmentto_fragmentcube"><code>Segment.to_fragment(cube)</code><a class="headerlink" href="#segmentto_fragmentcube" title="Permanent link">&para;</a></h3>
+<p>New module <code>tidemill/segments/model.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Condition</span><span class="p">:</span>
+    <span class="n">field</span><span class="p">:</span> <span class="nb">str</span>      <span class="c1"># &quot;customer.country&quot; | &quot;subscription.status&quot; | &quot;attr.tier&quot; | &quot;computed.mrr_band&quot;</span>
+    <span class="n">op</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Any</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Group</span><span class="p">:</span>
+    <span class="n">op</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;and&quot;</span><span class="p">,</span> <span class="s2">&quot;or&quot;</span><span class="p">]</span>
+    <span class="n">conditions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Condition</span><span class="p">,</span> <span class="s2">&quot;Group&quot;</span><span class="p">]]</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SegmentDef</span><span class="p">:</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Group</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Segment</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defn</span><span class="p">:</span> <span class="n">SegmentDef</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cube</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Cube</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">QueryFragment</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compile to a QueryFragment.</span>
+
+<span class="sd">        &#39;and&#39; groups concatenate filters (standard QueryFragment behavior).</span>
+<span class="sd">        &#39;or&#39; groups are more complex: emit a single FilterExpr with a</span>
+<span class="sd">        compound ColumnElement by calling a new Cube.or_group() helper</span>
+<span class="sd">        that builds an OR over child clauses — still bind-param safe, no</span>
+<span class="sd">        text SQL.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+</code></pre></div>
+<p>The compiler walks the tree:
+- <code>customer.&lt;col&gt;</code> → <code>cube.filter(&lt;col&gt;, op, value)</code> (requires the cube to declare a <code>customer</code> join; see audit below)
+- <code>subscription.&lt;col&gt;</code> → <code>cube.filter(&lt;col&gt;, op, value)</code> with the subscription join
+- <code>attr.&lt;key&gt;</code> → <code>cube.attribute(key, op, value)</code>
+- <code>computed.&lt;key&gt;</code> → <code>cube.dimension(key)</code> as a group-by is different; for filters, treat as a regular filter via <code>cube.filter(key, op, value)</code> against the expression dim</p>
+<p>AND composition is free (monoid <code>+</code>). OR requires a new <code>Cube.or_group([fragments]) -&gt; QueryFragment</code> helper that wraps child filters with <code>sqlalchemy.or_()</code> and returns a fragment carrying one composite <code>FilterExpr</code>-like element. Extend <code>FilterExpr</code> with a <code>kind='or'</code> variant rather than overloading a new type, to keep compilation paths uniform.</p>
+<h3 id="compare-mode-single-query-cross-join">Compare mode: single-query CROSS JOIN<a class="headerlink" href="#compare-mode-single-query-cross-join" title="Permanent link">&para;</a></h3>
+<p>Compare mode (N segments in one result) compiles to one SQL statement, not N parallel queries. The shape:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">seg</span><span class="p">.</span><span class="n">segment_id</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="k">period</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">metric</span><span class="w"> </span><span class="n">dims</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">mrr_base_cents</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">amount</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">metric_mrr_snapshot</span><span class="w"> </span><span class="n">s</span>
+<span class="k">JOIN</span><span class="w"> </span><span class="n">customer</span><span class="w"> </span><span class="k">c</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">...</span>
+<span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">customer_attribute</span><span class="w"> </span><span class="n">ca_tier</span><span class="w">   </span><span class="k">ON</span><span class="w"> </span><span class="n">ca_tier</span><span class="p">.</span><span class="n">customer_id</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">ca_tier</span><span class="p">.</span><span class="k">key</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tier&#39;</span>
+<span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">customer_attribute</span><span class="w"> </span><span class="n">ca_region</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">ca_region</span><span class="p">.</span><span class="n">customer_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">c</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">ca_region</span><span class="p">.</span><span class="k">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;region&#39;</span>
+<span class="k">CROSS</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="p">(</span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;seg_a&#39;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;seg_b&#39;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;seg_c&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">seg</span><span class="p">(</span><span class="n">segment_id</span><span class="p">)</span>
+<span class="k">WHERE</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">universe</span><span class="o">-</span><span class="n">filter</span><span class="w"> </span><span class="n">conditions</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="o">`</span><span class="n">segment</span><span class="o">=`</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="k">any</span><span class="p">)</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="k">AND</span><span class="s1">&#39;d into every row&gt;</span>
+<span class="s1">AND (</span>
+<span class="s1">    (seg.segment_id = &#39;</span><span class="n">seg_a</span><span class="s1">&#39; AND c.country = :a_country AND ca_tier.value_string = :a_tier)</span>
+<span class="s1"> OR (seg.segment_id = &#39;</span><span class="n">seg_b</span><span class="s1">&#39; AND ca_tier.value_string = :b_tier)</span>
+<span class="s1"> OR (seg.segment_id = &#39;</span><span class="n">seg_c</span><span class="err">&#39;</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">ca_region</span><span class="p">.</span><span class="n">value_string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">:</span><span class="n">c_region</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">seg</span><span class="p">.</span><span class="n">segment_id</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="k">period</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">metric</span><span class="w"> </span><span class="n">dims</span><span class="o">&gt;</span>
+</code></pre></div>
+<p>Each base row is duplicated N times by the CROSS JOIN; the OR filter keeps a given copy only if that row satisfies the tagged segment's conditions. A customer in both A and B produces two surviving rows (one tagged A, one tagged B), which is the correct overlap semantics. The set of dynamic attribute joins is the <strong>union</strong> across all branches — each <code>customer_attribute</code> key joins once, reused across branches that reference it.</p>
+<p>Implementation: extend <code>QueryFragment</code> with</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CompareBranch</span><span class="p">:</span>
+    <span class="n">segment_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">filter_fragment</span><span class="p">:</span> <span class="n">QueryFragment</span>       <span class="c1"># carries filters + any extra dynamic_joins</span>
+    <span class="c1"># dimensions/measures on the branch are ignored — only filters matter</span>
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QueryFragment</span><span class="p">:</span>
+    <span class="o">...</span>
+    <span class="n">compare</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">CompareBranch</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+</code></pre></div>
+<p>Compilation order in <code>QueryFragment.compile</code> (extending the existing pipeline at <code>query.py:214</code>):</p>
+<ol>
+<li>Apply static + dynamic joins (union across all compare branches).</li>
+<li>If <code>compare</code> is non-empty: add the <code>VALUES (...)</code> CROSS JOIN as <code>seg</code>; add <code>seg.segment_id</code> as the first GROUP BY dimension.</li>
+<li>Time grain + regular dimensions + measures (existing behaviour).</li>
+<li>Combine non-compare filters (AND) with the compare predicate (OR-of-ANDs, each branch tagged with <code>seg.segment_id = :branch_id</code>).</li>
+</ol>
+<p><code>Compare.to_fragment(cube, pairs)</code> takes <code>[(segment_id, SegmentDef), ...]</code> and returns a fragment where <code>compare</code> is populated and <code>dynamic_joins</code> is the union of each branch's joins. Internal composition reuses <code>Segment.to_fragment(cube)</code> to produce each branch's filter fragment — no separate code path for segment→SQL.</p>
+<p>Bind-param safety: each branch's filters keep their own param names (already prefixed by field name in <code>Cube.filter</code>); segment_id literals go through bindparam too.</p>
+<p><strong>Ratio-metric caveat.</strong> Metrics that compute a ratio (churn rate = churned_count / active_at_start_count) run two internal queries inside <code>Metric.query()</code> today. In compare mode, <strong>both</strong> must receive the same <code>compare</code> fragment so the numerator and denominator are grouped by segment_id before being divided in Python. <code>Metric</code> subclasses already thread <code>QuerySpec</code> through their multiple queries — the new <code>spec.compare</code> is propagated the same way. Churn's <code>_logo_rate</code> / <code>_revenue_rate</code> at <code>tidemill/metrics/churn/metric.py</code> is the main place to update.</p>
+<p><strong>Performance notes.</strong>
+- VALUES with ≤10 entries: negligible planner overhead.
+- Join amplification: segments that don't share attributes trigger LEFT JOINs on both attribute keys for every base row, but EAV index <code>(key, source_id, customer_id)</code> keeps each join cheap; Postgres hash-joins the ca_* relation once.
+- GROUP BY on <code>(segment_id, period, …)</code> is identical in cost to grouping by any other extra dimension — Tidemill already does this for <code>currency + customer_country</code>.</p>
+<h3 id="cube-audit-ensure-every-metric-joins-customer">Cube audit: ensure every metric joins <code>customer</code><a class="headerlink" href="#cube-audit-ensure-every-metric-joins-customer" title="Permanent link">&para;</a></h3>
+<p>Before shipping, verify each metric's cube has a <code>customer</code> join declared. Current state:
+- <code>MRRSnapshotCube</code>, <code>MRRMovementCube</code> — have <code>customer</code> join ✓
+- <code>ChurnEventCube</code>, <code>ChurnCustomerStateCube</code> — have <code>customer</code> join ✓
+- <code>RetentionCohortCube</code>, <code>LtvInvoiceCube</code> — check; add if missing
+- <code>TrialCube</code> — check; add if missing</p>
+<p>Missing joins must be added as static <code>JoinDef</code>s. The dynamic attribute joins declare <code>depends_on=("customer",)</code> so <code>_apply_joins</code> pulls the customer join in transitively.</p>
+<h3 id="account-vs-contract-scope-deferred">Account vs. contract scope (deferred)<a class="headerlink" href="#account-vs-contract-scope-deferred" title="Permanent link">&para;</a></h3>
+<p>SaaSGrid's account-vs-contract distinction maps onto Tidemill's customer-vs-subscription cubes. MVP supports <strong>account-scope</strong> only (filters always scope on <code>customer.id</code>). Contract-scope (filter subscriptions but keep customer) is a P1 follow-up — add a <code>scope</code> field to <code>Condition</code> and route attribute filters to either the customer join or a subscription-level attribute table when that arrives.</p>
+<hr />
+<h2 id="metric-api">Metric API<a class="headerlink" href="#metric-api" title="Permanent link">&para;</a></h2>
+<h3 id="existing-endpoints-additive-params">Existing endpoints — additive params<a class="headerlink" href="#existing-endpoints-additive-params" title="Permanent link">&para;</a></h3>
+<p>Every metric endpoint (<code>/api/metrics/{mrr,churn,retention,ltv,trials}</code> and their sub-paths) accepts two new query params, wired through <code>route_helpers.parse_spec</code>:</p>
+<ul>
+<li><code>segment: str</code> — ID of a saved segment to scope the metric to.</li>
+<li><code>compare_segments: list[str]</code> — 1–10 segment IDs to break down by.</li>
+</ul>
+<p><code>segment</code> and <code>compare_segments</code> compose — they are <strong>not</strong> mutually exclusive. <code>segment</code> scopes the universe (AND-restricts every row); <code>compare_segments</code> then slices that universe by tagging each surviving row with every branch it matches. Example: <code>segment=enterprise&amp;compare_segments=us_west,us_east</code> means "MRR of Enterprise customers, split by region". If a compare branch doesn't intersect the filter segment, its slice is just empty — treated as user input, not an API error.</p>
+<p>When <code>compare_segments</code> is used, the engine compiles a <strong>single query</strong> that tags each row with matching segments and groups by the synthetic <code>segment_id</code> dimension (see §"Compare mode: single-query CROSS JOIN" under Cube extensions). One round-trip, one plan, one scan. Correctness under overlap is preserved because the CROSS JOIN duplicates rows per matching segment rather than using a mutually-exclusive CASE.</p>
+<p><code>QuerySpec</code> is extended with two optional fields: <code>segment: SegmentDef | None</code> (filter) and <code>compare: tuple[tuple[str, SegmentDef], ...] | None</code> (slice, list of <code>(segment_id, definition)</code> pairs). They compose via the existing <code>+</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">fragment</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">cube</span><span class="o">.</span><span class="n">measures</span><span class="o">.</span><span class="n">mrr</span>
+    <span class="o">+</span> <span class="n">cube</span><span class="o">.</span><span class="n">apply_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>                     <span class="c1"># dims/filters/granularity from URL</span>
+    <span class="o">+</span> <span class="p">(</span><span class="n">segment</span><span class="o">.</span><span class="n">to_fragment</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span> <span class="k">if</span> <span class="n">segment</span> <span class="k">else</span> <span class="n">QueryFragment</span><span class="p">())</span>          <span class="c1"># universe filter</span>
+    <span class="o">+</span> <span class="p">(</span><span class="n">Compare</span><span class="o">.</span><span class="n">to_fragment</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">compare</span><span class="p">)</span> <span class="k">if</span> <span class="n">compare</span> <span class="k">else</span> <span class="n">QueryFragment</span><span class="p">())</span> <span class="c1"># slice</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Because all non-compare filters AND together in the WHERE clause and the compare predicate is itself a single compound OR-of-ANDs ANDed into the same WHERE, the two layers don't interfere.</p>
+<h3 id="new-endpoints">New endpoints<a class="headerlink" href="#new-endpoints" title="Permanent link">&para;</a></h3>
+<p>Namespaced under <code>/api/segments</code>:</p>
+<ul>
+<li><code>GET /api/segments</code> — list all segments (workspace-shared).</li>
+<li><code>POST /api/segments</code> — create. Body: <code>{name, description?, definition}</code>.</li>
+<li><code>GET /api/segments/{id}</code> — fetch one.</li>
+<li><code>PUT /api/segments/{id}</code> — update.</li>
+<li><code>DELETE /api/segments/{id}</code> — remove.</li>
+<li><code>POST /api/segments/validate</code> — lint a <code>definition</code> without saving: walk the tree, check fields exist, return specific errors. Used by the FE builder for live validation.</li>
+</ul>
+<p>Namespaced under <code>/api/attributes</code>:</p>
+<ul>
+<li><code>GET /api/attributes</code> — list all <code>attribute_definition</code> rows.</li>
+<li><code>POST /api/attributes</code> — create/update a definition.</li>
+<li><code>GET /api/attributes/{key}/values?limit=100</code> — distinct observed values for autocomplete/dropdown UI.</li>
+<li><code>POST /api/attributes/import</code> — CSV upload.</li>
+<li><code>POST /api/customers/{id}/attributes</code> — set on one customer.</li>
+</ul>
+<h3 id="discovery-endpoint">Discovery endpoint<a class="headerlink" href="#discovery-endpoint" title="Permanent link">&para;</a></h3>
+<p><code>GET /api/metrics/{name}/fields</code> returns everything the FE needs to build filter UIs:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer.country&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Country&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;subscription.plan_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Plan&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;computed.mrr_band&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MRR band&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;attributes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attr.tier&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Tier&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attr.account_manager&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Account manager&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;time_dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;snapshot_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Snapshot at&quot;</span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Powered by <code>Cube.available_dimensions()</code> + <code>Cube.available_time_dimensions()</code> (already exist at <code>query.py:642</code>) plus a read of <code>attribute_definition</code>.</p>
+<hr />
+<h2 id="frontend-changes">Frontend changes<a class="headerlink" href="#frontend-changes" title="Permanent link">&para;</a></h2>
+<h3 id="drop-hardcoded-dimension-lists">Drop hardcoded dimension lists<a class="headerlink" href="#drop-hardcoded-dimension-lists" title="Permanent link">&para;</a></h3>
+<p>Delete <code>MRR_DIMENSIONS</code>, <code>CHURN_DIMENSIONS</code>, <code>RETENTION_DIMENSIONS</code>, <code>LTV_DIMENSIONS</code>, <code>TRIALS_DIMENSIONS</code> from <code>frontend/src/lib/constants.ts</code>. Each report fetches <code>/api/metrics/{name}/fields</code> on mount and passes the result to the picker.</p>
+<h3 id="reuse-dimensionpicker-for-group-by">Reuse <code>DimensionPicker</code> for group-by<a class="headerlink" href="#reuse-dimensionpicker-for-group-by" title="Permanent link">&para;</a></h3>
+<p><code>frontend/src/components/controls/DimensionPicker.tsx</code> is already generic (takes <code>available: string[]</code>). It keeps handling the "break down by" role — with the attribute namespace prefixed (<code>attr.tier</code>) as part of the field string. Display label comes from the <code>/fields</code> response so we don't have to strip prefixes in the picker.</p>
+<h3 id="new-segmentbuilder-component">New <code>SegmentBuilder</code> component<a class="headerlink" href="#new-segmentbuilder-component" title="Permanent link">&para;</a></h3>
+<p><code>frontend/src/components/controls/SegmentBuilder.tsx</code> — a rule builder UI:</p>
+<ul>
+<li>Root: AND / OR selector.</li>
+<li>Each rule row: field dropdown (populated from <code>/fields</code>), operator dropdown (operators filtered by the field's type), value input (text / number / date / dropdown of observed values from <code>GET /api/attributes/{key}/values</code>).</li>
+<li>Add-rule / add-group buttons at each level; unlimited nesting.</li>
+<li>"Save as segment" → modal → persists via <code>POST /api/segments</code>.</li>
+</ul>
+<h3 id="new-segmentpicker-component">New <code>SegmentPicker</code> component<a class="headerlink" href="#new-segmentpicker-component" title="Permanent link">&para;</a></h3>
+<p><code>frontend/src/components/controls/SegmentPicker.tsx</code> — appears on each report alongside <code>DimensionPicker</code>:</p>
+<ul>
+<li>Filter row: single-select dropdown (the <code>segment=</code> query param).</li>
+<li>Compare row: multi-select dropdown of up to 10 segments (the <code>compare_segments=</code> query param).</li>
+<li>The two rows are independent — users can pick either, both, or neither.</li>
+<li>"Manage segments" link → full-page segment list + builder.</li>
+</ul>
+<h3 id="wire-into-reports">Wire into reports<a class="headerlink" href="#wire-into-reports" title="Permanent link">&para;</a></h3>
+<p>Each of <code>MRRReport.tsx</code>, <code>ChurnReport.tsx</code>, <code>RetentionReport.tsx</code>, <code>LtvReport.tsx</code>, <code>TrialsReport.tsx</code> gets:
+- Replaces local <code>const [dimensions]</code> with <code>useFields(metricName)</code> + <code>useSegments()</code>.
+- Passes <code>segment</code> and/or <code>compare_segments</code> through to <code>useMRR</code>, <code>useChurn</code>, etc. in <code>frontend/src/hooks/useMetrics.ts</code>.
+- When comparing, the chart pivots on <code>segment_name</code> (same code path as pivoting on a dimension value today — <code>MRRReport.tsx:77</code> shows the existing pivot logic; it just reads a different key).</p>
+<hr />
+<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
+<p>Update in lockstep with code (CLAUDE.md convention):</p>
+<ul>
+<li><code>docs/architecture/segments.md</code> (new) — the design doc: data model, DSL, cube compilation, scope semantics.</li>
+<li><code>docs/architecture/cubes.md</code> — document <code>Cube.attribute()</code>, <code>dynamic_joins</code>, the expanded operator set, compare-mode compilation.</li>
+<li><code>docs/architecture/api.md</code> — new endpoints (<code>/api/segments/*</code>, <code>/api/attributes/*</code>, <code>/api/metrics/{name}/fields</code>).</li>
+<li><code>docs/architecture/database.md</code> — three new tables.</li>
+<li><code>docs/definitions.md</code> — segment membership semantics (account-scope; NULL attribute = not-member for non-null operators).</li>
+<li><code>CLAUDE.md</code> — update package structure to include <code>tidemill/segments/</code> and <code>tidemill/attributes/</code>.</li>
+</ul>
+<hr />
+<h2 id="critical-files-paths-role">Critical files (paths + role)<a class="headerlink" href="#critical-files-paths-role" title="Permanent link">&para;</a></h2>
+<p><strong>Backend — modify:</strong>
+- <code>tidemill/metrics/query.py</code> — extend <code>QueryFragment</code> with <code>dynamic_joins</code> and <code>compare</code>; add <code>Cube.attribute()</code> and <code>Cube.or_group()</code>; expand operator set in <code>_filter_clause</code>; extend <code>compile()</code> to emit CROSS JOIN + compound predicate when <code>compare</code> is set.
+- <code>tidemill/metrics/base.py</code> — add <code>segment: SegmentDef | None</code> and <code>compare: tuple[tuple[str, SegmentDef], ...] | None</code> to <code>QuerySpec</code>.
+- <code>tidemill/metrics/route_helpers.py</code> — parse <code>segment</code> / <code>compare_segments</code> query params; resolve IDs to <code>SegmentDef</code>s; attach to <code>QuerySpec</code>.
+- <code>tidemill/engine.py</code> — thread <code>spec.segment</code> and <code>spec.compare</code> through each metric's <code>query()</code>; ratio-metric callsites must reuse the same compare payload for numerator and denominator.
+- <code>tidemill/state.py</code> — fan out <code>customer.metadata</code> into <code>customer_attribute</code> rows on customer.created/updated.
+- <code>tidemill/models.py</code> — declare <code>attribute_definition</code>, <code>customer_attribute</code>, <code>segment</code> tables.
+- <code>tidemill/api/app.py</code> — mount new routers.
+- Each <code>tidemill/metrics/*/cubes.py</code> — audit/add <code>customer</code> join; add <code>computed</code> dimensions (mrr_band, tenure_months, cohort_month).
+- Each <code>tidemill/metrics/*/routes.py</code> — <code>/fields</code> endpoint.
+- <code>tidemill/metrics/churn/metric.py</code> — ensure <code>_logo_rate</code> / <code>_revenue_rate</code> propagate the compare payload to both sub-queries.</p>
+<p><strong>Backend — create:</strong>
+- <code>tidemill/segments/__init__.py</code>
+- <code>tidemill/segments/model.py</code> — <code>SegmentDef</code>, <code>Condition</code>, <code>Group</code>, <code>Segment.to_fragment</code>, <code>Compare.to_fragment</code>.
+- <code>tidemill/segments/compiler.py</code> — walks the tree, emits <code>QueryFragment</code>.
+- <code>tidemill/segments/routes.py</code> — CRUD + validate.
+- <code>tidemill/attributes/__init__.py</code>
+- <code>tidemill/attributes/routes.py</code> — list, define, import CSV, set on customer.
+- <code>tidemill/attributes/ingest.py</code> — Stripe metadata fan-out helper.</p>
+<p><strong>Frontend — modify:</strong>
+- <code>frontend/src/lib/constants.ts</code> — delete <code>*_DIMENSIONS</code> constants.
+- <code>frontend/src/components/reports/{MRR,Churn,Retention,Ltv,Trials}Report.tsx</code> — wire in <code>useFields</code>, <code>useSegments</code>, render <code>SegmentPicker</code>.
+- <code>frontend/src/hooks/useMetrics.ts</code> — accept <code>segment</code> and <code>compare_segments</code> params.</p>
+<p><strong>Frontend — create:</strong>
+- <code>frontend/src/components/controls/SegmentBuilder.tsx</code>
+- <code>frontend/src/components/controls/SegmentPicker.tsx</code>
+- <code>frontend/src/pages/SegmentsPage.tsx</code> — full list / create / edit UI.
+- <code>frontend/src/hooks/useFields.ts</code>, <code>useSegments.ts</code>, <code>useAttributes.ts</code>.</p>
+<p><strong>Reuse (don't duplicate):</strong>
+- <code>tidemill/metrics/query.py:Cube</code> — factories (<code>dimension</code>, <code>filter</code>, <code>where</code>, <code>time_grain</code>, <code>apply_spec</code>).
+- <code>tidemill/metrics/query.py:Cube.available_dimensions()</code> — for the <code>/fields</code> endpoint.
+- <code>frontend/src/components/controls/DimensionPicker.tsx</code> — generic, reusable.
+- <code>tidemill/models_auth.py</code> saved-object pattern — mirrored by <code>segment</code> table.
+- <code>tidemill/state.py:_handle_customer</code> existing upsert path — extend, don't replace.</p>
+<hr />
+<h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
+<p><strong>Unit / backend:</strong>
+1. <code>make test</code> — new tests for <code>Segment.to_fragment(cube)</code> and <code>Compare.to_fragment(cube, [...])</code> across all five cubes.
+2. Test cases: AND-only segments, OR groups, nested groups, attribute + computed + customer-column in one segment, segments with unknown fields (reject with specific error), segments with mismatched types (e.g. <code>attr.tier &gt; 5</code> where tier is string — reject), segments with <code>is_empty</code> semantics.
+3. Test <code>customer_attribute</code> fan-out: Stripe webhook creates definitions on first sight; update only modifies changed keys; CSV upload inserts rows; REST API upsert works.
+4. Test <code>compare_segments=A,B</code>: customer in both appears in both segment rows; result row count matches expected union; exactly one SQL statement is executed.
+5. Snapshot the compiled SQL for a representative query (filter segment enterprise + compare by region + <code>mrr_band &gt;= $500</code> + tenure &gt; 6mo) to guard against regressions.</p>
+<p><strong>API / integration:</strong>
+6. Spin up the full stack (<code>cd deploy/compose &amp;&amp; docker-compose up -d</code>).
+7. Seed with <code>cd deploy/seed &amp;&amp; python stripe_seed.py</code> — the generated customers have <code>metadata</code> on some.
+8. <code>curl /api/attributes</code> — confirm Stripe metadata keys appear as <code>source='stripe'</code> attribute_definitions.
+9. <code>curl -X POST /api/attributes/import</code> with a CSV adding <code>tier</code> and <code>industry</code> columns — confirm new definitions and rows.
+10. <code>curl -X POST /api/segments</code> with an Enterprise-US definition — confirm validation passes; persistence round-trips.
+11. <code>curl /api/metrics/mrr?segment=&lt;id&gt;</code> — confirm response narrows correctly; compare against unfiltered MRR.
+12. <code>curl "/api/metrics/mrr?compare_segments=&lt;A&gt;,&lt;B&gt;"</code> — confirm N segment rows; sum matches expectation for non-overlapping segments. With overlap: a customer in both A and B contributes to both totals (check against two separate <code>segment=&lt;A&gt;</code> and <code>segment=&lt;B&gt;</code> calls).
+13. With <code>LOG_LEVEL=debug</code>, confirm exactly <strong>one</strong> <code>SQL:</code> line is logged per compare-mode request (one query, not N).
+14. Churn rate compare: <code>curl "/api/metrics/churn?compare_segments=&lt;A&gt;,&lt;B&gt;"</code> — confirm both numerator and denominator are segmented so per-segment rates are correct, not a denominator shared across segments.
+15. Combined filter + slice: <code>curl "/api/metrics/mrr?segment=&lt;enterprise&gt;&amp;compare_segments=&lt;us_west&gt;,&lt;us_east&gt;"</code> — confirm each slice is restricted to Enterprise customers (sum of slices ≤ plain <code>segment=&lt;enterprise&gt;</code> total). Slice that doesn't intersect the filter returns zero, not an error.</p>
+<p><strong>Frontend:</strong>
+16. Start dev server (<code>cd frontend &amp;&amp; npm run dev</code>), open the browser (mcp__chrome-devtools) to the MRR report.
+17. Confirm <code>DimensionPicker</code> populates from <code>/api/metrics/mrr/fields</code> (now includes attribute + computed keys).
+18. Open segment builder → create "Enterprise US" (country=US AND attr.tier=enterprise) → save → appears in <code>SegmentPicker</code>.
+19. Pick "Enterprise US" in the filter row AND pick two region segments in the compare row → confirm MRR chart stacks by region, all bars restricted to Enterprise.
+20. Navigate to Retention/LTV/Trials — confirm segment picker shows up and filters the chart.
+21. Watch the network tab: no 5xx, response shapes match the hooks.
+22. DevTools console: no React key warnings, no unhandled promise rejections.</p>
+<p><strong>Non-regression:</strong>
+23. Reload MRRReport without any segment selected — KPI values identical to pre-change baseline (capture before starting).
+24. <code>docker-compose logs api | grep 'SQL:'</code> — confirm no raw <code>text()</code> SQL is emitted for segment-bearing queries (SQL goes through the Cube compile path).</p>
+<hr />
+<h2 id="out-of-scope-follow-ups">Out of scope (follow-ups)<a class="headerlink" href="#out-of-scope-follow-ups" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Subscription-scope attributes</strong> (SaaSGrid's "contract-level") — requires <code>subscription_attribute</code> table and <code>scope</code> routing in the segment compiler.</li>
+<li><strong>AI enrichment</strong> (ChartMogul's OpenAI scraping of customer websites) — optional future plugin; the REST API endpoint already unblocks external scripts doing this.</li>
+<li><strong>Materialized compare views</strong> — if a compare with 10 segments over a 2-year daily series shows up as a hot path, cache the compiled query + result per segment-set-hash. Not needed for MVP.</li>
+<li><strong>Lago / Kill Bill connectors</strong> — their customer metadata models map to the same EAV once P1 connectors ship.</li>
+<li><strong>Segment change history / versioning</strong> — audit log for segment edits; useful for reproducibility but not MVP.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

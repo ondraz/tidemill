@@ -1,0 +1,2186 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://ondraz.github.io/tidemill/research/competitive-matrix/">
+      
+      
+        <link rel="prev" href="../analytics-tools/">
+      
+      
+        <link rel="next" href="../product-positioning/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Competitive Matrix - Tidemill</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/plotly.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <script src="../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#competitive-feature-matrix" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tidemill" class="md-header__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tidemill
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Competitive Matrix
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tidemill" class="md-nav__button md-logo" aria-label="Tidemill" data-md-component="logo">
+      
+  <img src="../../assets/icon-color.svg" alt="logo">
+
+    </a>
+    Tidemill
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ondraz/tidemill" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ondraz/tidemill
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../palette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Palette
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/connectors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connectors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/cubes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cubes & Query Algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/example-queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Query Algebra Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/segments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segmentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Research
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Research
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../market-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Market Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../business-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Business Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pricing-and-billing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pricing & Billing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../billing-engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Billing Engines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analytics-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analytics Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-read-this-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to Read This Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#billing-engine-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Billing Engine Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analytics-tool-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analytics Tool Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gap-analysis-where-no-existing-tool-is-strong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap Analysis: Where No Existing Tool Is Strong
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gap Analysis: Where No Existing Tool Is Strong">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gap-1-metric-calculation-transparency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 1: Metric Calculation Transparency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gap-2-open-source-billing-engine-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 2: Open-Source Billing Engine Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gap-3-self-hosted-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 3: Self-Hosted Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gap-4-data-warehouse-native" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 4: Data Warehouse Native
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gap-5-customizable-metric-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 5: Customizable Metric Definitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#landscape-positioning-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Landscape Positioning Map
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../product-positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Notebooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Notebooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/01_mrr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MRR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/02_churn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Churn
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/03_retention/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retention
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/04_ltv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTV
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/05_trials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-read-this-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to Read This Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#billing-engine-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Billing Engine Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analytics-tool-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analytics Tool Capabilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gap-analysis-where-no-existing-tool-is-strong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap Analysis: Where No Existing Tool Is Strong
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Gap Analysis: Where No Existing Tool Is Strong">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gap-1-metric-calculation-transparency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 1: Metric Calculation Transparency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gap-2-open-source-billing-engine-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 2: Open-Source Billing Engine Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gap-3-self-hosted-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 3: Self-Hosted Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gap-4-data-warehouse-native" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 4: Data Warehouse Native
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gap-5-customizable-metric-definitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gap 5: Customizable Metric Definitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#landscape-positioning-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Landscape Positioning Map
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="competitive-feature-matrix">Competitive Feature Matrix<a class="headerlink" href="#competitive-feature-matrix" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Side-by-side capability comparison across both billing engines and analytics tools, identifying gaps an open-source analytics package can fill.
+Last updated: March 2026</p>
+</blockquote>
+<hr />
+<h2 id="how-to-read-this-matrix">How to Read This Matrix<a class="headerlink" href="#how-to-read-this-matrix" title="Permanent link">&para;</a></h2>
+<p>This matrix maps capabilities across two layers of the subscription stack:</p>
+<ul>
+<li><strong>Billing Engines</strong> (Stripe, Lago, Kill Bill) — process subscriptions, generate invoices, handle payments</li>
+<li><strong>Analytics Tools</strong> (ChartMogul, Baremetrics, ProfitWell, SaaSGrid) — read billing data, compute metrics, visualize insights</li>
+</ul>
+<p>An open-source analytics package sits in the analytics layer but must integrate tightly with the billing layer. The matrix reveals where existing tools are strong, where they are weak, and where whitespace exists.</p>
+<p>Rating scale: <strong>Strong</strong> (market-leading), <strong>Adequate</strong> (functional), <strong>Weak</strong> (limited), <strong>Absent</strong> (not available).</p>
+<hr />
+<h2 id="billing-engine-capabilities">Billing Engine Capabilities<a class="headerlink" href="#billing-engine-capabilities" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Stripe Billing</th>
+<th>Lago</th>
+<th>Kill Bill</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Subscription Management</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Plan creation and management</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Plan versioning and migration</td>
+<td>Adequate</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Per-customer plan overrides</td>
+<td>Weak</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Multi-currency</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td><strong>Pricing Model Support</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Flat-rate</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Tiered</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Per-seat</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Usage-based metering</td>
+<td>Adequate (pre-aggregated)</td>
+<td>Strong (event-based)</td>
+<td>Strong (plugin-based)</td>
+</tr>
+<tr>
+<td>Hybrid (base + usage)</td>
+<td>Weak</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td><strong>Billing Operations</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Automated invoicing</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Proration handling</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Dunning / retry logic</td>
+<td>Strong (ML-powered)</td>
+<td>Adequate</td>
+<td>Adequate</td>
+</tr>
+<tr>
+<td>Credit notes and refunds</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Prepaid credits / wallets</td>
+<td>Weak</td>
+<td>Strong</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td><strong>Integration and Access</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>API quality</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Adequate</td>
+</tr>
+<tr>
+<td>Webhook events</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Adequate</td>
+</tr>
+<tr>
+<td>Direct database access</td>
+<td>Absent</td>
+<td>Strong (self-hosted)</td>
+<td>Strong (self-hosted)</td>
+</tr>
+<tr>
+<td>Payment processor flexibility</td>
+<td>Stripe only</td>
+<td>Multi-processor</td>
+<td>Multi-processor</td>
+</tr>
+<tr>
+<td><strong>Deployment</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Cloud / managed</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Self-hosted</td>
+<td>Absent</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td><strong>Data Ownership</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Full data portability</td>
+<td>Weak</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>No vendor lock-in</td>
+<td>Weak</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="analytics-tool-capabilities">Analytics Tool Capabilities<a class="headerlink" href="#analytics-tool-capabilities" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>ChartMogul</th>
+<th>Baremetrics</th>
+<th>ProfitWell</th>
+<th>SaaSGrid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Core Metrics</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>MRR / ARR</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Churn (logo and revenue)</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>LTV calculation</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>ARPU</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Net Revenue Retention</td>
+<td>Strong</td>
+<td>Adequate</td>
+<td>Adequate</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Expansion / Contraction MRR</td>
+<td>Strong</td>
+<td>Strong</td>
+<td>Adequate</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>CAC and LTV:CAC</td>
+<td>Weak</td>
+<td>Weak</td>
+<td>Weak</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td><strong>Segmentation and Cohorts</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Custom segmentation</td>
+<td>Strong</td>
+<td>Weak (pre-built)</td>
+<td>Weak</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Cohort analysis</td>
+<td>Strong</td>
+<td>Adequate (monthly)</td>
+<td>Adequate</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Custom dimensions / attributes</td>
+<td>Strong</td>
+<td>Weak</td>
+<td>Weak</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td><strong>Actionable Features</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Revenue recovery (dunning)</td>
+<td>Absent</td>
+<td>Strong (Recover)</td>
+<td>Strong (Retain)</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Forecasting</td>
+<td>Weak</td>
+<td>Strong (Forecast+)</td>
+<td>Absent</td>
+<td>Adequate</td>
+</tr>
+<tr>
+<td>Trial insights</td>
+<td>Absent</td>
+<td>Strong</td>
+<td>Absent</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Cancellation insights</td>
+<td>Absent</td>
+<td>Strong</td>
+<td>Absent</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Benchmarking</td>
+<td>Absent</td>
+<td>Strong</td>
+<td>Strong (34K+)</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td><strong>Data and Integration</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Billing source connectors</td>
+<td>Strong (10+)</td>
+<td>Adequate (8+)</td>
+<td>Adequate (6+)</td>
+<td>Strong (8+)</td>
+</tr>
+<tr>
+<td>Open-source billing support</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>CRM integration</td>
+<td>Strong (built-in)</td>
+<td>Weak</td>
+<td>Adequate</td>
+<td>Strong</td>
+</tr>
+<tr>
+<td>Accounting integration</td>
+<td>Absent</td>
+<td>Strong (QBO, Xero)</td>
+<td>Absent</td>
+<td>Strong (NetSuite, QBO, Sage, Xero)</td>
+</tr>
+<tr>
+<td>Data warehouse export</td>
+<td>Weak</td>
+<td>Weak</td>
+<td>Weak</td>
+<td>Adequate</td>
+</tr>
+<tr>
+<td>API for programmatic access</td>
+<td>Adequate</td>
+<td>Adequate</td>
+<td>Adequate</td>
+<td>Adequate</td>
+</tr>
+<tr>
+<td><strong>Transparency and Control</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Open-source</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Metric calculation transparency</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Self-hosted deployment</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Custom metric definitions</td>
+<td>Weak</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Adequate</td>
+</tr>
+<tr>
+<td><strong>Pricing</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Free tier</td>
+<td>Strong (&lt; $10K MRR)</td>
+<td>Absent</td>
+<td>Strong (unlimited)</td>
+<td>Absent</td>
+</tr>
+<tr>
+<td>Cost at $100K MRR</td>
+<td>~$100/mo</td>
+<td>~$358/mo</td>
+<td>Free</td>
+<td>~$5,000/yr</td>
+</tr>
+<tr>
+<td>Cost at $1M MRR</td>
+<td>~$1,000/mo</td>
+<td>~$700+/mo</td>
+<td>Free</td>
+<td>Custom</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="gap-analysis-where-no-existing-tool-is-strong">Gap Analysis: Where No Existing Tool Is Strong<a class="headerlink" href="#gap-analysis-where-no-existing-tool-is-strong" title="Permanent link">&para;</a></h2>
+<p>The matrix reveals several clear gaps that represent opportunity for an open-source analytics package:</p>
+<h3 id="gap-1-metric-calculation-transparency">Gap 1: Metric Calculation Transparency<a class="headerlink" href="#gap-1-metric-calculation-transparency" title="Permanent link">&para;</a></h3>
+<p>No existing analytics tool lets users inspect, audit, or customize how metrics are computed. Every tool is a black box. For companies with complex billing (usage-based, hybrid, multi-currency), this is a real pain point — generic MRR or churn formulas may not match their business reality. An open-source tool with transparent, documented metric calculations addresses this directly.</p>
+<h3 id="gap-2-open-source-billing-engine-integration">Gap 2: Open-Source Billing Engine Integration<a class="headerlink" href="#gap-2-open-source-billing-engine-integration" title="Permanent link">&para;</a></h3>
+<p>No analytics tool offers first-class integration with Lago or Kill Bill. This is a significant blind spot given the growing adoption of open-source billing. Companies choosing Lago or Kill Bill for billing have zero dedicated analytics options — they must build custom dashboards or try to shoehorn data into tools designed for Stripe.</p>
+<h3 id="gap-3-self-hosted-deployment">Gap 3: Self-Hosted Deployment<a class="headerlink" href="#gap-3-self-hosted-deployment" title="Permanent link">&para;</a></h3>
+<p>No analytics tool can be self-hosted. Companies in regulated industries (healthcare, finance, government) or with strict data residency requirements cannot use any existing subscription analytics tool without sending billing data to a third party. Self-hosted analytics paired with self-hosted billing (Lago or Kill Bill) is a complete stack that doesn't exist today.</p>
+<h3 id="gap-4-data-warehouse-native">Gap 4: Data Warehouse Native<a class="headerlink" href="#gap-4-data-warehouse-native" title="Permanent link">&para;</a></h3>
+<p>Existing tools are designed as standalone SaaS applications with their own data stores. None are designed to work natively with a company's existing data warehouse (Snowflake, BigQuery, PostgreSQL). An analytics package that computes metrics directly on warehouse data, or exports cleanly to warehouses, would serve the growing "modern data stack" community.</p>
+<h3 id="gap-5-customizable-metric-definitions">Gap 5: Customizable Metric Definitions<a class="headerlink" href="#gap-5-customizable-metric-definitions" title="Permanent link">&para;</a></h3>
+<p>Every tool defines MRR, churn, and LTV with fixed formulas. But these metrics are not standardized — different companies legitimately need different calculation methods. For example, should annual subscriptions be recognized as MRR monthly or at time of payment? How should free trials be counted? How should multi-product subscriptions be attributed? An open-source tool can offer pluggable metric definitions that users configure for their specific business logic.</p>
+<hr />
+<h2 id="landscape-positioning-map">Landscape Positioning Map<a class="headerlink" href="#landscape-positioning-map" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>                    ANALYTICS DEPTH
+                         High
+                          |
+                 SaaSGrid |  ChartMogul
+                    ($$$)  |  ($$)
+                          |
+   ACTION-              --+--              DATA
+   ORIENTED               |               PLATFORM
+                          |
+              Baremetrics |
+                   ($$)   |
+                          |  ProfitWell
+                          |  (Free)
+                          |
+                         Low
+
+   ─────────────────────────────────────────
+   Closed Source          |          Open Source
+                          |
+                     [WHITESPACE]
+                   Open-source analytics
+                   Self-hosted, transparent
+                   Lago + Kill Bill native
+</code></pre></div>
+<p>The whitespace is clear: no tool combines analytical depth with open-source transparency. ProfitWell compressed the market on price (free), but an open-source tool competes on a different dimension entirely — transparency, customizability, and data ownership.</p>
+<hr />
+<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">&para;</a></h2>
+<p>Cross-references <a href="../billing-engines/">Billing Engines</a> and <a href="../analytics-tools/">Analytics Tools</a> for detailed per-product analysis.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
