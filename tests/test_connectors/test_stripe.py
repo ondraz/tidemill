@@ -268,7 +268,7 @@ class TestPriceTranslation:
         assert p["interval_count"] == 1
         assert p["amount_cents"] == 9900
         assert p["currency"] == "usd"
-        assert p["billing_scheme"] == "per_unit"
+        assert p["pricing_model"] == "flat"
         assert p["usage_type"] == "licensed"
         assert p["trial_period_days"] == 14
         assert p["name"] == "Pro Monthly"
@@ -282,7 +282,7 @@ class TestPriceTranslation:
         )
         events = connector.translate(wh)
         assert events[0].payload["amount_cents"] is None
-        assert events[0].payload["billing_scheme"] == "tiered"
+        assert events[0].payload["pricing_model"] == "tiered"
         assert events[0].payload["usage_type"] == "metered"
         assert events[0].payload["trial_period_days"] is None
 

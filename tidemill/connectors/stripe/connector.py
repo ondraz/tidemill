@@ -370,6 +370,7 @@ class StripeConnector(WebhookConnector):
         product_ref = price.get("product")
         if isinstance(product_ref, dict):
             product_ref = product_ref.get("id")
+        usage_type = recurring.get("usage_type")
         return {
             "external_id": price["id"],
             "product_external_id": product_ref,
@@ -378,12 +379,28 @@ class StripeConnector(WebhookConnector):
             "interval_count": recurring.get("interval_count") or 1,
             "amount_cents": price.get("unit_amount"),
             "currency": price.get("currency"),
-            "billing_scheme": price.get("billing_scheme"),
-            "usage_type": recurring.get("usage_type"),
+            "pricing_model": StripeConnector._canonical_pricing_model(
+                price.get("billing_scheme"), usage_type, price.get("tiers_mode")
+            ),
+            "usage_type": usage_type,
             "trial_period_days": recurring.get("trial_period_days"),
             "active": bool(price.get("active", True)),
             "metadata": price.get("metadata") or {},
         }
+
+    @staticmethod
+    def _canonical_pricing_model(
+        billing_scheme: str | None,
+        usage_type: str | None,
+        tiers_mode: str | None,
+    ) -> str | None:
+        # Canonical values: flat | tiered | volume | usage_based
+        # See docs/architecture/canonical-vocabulary.md.
+        if billing_scheme == "tiered":
+            return "volume" if tiers_mode == "volume" else "tiered"
+        if billing_scheme == "per_unit":
+            return "usage_based" if usage_type == "metered" else "flat"
+        return None
 
     # ── customer handlers ────────────────────────────────────────────────
 

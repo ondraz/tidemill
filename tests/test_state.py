@@ -184,7 +184,7 @@ class TestPlanHandler:
                     "interval_count": 1,
                     "amount_cents": 9900,
                     "currency": "USD",
-                    "billing_scheme": "per_unit",
+                    "pricing_model": "flat",
                     "usage_type": "licensed",
                     "trial_period_days": 14,
                     "active": True,
@@ -200,7 +200,7 @@ class TestPlanHandler:
             await db.execute(
                 text(
                     'SELECT name, "interval", amount_cents, currency,'
-                    "  billing_scheme, usage_type, trial_period_days, product_id"
+                    "  pricing_model, usage_type, trial_period_days, product_id"
                     " FROM plan WHERE external_id = 'price_1'"
                 )
             )
@@ -210,7 +210,7 @@ class TestPlanHandler:
         assert row[1] == "month"
         assert row[2] == 9900
         assert row[3] == "USD"
-        assert row[4] == "per_unit"
+        assert row[4] == "flat"
         assert row[5] == "licensed"
         assert row[6] == 14
         assert row[7] is not None  # product_id resolved via lookup

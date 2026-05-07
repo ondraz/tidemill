@@ -115,13 +115,13 @@ async def _handle_plan(session: AsyncSession, event: Event) -> None:
                     "INSERT INTO plan"
                     " (id, source_id, external_id, product_id, name,"
                     '  "interval", interval_count, amount_cents, currency,'
-                    "  billing_scheme, usage_type, trial_period_days,"
+                    "  pricing_model, usage_type, trial_period_days,"
                     "  metadata_, active, created_at)"
                     " VALUES (:id, :src, :eid,"
                     "  (SELECT id FROM product WHERE source_id = :src"
                     "     AND external_id = :prod_eid LIMIT 1),"
                     "  :name, :interval, :ic, :amount, :currency,"
-                    "  :scheme, :usage, :trial, :meta, :active, :now)"
+                    "  :pricing_model, :usage, :trial, :meta, :active, :now)"
                     " ON CONFLICT ON CONSTRAINT uq_plan_source DO UPDATE SET"
                     "  product_id = COALESCE(EXCLUDED.product_id, plan.product_id),"
                     "  name = COALESCE(EXCLUDED.name, plan.name),"
@@ -129,7 +129,7 @@ async def _handle_plan(session: AsyncSession, event: Event) -> None:
                     "  interval_count = EXCLUDED.interval_count,"
                     "  amount_cents = COALESCE(EXCLUDED.amount_cents, plan.amount_cents),"
                     "  currency = COALESCE(EXCLUDED.currency, plan.currency),"
-                    "  billing_scheme = COALESCE(EXCLUDED.billing_scheme, plan.billing_scheme),"
+                    "  pricing_model = COALESCE(EXCLUDED.pricing_model, plan.pricing_model),"
                     "  usage_type = COALESCE(EXCLUDED.usage_type, plan.usage_type),"
                     "  trial_period_days = COALESCE("
                     "    EXCLUDED.trial_period_days, plan.trial_period_days),"
@@ -146,7 +146,7 @@ async def _handle_plan(session: AsyncSession, event: Event) -> None:
                     "ic": p.get("interval_count") or 1,
                     "amount": p.get("amount_cents"),
                     "currency": normalize_currency(p.get("currency")),
-                    "scheme": p.get("billing_scheme"),
+                    "pricing_model": p.get("pricing_model"),
                     "usage": p.get("usage_type"),
                     "trial": p.get("trial_period_days"),
                     "meta": json.dumps(p.get("metadata", {})),
