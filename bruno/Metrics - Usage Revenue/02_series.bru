@@ -1,0 +1,29 @@
+meta {
+  name: Usage revenue — time series
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/metrics/usage-revenue/series?start={{start}}&end={{end}}&interval=month
+  body: none
+  auth: bearer
+}
+
+params:query {
+  start: {{start}}
+  end: {{end}}
+  interval: month
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+docs {
+  Usage revenue per period bucket. `interval` accepts
+  `day | week | month | quarter | year` and aligns to the same
+  DATE_TRUNC anchors as MRR series (week = Monday). Underlying buckets
+  are monthly (one row per finalized invoice month), so sub-monthly
+  intervals are sparse.
+}

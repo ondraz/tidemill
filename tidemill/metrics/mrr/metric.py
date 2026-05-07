@@ -25,7 +25,7 @@ def _resolve_currency(event: Event, kind: str) -> str:
     """
     cur = event.payload.get("currency")
     if cur:
-        return cur.upper()
+        return str(cur).upper()
     logger.warning(
         "%s event missing currency, defaulting to USD",
         kind,
@@ -91,10 +91,18 @@ class MrrMetric(Metric):
             "subscription.reactivated",
             "subscription.paused",
             "subscription.resumed",
+            # Drives the trailing-3m usage component (see metrics/mrr/usage.py).
+            "invoice.paid",
         ]
 
     async def handle_event(self, event: Event) -> None:
         from tidemill.fx import to_base_cents
+
+        if event.type == "invoice.paid":
+            from tidemill.metrics.mrr.usage import recompute_usage_component_for_invoice
+
+            await recompute_usage_component_for_invoice(self.db, event)
+            return
 
         p = event.payload
         ext_id = p["external_id"]
@@ -165,18 +173,26 @@ class MrrMetric(Metric):
                 )
 
             case "subscription.churned" | "subscription.paused":
-                prev_mrr = p.get("prev_mrr_cents", 0) or p.get("mrr_cents", 0)
+                prev_sub_mrr = p.get("prev_mrr_cents", 0) or p.get("mrr_cents", 0)
                 currency = _resolve_currency(event, "MRR")
-                prev_mrr_base = await to_base_cents(
-                    prev_mrr, currency, event.occurred_at.date(), self.db
+                prev_sub_mrr_base = await to_base_cents(
+                    prev_sub_mrr, currency, event.occurred_at.date(), self.db
                 )
-                await self._upsert_snapshot(event, ext_id, 0, 0, currency)
+                # Read the lingering usage component so churn revenue includes
+                # both the licensed subscription portion *and* the trailing-3m
+                # usage component the customer was paying when they cancelled.
+                prior = await self._read_snapshot_components(event, ext_id)
+                prev_usage = prior["usage_mrr_cents"] if prior else 0
+                prev_usage_base = prior["usage_mrr_base_cents"] if prior else 0
+                total_lost = prev_sub_mrr + prev_usage
+                total_lost_base = prev_sub_mrr_base + prev_usage_base
+                await self._clear_snapshot(event, ext_id, currency)
                 await self._append_movement(
                     event,
                     ext_id,
                     "churn",
-                    -prev_mrr,
-                    -prev_mrr_base,
+                    -total_lost,
+                    -total_lost_base,
                     currency,
                 )
 
@@ -236,15 +252,32 @@ class MrrMetric(Metric):
         mrr_base_cents: int,
         currency: str,
     ) -> None:
+        """Upsert the snapshot row for *subscription_ext_id*.
+
+        Writes to the subscription-component columns and recomputes the
+        combined ``mrr_cents`` / ``mrr_base_cents`` so downstream readers
+        (which target the combined columns) see ``subscription + usage``.
+        ``usage_mrr_*`` is preserved on update — it's owned by the
+        trailing-3m recompute path (see :mod:`tidemill.metrics.mrr.usage`).
+        """
         await self.db.execute(
             text(
                 "INSERT INTO metric_mrr_snapshot"
                 " (id, source_id, customer_id, subscription_id,"
-                "  mrr_cents, mrr_base_cents, currency, snapshot_at)"
-                " VALUES (:id, :src, :cid, :sid, :mrr, :mrrb, :cur, :at)"
+                "  mrr_cents, mrr_base_cents,"
+                "  subscription_mrr_cents, subscription_mrr_base_cents,"
+                "  usage_mrr_cents, usage_mrr_base_cents,"
+                "  currency, snapshot_at)"
+                " VALUES (:id, :src, :cid, :sid,"
+                "         :mrr, :mrrb, :mrr, :mrrb, 0, 0,"
+                "         :cur, :at)"
                 " ON CONFLICT ON CONSTRAINT uq_mrr_snapshot_sub DO UPDATE SET"
-                "  mrr_cents = EXCLUDED.mrr_cents,"
-                "  mrr_base_cents = EXCLUDED.mrr_base_cents,"
+                "  subscription_mrr_cents = EXCLUDED.subscription_mrr_cents,"
+                "  subscription_mrr_base_cents = EXCLUDED.subscription_mrr_base_cents,"
+                "  mrr_cents = EXCLUDED.subscription_mrr_cents"
+                "    + metric_mrr_snapshot.usage_mrr_cents,"
+                "  mrr_base_cents = EXCLUDED.subscription_mrr_base_cents"
+                "    + metric_mrr_snapshot.usage_mrr_base_cents,"
                 "  currency = EXCLUDED.currency,"
                 "  snapshot_at = EXCLUDED.snapshot_at"
             ),
@@ -268,24 +301,113 @@ class MrrMetric(Metric):
         amount_cents: int,
         amount_base_cents: int,
         currency: str,
+        *,
+        source: str = "subscription",
+        event_id: str | None = None,
     ) -> None:
+        """Append an MRR movement.
+
+        Args:
+            event: The triggering event.
+            subscription_ext_id: External (Stripe) subscription id.
+            movement_type: One of new/expansion/contraction/churn/reactivation.
+            amount_cents: Signed delta in original currency (negative for
+                contraction/churn).
+            amount_base_cents: Same delta in base currency.
+            currency: Original currency (uppercase ISO 4217).
+            source: ``subscription`` for licensed-plan changes, ``usage`` for
+                the trailing-3m component shifts. Lets the waterfall split
+                expansion/contraction by origin.
+            event_id: Override the unique event_id (defaults to ``event.id``).
+                Pass a synthetic id when one Kafka event produces multiple
+                movements (e.g. an ``invoice.paid`` driving a usage delta —
+                the corresponding Kafka event is consumed by both LTV and
+                MRR-usage paths and each must register a distinct movement).
+        """
         await self.db.execute(
             text(
                 "INSERT INTO metric_mrr_movement"
                 " (id, event_id, source_id, customer_id, subscription_id,"
-                "  movement_type, amount_cents, amount_base_cents, currency, occurred_at)"
-                " VALUES (:id, :eid, :src, :cid, :sid, :mt, :amt, :amtb, :cur, :at)"
+                "  movement_type, source,"
+                "  amount_cents, amount_base_cents, currency, occurred_at)"
+                " VALUES (:id, :eid, :src, :cid, :sid, :mt, :mvsrc,"
+                "         :amt, :amtb, :cur, :at)"
                 " ON CONFLICT (event_id) DO NOTHING"
             ),
             {
                 "id": str(uuid.uuid4()),
-                "eid": event.id,
+                "eid": event_id or event.id,
                 "src": event.source_id,
                 "cid": event.customer_id,
                 "sid": subscription_ext_id,
                 "mt": movement_type,
+                "mvsrc": source,
                 "amt": amount_cents,
                 "amtb": amount_base_cents,
+                "cur": currency.upper(),
+                "at": event.occurred_at,
+            },
+        )
+
+    async def _read_snapshot_components(
+        self,
+        event: Event,
+        subscription_ext_id: str,
+    ) -> dict[str, int] | None:
+        """Read current component breakdown for *subscription_ext_id*.
+
+        Returns ``None`` when no snapshot row exists (subscription has never
+        been seen before).
+        """
+        result = await self.db.execute(
+            text(
+                "SELECT subscription_mrr_cents, subscription_mrr_base_cents,"
+                "       usage_mrr_cents, usage_mrr_base_cents"
+                " FROM metric_mrr_snapshot"
+                " WHERE source_id = :src AND subscription_id = :sid"
+            ),
+            {"src": event.source_id, "sid": subscription_ext_id},
+        )
+        row = result.mappings().first()
+        if row is None:
+            return None
+        return {k: int(v or 0) for k, v in row.items()}
+
+    async def _clear_snapshot(
+        self,
+        event: Event,
+        subscription_ext_id: str,
+        currency: str,
+    ) -> None:
+        """Zero out every component column on churn or pause.
+
+        We keep the row (rather than deleting) so reactivation can update
+        in place and so the snapshot remains a complete index of every
+        subscription Tidemill has seen.
+        """
+        await self.db.execute(
+            text(
+                "INSERT INTO metric_mrr_snapshot"
+                " (id, source_id, customer_id, subscription_id,"
+                "  mrr_cents, mrr_base_cents,"
+                "  subscription_mrr_cents, subscription_mrr_base_cents,"
+                "  usage_mrr_cents, usage_mrr_base_cents,"
+                "  currency, snapshot_at)"
+                " VALUES (:id, :src, :cid, :sid, 0, 0, 0, 0, 0, 0, :cur, :at)"
+                " ON CONFLICT ON CONSTRAINT uq_mrr_snapshot_sub DO UPDATE SET"
+                "  mrr_cents = 0,"
+                "  mrr_base_cents = 0,"
+                "  subscription_mrr_cents = 0,"
+                "  subscription_mrr_base_cents = 0,"
+                "  usage_mrr_cents = 0,"
+                "  usage_mrr_base_cents = 0,"
+                "  snapshot_at = EXCLUDED.snapshot_at"
+            ),
+            {
+                "id": str(uuid.uuid4()),
+                "src": event.source_id,
+                "cid": event.customer_id,
+                "sid": subscription_ext_id,
                 "cur": currency.upper(),
                 "at": event.occurred_at,
             },
@@ -295,6 +417,8 @@ class MrrMetric(Metric):
         match params.get("query_type"):
             case "current":
                 return await self._current_mrr(params.get("at"), spec)
+            case "components":
+                return await self._current_components(spec)
             case "series":
                 return await self._mrr_series(
                     params["start"],
@@ -332,6 +456,31 @@ class MrrMetric(Metric):
                 return mrr * 12
             case other:
                 raise ValueError(f"Unknown query_type: {other}")
+
+    async def _current_components(self, spec: QuerySpec | None) -> dict[str, int]:
+        """Return current ``{subscription_mrr, usage_mrr, mrr}`` from the snapshot.
+
+        Snapshot reads only — no historical cumulative-movement view, since
+        the components are only retained on the live snapshot today.
+        """
+        m = self.model
+        q = (
+            m.measures.subscription_mrr
+            + m.measures.usage_mrr
+            + m.measures.mrr
+            + m.where("s.mrr_base_cents", ">", 0)
+        )
+        q = q + await build_spec_fragment(m, spec, self.db)
+        stmt, params = q.compile(m)
+        result = await self.db.execute(stmt, params)
+        row = result.mappings().first()
+        if row is None:
+            return {"subscription_mrr": 0, "usage_mrr": 0, "mrr": 0}
+        return {
+            "subscription_mrr": int(row["subscription_mrr"] or 0),
+            "usage_mrr": int(row["usage_mrr"] or 0),
+            "mrr": int(row["mrr"] or 0),
+        }
 
     async def _current_mrr(
         self,

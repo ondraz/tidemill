@@ -243,14 +243,14 @@ class LtvMetric(Metric):
             arpu_by_seg = (
                 {row["segment_id"]: row["arpu"] for row in arpu} if isinstance(arpu, list) else {}
             )
-            out = []
+            out: list[dict[str, Any]] = []
             for seg_id, _ in spec.compare:
                 a = arpu_by_seg.get(seg_id)
-                rates = rates_by_seg.get(seg_id, [])
-                if a is None or not rates:
+                seg_rates = rates_by_seg.get(seg_id, [])
+                if a is None or not seg_rates:
                     out.append({"segment_id": seg_id, "ltv": None})
                     continue
-                avg_churn = sum(rates) / len(rates)
+                avg_churn = sum(seg_rates) / len(seg_rates)
                 ltv = float(a / avg_churn) if avg_churn > 0 else None
                 out.append({"segment_id": seg_id, "ltv": ltv})
             return out

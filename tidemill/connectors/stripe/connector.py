@@ -24,6 +24,79 @@ def _ts(unix_ts: int | None) -> str | None:
     return datetime.fromtimestamp(unix_ts, tz=UTC).isoformat()
 
 
+def _current_period(sub: dict[str, Any]) -> tuple[int | None, int | None]:
+    """Extract ``(current_period_start, current_period_end)`` from a subscription.
+
+    API version ``2025-03-31.basil`` moved these fields off the top-level
+    Subscription onto each SubscriptionItem. Older versions still expose them
+    at the top level. We prefer the top-level value and fall back to the first
+    item — for the typical single-item subscription the period is identical
+    across items.
+    """
+    start = sub.get("current_period_start")
+    end = sub.get("current_period_end")
+    if start is not None and end is not None:
+        return start, end
+    items = sub.get("items", {})
+    items_data = items.get("data", []) if isinstance(items, dict) else []
+    if items_data:
+        first = items_data[0]
+        if start is None:
+            start = first.get("current_period_start")
+        if end is None:
+            end = first.get("current_period_end")
+    return start, end
+
+
+def _cancel_details(sub: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Extract ``(reason, feedback)`` from ``cancellation_details``.
+
+    Stripe distinguishes the structured ``reason`` (programmatic enum such as
+    ``cancellation_requested`` or ``payment_disputed``) from the optional
+    ``feedback`` (the customer's chosen reason from a portal survey, e.g.
+    ``too_expensive``). They land in separate columns so segments can filter
+    on either dimension.
+    """
+    details = sub.get("cancellation_details") or {}
+    return details.get("reason"), details.get("feedback")
+
+
+def _classify_line_kind(li: dict[str, Any]) -> str:
+    """Categorize a Stripe invoice line item.
+
+    Returns one of: ``subscription`` (licensed recurring), ``usage`` (metered),
+    ``discount`` (negative-amount line), ``other`` (one-off, proration, tax-only).
+    The classification drives the trailing-3m usage component of MRR — only
+    ``usage`` lines feed ``metric_mrr_usage_component``.
+    """
+    price = li.get("price") or {}
+    recurring = price.get("recurring") or {}
+    usage_type = recurring.get("usage_type")
+    if usage_type == "metered":
+        return "usage"
+    if usage_type == "licensed":
+        return "subscription"
+    amount = li.get("amount", 0) or 0
+    if amount < 0:
+        return "discount"
+    return "other"
+
+
+def _serialize_line(li: dict[str, Any]) -> dict[str, Any]:
+    """Project a Stripe invoice line into the connector-internal payload shape."""
+    return {
+        "type": li.get("type"),
+        "kind": _classify_line_kind(li),
+        "description": li.get("description"),
+        "amount_cents": li.get("amount", 0),
+        "currency": li.get("currency"),
+        "quantity": li.get("quantity"),
+        "period_start": _ts((li.get("period") or {}).get("start")),
+        "period_end": _ts((li.get("period") or {}).get("end")),
+        "subscription_external_id": li.get("subscription"),
+    }
+
+
 @register("stripe")
 class StripeConnector(WebhookConnector):
     """Stripe webhook translator, signature verifier, and backfill generator."""
@@ -244,6 +317,7 @@ class StripeConnector(WebhookConnector):
         sub = wh["data"]["object"]
         cust_id = sub["customer"]
         events: list[Event] = []
+        cps, cpe = _current_period(sub)
 
         events.append(
             self._make_event(
@@ -262,8 +336,8 @@ class StripeConnector(WebhookConnector):
                     "started_at": _ts(sub.get("start_date")),
                     "trial_start": _ts(sub.get("trial_start")),
                     "trial_end": _ts(sub.get("trial_end")),
-                    "current_period_start": _ts(sub.get("current_period_start")),
-                    "current_period_end": _ts(sub.get("current_period_end")),
+                    "current_period_start": _ts(cps),
+                    "current_period_end": _ts(cpe),
                 },
             )
         )
@@ -368,6 +442,8 @@ class StripeConnector(WebhookConnector):
                     )
                 )
             elif new_status == "canceled":
+                cancel_reason, cancel_feedback = _cancel_details(sub)
+                _, ends_at = _current_period(sub)
                 events.append(
                     self._make_event(
                         "subscription.canceled",
@@ -379,10 +455,9 @@ class StripeConnector(WebhookConnector):
                             "mrr_cents": mrr,
                             "currency": sub.get("currency"),
                             "canceled_at": _ts(sub.get("canceled_at")),
-                            "ends_at": _ts(sub.get("current_period_end")),
-                            "cancel_reason": (sub.get("cancellation_details") or {}).get(
-                                "feedback"
-                            ),
+                            "ends_at": _ts(ends_at),
+                            "cancel_reason": cancel_reason,
+                            "cancel_feedback": cancel_feedback,
                         },
                     )
                 )
@@ -433,6 +508,8 @@ class StripeConnector(WebhookConnector):
 
         # Pending cancellation
         if "cancel_at_period_end" in prev and sub.get("cancel_at_period_end"):
+            cancel_reason, cancel_feedback = _cancel_details(sub)
+            _, ends_at = _current_period(sub)
             events.append(
                 self._make_event(
                     "subscription.canceled",
@@ -444,8 +521,9 @@ class StripeConnector(WebhookConnector):
                         "mrr_cents": mrr,
                         "currency": sub.get("currency"),
                         "canceled_at": _ts(sub.get("canceled_at")),
-                        "ends_at": _ts(sub.get("current_period_end")),
-                        "cancel_reason": (sub.get("cancellation_details") or {}).get("feedback"),
+                        "ends_at": _ts(ends_at),
+                        "cancel_reason": cancel_reason,
+                        "cancel_feedback": cancel_feedback,
                     },
                 )
             )
@@ -481,6 +559,7 @@ class StripeConnector(WebhookConnector):
         sub = wh["data"]["object"]
         cust_id = sub["customer"]
         occurred = self._sub_occurred(sub, wh)
+        cancel_reason, cancel_feedback = _cancel_details(sub)
         events: list[Event] = [
             self._make_event(
                 "subscription.churned",
@@ -491,7 +570,8 @@ class StripeConnector(WebhookConnector):
                     "external_id": sub["id"],
                     "prev_mrr_cents": self._compute_mrr(sub),
                     "currency": sub.get("currency"),
-                    "cancel_reason": (sub.get("cancellation_details") or {}).get("feedback"),
+                    "cancel_reason": cancel_reason,
+                    "cancel_feedback": cancel_feedback,
                 },
             )
         ]
@@ -539,15 +619,7 @@ class StripeConnector(WebhookConnector):
                     "period_start": _ts(inv.get("period_start")),
                     "period_end": _ts(inv.get("period_end")),
                     "line_items": [
-                        {
-                            "description": li.get("description"),
-                            "amount_cents": li.get("amount", 0),
-                            "currency": li.get("currency"),
-                            "quantity": li.get("quantity"),
-                            "period_start": _ts((li.get("period") or {}).get("start")),
-                            "period_end": _ts((li.get("period") or {}).get("end")),
-                        }
-                        for li in (inv.get("lines", {}).get("data", []))
+                        _serialize_line(li) for li in (inv.get("lines", {}).get("data", []))
                     ],
                 },
             )
@@ -563,6 +635,7 @@ class StripeConnector(WebhookConnector):
                 occurred_at=self._event_occurred(wh),
                 payload={
                     "external_id": inv["id"],
+                    "subscription_external_id": inv.get("subscription"),
                     "paid_at": _ts(inv.get("status_transitions", {}).get("paid_at")),
                     "amount_cents": inv.get("amount_paid", 0),
                     "currency": inv.get("currency"),
@@ -677,7 +750,15 @@ class StripeConnector(WebhookConnector):
             if clock_id:
                 params["test_clock"] = clock_id
             for cust in stripe.Customer.list(**params).auto_paging_iter():
-                address = dict(cust.address) if cust.address else {}
+                address: dict[str, Any] = cust.address.to_dict() if cust.address else {}
+                metadata_obj = cust.metadata
+                metadata: dict[str, Any]
+                if metadata_obj is None:
+                    metadata = {}
+                elif isinstance(metadata_obj, dict):
+                    metadata = dict(metadata_obj)
+                else:
+                    metadata = metadata_obj.to_dict()
                 yield self._make_event(
                     "customer.created",
                     customer_id=str(cust.id),
@@ -689,7 +770,7 @@ class StripeConnector(WebhookConnector):
                         "email": cust.email,
                         "currency": cust.currency,
                         "country": address.get("country"),
-                        "metadata": dict(cust.metadata or {}),
+                        "metadata": metadata,
                     },
                 )
 
@@ -701,7 +782,7 @@ class StripeConnector(WebhookConnector):
             if clock_id:
                 params["test_clock"] = clock_id
             for sub in stripe.Subscription.list(**params).auto_paging_iter():
-                sub_dict: dict[str, Any] = dict(sub)
+                sub_dict: dict[str, Any] = sub.to_dict()
                 mrr = self._compute_mrr(sub_dict)
                 occurred = datetime.fromtimestamp(sub.created, tz=UTC)
                 plan_id = ""
@@ -709,6 +790,8 @@ class StripeConnector(WebhookConnector):
                 if items_data:
                     plan_id = str(items_data[0].get("price", {}).get("id", ""))
                 customer_id = str(sub.customer or "")
+                cps, cpe = _current_period(sub_dict)
+                cancel_reason, cancel_feedback = _cancel_details(sub_dict)
 
                 yield self._make_event(
                     "subscription.created",
@@ -728,8 +811,8 @@ class StripeConnector(WebhookConnector):
                         "started_at": _ts(sub_dict.get("start_date")),
                         "trial_start": _ts(sub_dict.get("trial_start")),
                         "trial_end": _ts(sub_dict.get("trial_end")),
-                        "current_period_start": _ts(sub_dict.get("current_period_start")),
-                        "current_period_end": _ts(sub_dict.get("current_period_end")),
+                        "current_period_start": _ts(cps),
+                        "current_period_end": _ts(cpe),
                     },
                 )
                 if sub.status == "active":
@@ -754,6 +837,8 @@ class StripeConnector(WebhookConnector):
                             "external_id": sub.id,
                             "prev_mrr_cents": mrr,
                             "currency": sub_dict.get("currency"),
+                            "cancel_reason": cancel_reason,
+                            "cancel_feedback": cancel_feedback,
                         },
                     )
 
@@ -766,6 +851,18 @@ class StripeConnector(WebhookConnector):
             params["created"] = created_filter
         for inv in stripe.Invoice.list(**params).auto_paging_iter():
             inv_customer = str(inv.customer or "")
+            line_items: list[dict[str, Any]] = []
+            try:
+                for li in inv.lines.auto_paging_iter():
+                    line_items.append(_serialize_line(li.to_dict()))
+            except Exception:  # noqa: BLE001
+                # Older Stripe API versions or unusual invoice states may not
+                # expose paginated lines; fall back to whatever the first page
+                # surfaced so we at least get partial usage classification.
+                line_items = [
+                    _serialize_line(li.to_dict())
+                    for li in (getattr(inv.lines, "data", None) or [])
+                ]
             yield self._make_event(
                 "invoice.created",
                 customer_id=inv_customer,
@@ -782,7 +879,7 @@ class StripeConnector(WebhookConnector):
                     "total_cents": inv.total or 0,
                     "period_start": _ts(inv.period_start),
                     "period_end": _ts(inv.period_end),
-                    "line_items": [],
+                    "line_items": line_items,
                 },
             )
             if inv.status == "paid":
@@ -795,6 +892,7 @@ class StripeConnector(WebhookConnector):
                     occurred_at=datetime.fromtimestamp(inv.created, tz=UTC),
                     payload={
                         "external_id": inv.id,
+                        "subscription_external_id": getattr(inv, "subscription", None),
                         "paid_at": _ts(paid_at),
                         "amount_cents": inv.amount_paid or 0,
                         "currency": inv.currency,
@@ -884,6 +982,7 @@ class StripeConnector(WebhookConnector):
                 ended_at is not None and trial_end is not None and ended_at < trial_end
             )
             if canceled_in_trial:
+                assert ended_at is not None  # narrowed via canceled_in_trial
                 yield self._make_event(
                     "subscription.trial_expired",
                     customer_id=customer_id,

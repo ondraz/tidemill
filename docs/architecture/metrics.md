@@ -262,7 +262,7 @@ No Kafka, no event processing. The database connector queries billing tables at 
 
 ### MRR (P0)
 
-**Subscribes to (ingestion mode):** `subscription.created`, `subscription.activated`, `subscription.changed`, `subscription.canceled`, `subscription.churned`, `subscription.reactivated`, `subscription.paused`, `subscription.resumed`
+**Subscribes to (ingestion mode):** `subscription.created`, `subscription.activated`, `subscription.changed`, `subscription.canceled`, `subscription.churned`, `subscription.reactivated`, `subscription.paused`, `subscription.resumed`, `invoice.paid` (drives the trailing-3m usage component)
 
 **Direct queries (same-database mode):** `DatabaseConnector.get_mrr_cents()`, `DatabaseConnector.get_subscription_changes()`
 
@@ -275,10 +275,17 @@ CREATE TABLE metric_mrr_snapshot (
     source_id       UUID NOT NULL,
     customer_id     TEXT NOT NULL,
     subscription_id TEXT NOT NULL,
-    mrr_cents       BIGINT NOT NULL,         -- current MRR in original currency
-    mrr_base_cents   BIGINT NOT NULL,         -- MRR in base currency (at rate on snapshot_at)
+    -- Combined MRR = subscription_mrr + usage_mrr (kept for read efficiency).
+    mrr_cents       BIGINT NOT NULL,
+    mrr_base_cents   BIGINT NOT NULL,
+    -- Component breakdown — subscription is licensed-recurring (Stripe
+    -- non-metered items); usage is the trailing-3m smoothed metered charge.
+    subscription_mrr_cents      BIGINT NOT NULL DEFAULT 0,
+    subscription_mrr_base_cents BIGINT NOT NULL DEFAULT 0,
+    usage_mrr_cents             BIGINT NOT NULL DEFAULT 0,
+    usage_mrr_base_cents        BIGINT NOT NULL DEFAULT 0,
     currency        TEXT NOT NULL,           -- ISO 4217
-    snapshot_at     TIMESTAMPTZ NOT NULL,    -- when this state took effect
+    snapshot_at     TIMESTAMPTZ NOT NULL,
     UNIQUE(source_id, subscription_id)
 );
 
@@ -290,12 +297,33 @@ CREATE TABLE metric_mrr_movement (
     customer_id     TEXT NOT NULL,
     subscription_id TEXT NOT NULL,
     movement_type   TEXT NOT NULL,           -- new | expansion | contraction | churn | reactivation
-    amount_cents    BIGINT NOT NULL,         -- signed, original currency
-    amount_base_cents BIGINT NOT NULL,        -- signed, base currency at rate on occurred_at
+    -- Origin: 'subscription' (licensed-plan changes) or 'usage' (trailing-3m
+    -- component shift). Lets the waterfall split deltas by source.
+    source          TEXT NOT NULL DEFAULT 'subscription',
+    amount_cents    BIGINT NOT NULL,
+    amount_base_cents BIGINT NOT NULL,
     currency        TEXT NOT NULL,
     occurred_at     TIMESTAMPTZ NOT NULL
 );
+
+-- Per-subscription monthly bucket of finalized usage charges. Trailing-3m
+-- average of this table feeds metric_mrr_snapshot.usage_mrr_*. Also the
+-- canonical store backing the usage_revenue metric.
+CREATE TABLE metric_mrr_usage_component (
+    id              UUID PRIMARY KEY,
+    source_id       UUID NOT NULL,
+    customer_id     TEXT NOT NULL,
+    subscription_id TEXT NOT NULL,
+    period_start    DATE NOT NULL,           -- first-of-month UTC
+    usage_cents     BIGINT NOT NULL,
+    usage_base_cents BIGINT NOT NULL,
+    currency        TEXT NOT NULL,
+    computed_at     TIMESTAMPTZ NOT NULL,
+    UNIQUE(source_id, subscription_id, period_start)
+);
 ```
+
+**Usage component (trailing 3-month):** On every `invoice.paid` event, the MRR metric sums the invoice's `kind='usage'` line items into the bucket for that billing month, recomputes the trailing-3m mean for the subscription, and emits an `expansion`/`contraction` movement (tagged `source='usage'`) when the mean shifts. See `tidemill/metrics/mrr/usage.py` and `docs/definitions.md#mrr` for the formal definition. This is what makes pure-usage customers (e.g. the seeded "Active Starter" archetype) visible to downstream churn and LTV — without it they show $0 MRR and are invisible to logo-churn entirely.
 
 **Event handling:**
 
@@ -771,6 +799,16 @@ Series — same aggregate with `time_grain("started_at", interval)` → one row 
 **Cube:** `TrialCube` — source `metric_trial`; measures: `started_count`, `converted_count`, `expired_count`, `customer_count`; dimensions: `source_id`, `customer_country` (via customer join); time dimensions: `started_at`, `converted_at`, `expired_at`.
 
 **API endpoints:** `GET /metrics/trials` (conversion rate), `GET /metrics/trials/series`, `GET /metrics/trials/funnel`
+
+### Usage Revenue (P1)
+
+Sibling metric to MRR. Reports the **raw** monthly usage charges as actuals — distinct from MRR's smoothed trailing-3m usage component. No event subscription: the canonical store (`metric_mrr_usage_component`) is populated by the MRR metric's `invoice.paid` handler. Usage Revenue declares no new tables and re-aggregates that data via its own Cube. Useful for auditing meter events, reconciling against Stripe invoices, and answering "how much did customers actually pay for usage in month $m$" without smoothing.
+
+**Cube:** `UsageRevenueCube` — source `metric_mrr_usage_component`; measures: `revenue`, `revenue_original`, `subscription_count`, `customer_count`; dimensions: `source_id`, `customer_id`, `subscription_id`, `currency`, plan/product/customer joins, `tenure_months`, `cohort_month`; time dimension: `period_start`.
+
+**Dependencies:** `mrr` — usage_revenue must initialize after MRR so the upstream `invoice.paid` handler is wired before any query runs.
+
+**API endpoints:** `GET /metrics/usage-revenue` (total), `GET /metrics/usage-revenue/series`, `GET /metrics/usage-revenue/by-customer`
 
 ## MetricsEngine
 

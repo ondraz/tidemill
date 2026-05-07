@@ -31,11 +31,12 @@ bru run --env Local "Metrics - MRR"        # whole folder
 | `Sources/` | Connector source registry + manual backfill trigger. |
 | `Webhooks/` | Stripe and generic webhook receivers. |
 | `Metrics - Discovery/` | List metrics, get the global KPI summary, introspect a metric's filterable dimensions, run a metric via `POST` body. |
-| `Metrics - MRR/` | Current snapshot, time series, breakdown, waterfall, ARR — plus advanced examples for filters, dimensions, segments, and compare-mode. |
+| `Metrics - MRR/` | Current snapshot, time series, breakdown, waterfall, ARR, components (subscription vs usage) — plus advanced examples for filters, dimensions, segments, and compare-mode. |
 | `Metrics - Churn/` | Logo churn, revenue churn, churned-customer detail, churn revenue events. |
 | `Metrics - Retention/` | Cohort matrix, NRR, GRR. |
 | `Metrics - LTV/` | Simple LTV, ARPU, cohort LTV. |
 | `Metrics - Trials/` | Conversion rate, trial series, conversion funnel. |
+| `Metrics - Usage Revenue/` | Finalized monthly metered charges as actuals — total, time series, per customer. Sibling to MRR's smoothed trailing-3m usage component. |
 | `Segments/` | Segment DSL — list/create/get/update/delete, plus the `/validate` linter. |
 | `Attributes/` | Attribute definitions, distinct values, customer attribute writes, CSV import. |
 | `Dashboards/` | Dashboard + section CRUD and chart placement. |

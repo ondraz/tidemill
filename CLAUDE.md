@@ -113,12 +113,13 @@ tidemill/
 │   ├── registry.py          # @register decorator, discovery, dependency resolution
 │   ├── query.py             # Cube, QueryFragment (+ dynamic_joins + compare), compilation
 │   ├── route_helpers.py     # Shared FastAPI helpers (resolves segment IDs to SegmentDefs)
-│   ├── mrr/                 # MRR, ARR, net new MRR, waterfall
+│   ├── mrr/                 # MRR (subscription + trailing-3m usage), ARR, waterfall
 │   ├── churn/               # Logo churn, revenue churn
 │   ├── retention/           # Cohort retention, NRR, GRR
 │   ├── ltv/                 # LTV, ARPU, cohort LTV
 │   ├── trials/              # Trial conversion rate, funnel
 │   └── expenses/            # Total expense by account_type / vendor / period (reads bill + expense tables)
+│   └── usage_revenue/       # Raw monthly usage charges (actuals — sibling to MRR)
 ├── segments/                # Customer segmentation DSL + compiler
 │   ├── model.py             # SegmentDef, Condition, Group, Segment.to_fragment, Compare
 │   ├── compiler.py          # build_spec_fragment — QuerySpec → QueryFragment
@@ -138,7 +139,8 @@ tidemill/
     ├── churn.py             # Churn: customer detail, timeline, lost MRR
     ├── retention.py         # Retention: NRR/GRR
     ├── ltv.py               # LTV: overview, ARPU timeline, cohort
-    └── trials.py            # Trials: funnel, timeline
+    ├── trials.py            # Trials: funnel, timeline
+    └── usage_revenue.py     # Usage actuals: total, series, per-customer
 ```
 
 Each metric module: `tables.py` (schema), `cubes.py` (query model), `metric.py` (logic), `routes.py` (API), `__init__.py`.
@@ -272,3 +274,4 @@ Copy `.env.example` to `.env` and configure:
 - **Metric transparency:** every metric must document its formula, SQL, assumptions, edge cases.
 - **Query Algebra:** all segmented metric SQL is built through `Cube` definitions and composable `QueryFragment` objects (SQLAlchemy `Select`-based, no string concatenation). See `docs/architecture/cubes.md`.
 - **Documentation:** when making code changes, always update the corresponding documentation in `docs/`. This includes architecture docs (`docs/architecture/`), development guides (`docs/development/`), and `CLAUDE.md` itself when the project structure, conventions, or workflows change.
+- **Verification:** after every code change, run `make check` and fix all issues it reports before declaring the task complete.

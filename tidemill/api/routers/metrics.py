@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import calendar
 from datetime import UTC, date, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -184,7 +184,7 @@ async def get_summary(
     losses = abs(amounts.get("churn", 0)) + abs(amounts.get("contraction", 0))
     result["quick_ratio"] = gains / losses if losses > 0 else None
 
-    return coerce_numerics(result)
+    return cast(dict[str, Any], coerce_numerics(result))
 
 
 @router.get("/metrics/{metric}/fields")

@@ -67,7 +67,7 @@ def verify_clerk_token(request: Request) -> dict[str, Any]:
             algorithms=["RS256"],
             options={"verify_aud": False},
         )
-        return payload  # type: ignore[no-any-return]
+        return payload
     except jwt.ExpiredSignatureError as exc:
         raise HTTPException(401, "Token expired") from exc
     except jwt.InvalidTokenError as exc:
