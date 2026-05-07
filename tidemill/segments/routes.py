@@ -40,17 +40,24 @@ async def _get_user_id(request: Request) -> str | None:
 
 
 def _resolve_cube(metric: str) -> Any:
-    """Resolve a metric's primary cube via the registry, or raise 400.
+    """Resolve a metric's primary cube via the registry, or raise 4xx.
 
     The metrics registry is the single source of truth for which cube
     belongs to which metric — each metric advertises its own cube through
     ``Metric.primary_cube``.  This router stays plugin-agnostic.
+    Distinguishes 404 (no such metric) from 400 (metric exists but has
+    no Cube — e.g. raw-SQL metrics like ``expenses``).
     """
-    from tidemill.metrics.registry import metric_primary_cube
+    from tidemill.metrics.registry import metric_exists, metric_primary_cube
 
+    if not metric_exists(metric):
+        raise HTTPException(404, f"Unknown metric {metric!r}")
     cube = metric_primary_cube(metric)
     if cube is None:
-        raise HTTPException(400, f"Unknown metric {metric!r}")
+        raise HTTPException(
+            400,
+            f"Metric {metric!r} does not support segments (no Cube exposed)",
+        )
     return cube
 
 

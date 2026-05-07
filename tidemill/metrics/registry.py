@@ -31,6 +31,11 @@ def registered_names() -> list[str]:
     return sorted(_REGISTRY)
 
 
+def metric_exists(name: str) -> bool:
+    """Return True if *name* is a registered metric (regardless of cube support)."""
+    return name in _REGISTRY
+
+
 def metric_primary_cube(name: str) -> type[Cube] | None:
     """Resolve *name* to its metric's :attr:`Metric.primary_cube`.
 
@@ -39,6 +44,10 @@ def metric_primary_cube(name: str) -> type[Cube] | None:
     ``/fields`` discovery endpoint, segment validation) so they stay
     plugin-agnostic — each metric advertises its own filter surface via
     the base-class contract rather than the router hard-coding a lookup.
+
+    Callers that need to distinguish "unknown metric" from "metric exists
+    but doesn't expose a Cube" should consult :func:`metric_exists` first
+    so they can return a more accurate error (404 vs. 400 "not supported").
     """
     cls = _REGISTRY.get(name)
     if cls is None:

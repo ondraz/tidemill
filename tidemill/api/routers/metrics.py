@@ -23,12 +23,20 @@ def _load_cube(metric: str) -> Any:
 
     Keeps this router plugin-agnostic — each metric advertises its own
     cube through ``Metric.primary_cube``; generic endpoints just ask.
+    Distinguishes 404 (no such metric) from 400 (metric exists but has
+    no Cube — e.g. raw-SQL metrics like ``expenses``).
     """
-    from tidemill.metrics.registry import metric_primary_cube
+    from tidemill.metrics.registry import metric_exists, metric_primary_cube
 
+    if not metric_exists(metric):
+        raise HTTPException(404, f"Unknown metric {metric!r}")
     cube = metric_primary_cube(metric)
     if cube is None:
-        raise HTTPException(404, f"Unknown metric {metric!r}")
+        raise HTTPException(
+            400,
+            f"Metric {metric!r} does not expose a queryable cube"
+            " (no field discovery / segment filtering)",
+        )
     return cube
 
 
