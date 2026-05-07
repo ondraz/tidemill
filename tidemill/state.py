@@ -88,16 +88,23 @@ async def _handle_customer(session: AsyncSession, event: Event) -> None:
                     "now": event.occurred_at,
                 },
             )
-            # Fan Stripe metadata out into typed customer_attribute rows so
+            # Fan customer metadata out into typed customer_attribute rows so
             # segments can filter on it.  We resolve the customer's internal
             # id from (source_id, external_id) — the INSERT above may have
             # generated a fresh UUID on first sight, so we re-read here.
+            # Origin is the connector type ('stripe', 'lago', ...) so callers
+            # can tell which source produced the value.
             meta = p.get("metadata") or {}
             if meta:
                 from tidemill.attributes.ingest import fan_out_customer_metadata
 
                 cust_row = await session.execute(
-                    text("SELECT id FROM customer WHERE source_id = :src AND external_id = :eid"),
+                    text(
+                        "SELECT c.id, cs.type AS source_type"
+                        " FROM customer c"
+                        " JOIN connector_source cs ON cs.id = c.source_id"
+                        " WHERE c.source_id = :src AND c.external_id = :eid"
+                    ),
                     {"src": event.source_id, "eid": p["external_id"]},
                 )
                 cust = cust_row.mappings().first()
@@ -107,7 +114,7 @@ async def _handle_customer(session: AsyncSession, event: Event) -> None:
                         source_id=event.source_id,
                         customer_id=cust["id"],
                         metadata=meta,
-                        origin="stripe",
+                        origin=cust["source_type"],
                     )
         case "customer.deleted":
             await session.execute(

@@ -104,7 +104,7 @@ class MRRSnapshotCube(Cube):
         plan_id = Dim("sub.plan_id", join="subscription")
         plan_name = Dim("p.name", join="plan", label="plan_name")
         plan_interval = Dim("p.interval", join="plan", label="plan_interval")
-        billing_scheme = Dim("p.billing_scheme", join="plan", label="billing_scheme")
+        pricing_model = Dim("p.pricing_model", join="plan", label="pricing_model")
         usage_type = Dim("p.usage_type", join="plan", label="usage_type")
         # Product (via subscription → plan → product)
         product_name = Dim("prod.name", join="product", label="product_name")
@@ -173,7 +173,7 @@ class MRRMovementCube(Cube):
         plan_id = Dim("sub.plan_id", join="subscription")
         plan_name = Dim("p.name", join="plan", label="plan_name")
         plan_interval = Dim("p.interval", join="plan", label="plan_interval")
-        billing_scheme = Dim("p.billing_scheme", join="plan", label="billing_scheme")
+        pricing_model = Dim("p.pricing_model", join="plan", label="pricing_model")
         usage_type = Dim("p.usage_type", join="plan", label="usage_type")
         # Product
         product_name = Dim("prod.name", join="product", label="product_name")
