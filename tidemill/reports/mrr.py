@@ -34,6 +34,57 @@ def snapshot(tm: TidemillClient, at: str | None = None) -> dict[str, Any]:
     }
 
 
+def usage_breakdown(tm: TidemillClient) -> dict[str, Any]:
+    """Split current MRR into subscription and usage (trailing-3m) components.
+
+    Useful for sanity-checking how much of headline MRR is the smoothed
+    metered component vs. committed licensed recurring.
+
+    Args:
+        tm: Tidemill API client.
+
+    Returns:
+        Dict with ``subscription_mrr``, ``usage_mrr``, ``mrr``, and
+        ``usage_share`` (0.0–1.0) — all dollar amounts except the share.
+    """
+    components = tm.mrr_components()
+    sub_cents = int(components.get("subscription_mrr") or 0)
+    usage_cents = int(components.get("usage_mrr") or 0)
+    total_cents = int(components.get("mrr") or 0) or (sub_cents + usage_cents)
+    return {
+        "subscription_mrr": sub_cents / 100,
+        "usage_mrr": usage_cents / 100,
+        "mrr": total_cents / 100,
+        "usage_share": (usage_cents / total_cents) if total_cents else 0.0,
+    }
+
+
+def style_usage_breakdown(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+    """Format the usage/subscription MRR split as a one-row table.
+
+    Args:
+        data: Dict from :func:`usage_breakdown`.
+    """
+    df = pd.DataFrame(
+        [
+            {
+                "Subscription MRR": data["subscription_mrr"],
+                "Usage MRR": data["usage_mrr"],
+                "Total MRR": data["mrr"],
+                "Usage share": data["usage_share"],
+            }
+        ]
+    )
+    return df.style.format(
+        {
+            "Subscription MRR": "${:,.2f}",
+            "Usage MRR": "${:,.2f}",
+            "Total MRR": "${:,.2f}",
+            "Usage share": "{:.1%}",
+        }
+    ).hide(axis="index")
+
+
 def breakdown(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     """Fetch MRR movement breakdown.
 

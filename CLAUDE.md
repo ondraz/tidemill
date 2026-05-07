@@ -107,11 +107,12 @@ tidemill/
 │   ├── registry.py          # @register decorator, discovery, dependency resolution
 │   ├── query.py             # Cube, QueryFragment (+ dynamic_joins + compare), compilation
 │   ├── route_helpers.py     # Shared FastAPI helpers (resolves segment IDs to SegmentDefs)
-│   ├── mrr/                 # MRR, ARR, net new MRR, waterfall
+│   ├── mrr/                 # MRR (subscription + trailing-3m usage), ARR, waterfall
 │   ├── churn/               # Logo churn, revenue churn
 │   ├── retention/           # Cohort retention, NRR, GRR
 │   ├── ltv/                 # LTV, ARPU, cohort LTV
-│   └── trials/              # Trial conversion rate, funnel
+│   ├── trials/              # Trial conversion rate, funnel
+│   └── usage_revenue/       # Raw monthly usage charges (actuals — sibling to MRR)
 ├── segments/                # Customer segmentation DSL + compiler
 │   ├── model.py             # SegmentDef, Condition, Group, Segment.to_fragment, Compare
 │   ├── compiler.py          # build_spec_fragment — QuerySpec → QueryFragment
@@ -131,7 +132,8 @@ tidemill/
     ├── churn.py             # Churn: customer detail, timeline, lost MRR
     ├── retention.py         # Retention: NRR/GRR
     ├── ltv.py               # LTV: overview, ARPU timeline, cohort
-    └── trials.py            # Trials: funnel, timeline
+    ├── trials.py            # Trials: funnel, timeline
+    └── usage_revenue.py     # Usage actuals: total, series, per-customer
 ```
 
 Each metric module: `tables.py` (schema), `cubes.py` (query model), `metric.py` (logic), `routes.py` (API), `__init__.py`.
