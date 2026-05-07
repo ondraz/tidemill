@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, Header, Query, Request, Response
 from fastapi.responses import RedirectResponse
@@ -23,6 +24,10 @@ async def receive_quickbooks_webhook(
 
     The notification payload only carries entity IDs; we fetch each full
     entity from the QBO API before publishing events.
+
+    ``source_id`` is derived from the payload's ``realmId`` so a single
+    webhook URL works for every connected company. The optional
+    ``?source_id=`` query param overrides this for single-realm setups.
     """
     from tidemill.api.app import app as fastapi_app
     from tidemill.connectors import get_connector
@@ -30,11 +35,21 @@ async def receive_quickbooks_webhook(
     body = await request.body()
     payload = await request.json()
 
-    source_id = request.query_params.get("source_id", "quickbooks")
+    source_id = request.query_params.get("source_id") or _source_id_from_payload(payload)
+    if not source_id:
+        return Response(
+            status_code=400,
+            content="missing source_id (no realmId in payload, no ?source_id= query)",
+        )
     config = await _load_source_config(fastapi_app, source_id)
 
     connector = get_connector("quickbooks", source_id=source_id, config=config)
 
+    # When a verifier token is configured, *require* the signature header —
+    # otherwise an attacker could bypass verification by simply omitting it.
+    has_verifier = bool(config.get("webhook_verifier_token"))
+    if has_verifier and not intuit_signature:
+        return Response(status_code=400, content="Missing intuit-signature header")
     if intuit_signature and not connector.verify_signature(body, intuit_signature):
         return Response(status_code=400, content="Invalid signature")
 
@@ -44,6 +59,22 @@ async def receive_quickbooks_webhook(
         await producer.publish_many(events)
 
     return Response(status_code=200, content="ok")
+
+
+def _source_id_from_payload(payload: dict[str, Any]) -> str | None:
+    """Pick the first realmId out of the QBO notification envelope.
+
+    QBO can batch notifications for multiple realms in one POST in theory,
+    but each Intuit Developer app webhook is registered against a single
+    realm in practice. We use the first one we see; mismatched realms in
+    the same payload will load the wrong config and miss tokens, which is
+    safer than silently routing into ``"quickbooks"``.
+    """
+    for notif in payload.get("eventNotifications", []) or []:
+        realm = notif.get("realmId")
+        if realm:
+            return f"quickbooks-{realm}"
+    return None
 
 
 # ── OAuth 2.0 flow ───────────────────────────────────────────────────────
@@ -64,9 +95,7 @@ async def oauth_start() -> RedirectResponse:
     client_id = os.environ.get("QUICKBOOKS_CLIENT_ID", "")
     redirect_uri = os.environ.get("QUICKBOOKS_REDIRECT_URI", "")
     if not client_id or not redirect_uri:
-        return RedirectResponse(
-            "/?error=quickbooks_oauth_not_configured", status_code=302
-        )
+        return RedirectResponse("/?error=quickbooks_oauth_not_configured", status_code=302)
     state = secrets.token_urlsafe(24)
     params = {
         "client_id": client_id,
@@ -152,13 +181,17 @@ async def oauth_callback(
         await session.commit()
 
     logger.info("quickbooks oauth complete realm=%s source_id=%s", realmId, source_id)
-    return RedirectResponse(f"/?quickbooks_connected={source_id}", status_code=302)
+    # Redirect to a static success path — the frontend can fetch the
+    # newly-created connector source via the API. Echoing realmId/source_id
+    # back into the redirect URL was flagged by CodeQL as untrusted-redirect
+    # input even though we control its shape.
+    return RedirectResponse("/?quickbooks_connected=1", status_code=302)
 
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
 
-async def _load_source_config(app, source_id: str) -> dict:  # type: ignore[no-untyped-def]
+async def _load_source_config(app: Any, source_id: str) -> dict[str, Any]:
     """Read ``connector_source.config`` JSON for *source_id*.
 
     Falls back to the static env-var config in ``app.state.connector_configs``
@@ -168,7 +201,7 @@ async def _load_source_config(app, source_id: str) -> dict:  # type: ignore[no-u
     from sqlalchemy import text
 
     factory = getattr(app.state, "session_factory", None)
-    fallback = getattr(app.state, "connector_configs", {}).get("quickbooks", {})
+    fallback: dict[str, Any] = getattr(app.state, "connector_configs", {}).get("quickbooks", {})
     if factory is None:
         return fallback
     async with factory() as session:
@@ -179,7 +212,9 @@ async def _load_source_config(app, source_id: str) -> dict:  # type: ignore[no-u
         row = result.mappings().first()
     if row and row["config"]:
         try:
-            return {**fallback, **json.loads(row["config"])}
+            parsed: dict[str, Any] = json.loads(row["config"])
         except json.JSONDecodeError:
             logger.warning("connector_source.config not JSON for %s", source_id)
+        else:
+            return {**fallback, **parsed}
     return fallback

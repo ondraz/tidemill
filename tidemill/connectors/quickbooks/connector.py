@@ -121,16 +121,22 @@ class QuickBooksConnector(ExpenseConnector):
         """Pull QBO Class and Department off a line/header.
 
         QBO supports Class (cross-cutting tag) and Department (location).
-        Both are reference objects with ``{value, name}``; we keep ``value``
-        (the QBO ID) so reports can group by stable identifier.
+        Both are reference objects with ``{value, name}``. We use ``value``
+        (the QBO ID) as the dimension key so renaming a Class/Department
+        in QBO doesn't fragment historical group totals; the human-readable
+        ``name`` is captured alongside under a ``*_name`` key for display.
         """
         dims: dict[str, Any] = {}
         cls_ref = native_obj.get("ClassRef")
-        if cls_ref:
-            dims["class"] = cls_ref.get("name") or cls_ref.get("value")
+        if cls_ref and cls_ref.get("value"):
+            dims["class"] = cls_ref["value"]
+            if cls_ref.get("name"):
+                dims["class_name"] = cls_ref["name"]
         dept_ref = native_obj.get("DepartmentRef")
-        if dept_ref:
-            dims["department"] = dept_ref.get("name") or dept_ref.get("value")
+        if dept_ref and dept_ref.get("value"):
+            dims["department"] = dept_ref["value"]
+            if dept_ref.get("name"):
+                dims["department_name"] = dept_ref["name"]
         return dims
 
     # ── translate / verify_signature ─────────────────────────────────────
@@ -237,9 +243,7 @@ class QuickBooksConnector(ExpenseConnector):
 
     # ── per-entity translation ───────────────────────────────────────────
 
-    def _translate_entity(
-        self, name: str, obj: dict[str, Any], realm_id: str
-    ) -> list[Event]:
+    def _translate_entity(self, name: str, obj: dict[str, Any], realm_id: str) -> list[Event]:
         match name:
             case "Vendor":
                 return [self._translate_vendor(obj, realm_id)]
@@ -253,9 +257,7 @@ class QuickBooksConnector(ExpenseConnector):
                 return [self._translate_bill_payment(obj, realm_id)]
         return []
 
-    def _build_delete_events(
-        self, name: str, qbo_id: str, realm_id: str
-    ) -> list[Event]:
+    def _build_delete_events(self, name: str, qbo_id: str, realm_id: str) -> list[Event]:
         match name:
             case "Vendor":
                 return [
@@ -354,6 +356,10 @@ class QuickBooksConnector(ExpenseConnector):
         ext_id = obj["Id"]
         currency = (obj.get("CurrencyRef") or {}).get("value")
         total_cents = _to_cents(obj.get("TotalAmt"))
+        tax_cents = _to_cents((obj.get("TxnTaxDetail") or {}).get("TotalTax"))
+        # Pre-tax subtotal so subtotal + tax = total. Reviewers flagged that
+        # storing total_cents as subtotal made downstream sums double-count.
+        subtotal_cents = max(total_cents - tax_cents, 0)
         status = self._compute_bill_status(obj)
 
         lines = []
@@ -388,8 +394,8 @@ class QuickBooksConnector(ExpenseConnector):
                     "status": status,
                     "doc_number": obj.get("DocNumber"),
                     "currency": currency,
-                    "subtotal_cents": total_cents,
-                    "tax_cents": _to_cents((obj.get("TxnTaxDetail") or {}).get("TotalTax")),
+                    "subtotal_cents": subtotal_cents,
+                    "tax_cents": tax_cents,
                     "total_cents": total_cents,
                     "txn_date": _date_to_iso(obj.get("TxnDate")),
                     "due_date": _date_to_iso(obj.get("DueDate")),
@@ -416,6 +422,8 @@ class QuickBooksConnector(ExpenseConnector):
         ext_id = obj["Id"]
         currency = (obj.get("CurrencyRef") or {}).get("value")
         total_cents = _to_cents(obj.get("TotalAmt"))
+        tax_cents = _to_cents((obj.get("TxnTaxDetail") or {}).get("TotalTax"))
+        subtotal_cents = max(total_cents - tax_cents, 0)
 
         lines = []
         for raw_line in obj.get("Line") or []:
@@ -452,8 +460,8 @@ class QuickBooksConnector(ExpenseConnector):
                 "payment_type": self.normalize_payment_type(obj.get("PaymentType", "")),
                 "doc_number": obj.get("DocNumber"),
                 "currency": currency,
-                "subtotal_cents": total_cents,
-                "tax_cents": _to_cents((obj.get("TxnTaxDetail") or {}).get("TotalTax")),
+                "subtotal_cents": subtotal_cents,
+                "tax_cents": tax_cents,
                 "total_cents": total_cents,
                 "txn_date": _date_to_iso(obj.get("TxnDate")),
                 "memo": obj.get("PrivateNote"),

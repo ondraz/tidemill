@@ -13,9 +13,7 @@ router = APIRouter(tags=["metrics"])
 
 
 @router.get("/metrics/expenses")
-async def get_expenses_total(
-    start: date | None = None, end: date | None = None
-) -> Any:
+async def get_expenses_total(start: date | None = None, end: date | None = None) -> Any:
     return await query_metric(
         "expenses",
         {"query_type": "total", "start": start, "end": end},
@@ -42,9 +40,7 @@ async def get_expenses_by_vendor(start: date, end: date) -> Any:
 
 
 @router.get("/metrics/expenses/series")
-async def get_expenses_series(
-    start: date, end: date, interval: str = "month"
-) -> Any:
+async def get_expenses_series(start: date, end: date, interval: str = "month") -> Any:
     return await query_metric(
         "expenses",
         {

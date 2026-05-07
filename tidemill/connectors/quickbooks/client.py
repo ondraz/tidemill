@@ -71,7 +71,7 @@ class QuickBooksClient:
             except ValueError:
                 expiry = datetime.now(UTC) - timedelta(seconds=1)
             if expiry > datetime.now(UTC) + timedelta(seconds=60):
-                return access
+                return str(access)
         return await self._refresh()
 
     async def _refresh(self) -> str:
@@ -92,7 +92,7 @@ class QuickBooksClient:
         if resp.status_code != 200:
             raise QuickBooksAPIError(f"Token refresh failed: {resp.status_code} {resp.text}")
         body = resp.json()
-        access_token = body["access_token"]
+        access_token: str = body["access_token"]
         new_refresh = body.get("refresh_token", refresh_token)
         expires_in = int(body.get("expires_in", 3600))
         expiry = datetime.now(UTC) + timedelta(seconds=expires_in)
@@ -119,9 +119,7 @@ class QuickBooksClient:
 
             async with factory() as session:
                 await session.execute(
-                    text(
-                        "UPDATE connector_source SET config = :cfg WHERE id = :sid"
-                    ),
+                    text("UPDATE connector_source SET config = :cfg WHERE id = :sid"),
                     {"cfg": json.dumps(self.config), "sid": self.source_id},
                 )
                 await session.commit()
@@ -144,7 +142,8 @@ class QuickBooksClient:
             resp = await self._http.request(method, url, headers=headers, params=params)
         if resp.status_code >= 300:
             raise QuickBooksAPIError(f"{method} {url} → {resp.status_code} {resp.text}")
-        return resp.json()
+        body: dict[str, Any] = resp.json()
+        return body
 
     # ── public API ───────────────────────────────────────────────────────
 

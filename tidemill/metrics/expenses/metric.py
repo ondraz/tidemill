@@ -75,9 +75,7 @@ class ExpensesMetric(Metric):
             case "total":
                 return await self._total(params.get("start"), params.get("end"))
             case "by_account_type":
-                return await self._by_account_type(
-                    params["start"], params["end"]
-                )
+                return await self._by_account_type(params["start"], params["end"])
             case "by_vendor":
                 return await self._by_vendor(params["start"], params["end"])
             case "series":
@@ -104,8 +102,7 @@ class ExpensesMetric(Metric):
             _EXPENSE_LINES_CTE
             + " SELECT COALESCE(SUM(el.amount_base_cents), 0) AS total_base_cents,"
             "        COUNT(*) AS line_count"
-            " FROM expense_lines el"
-            + clause
+            " FROM expense_lines el" + clause
         )
         result = await self.db.execute(text(sql), params)
         row = result.mappings().one()
@@ -114,12 +111,9 @@ class ExpensesMetric(Metric):
             "line_count": int(row["line_count"] or 0),
         }
 
-    async def _by_account_type(
-        self, start: date, end: date
-    ) -> list[dict[str, Any]]:
+    async def _by_account_type(self, start: date, end: date) -> list[dict[str, Any]]:
         sql = (
-            _EXPENSE_LINES_CTE
-            + " SELECT COALESCE(a.account_type, 'unknown') AS account_type,"
+            _EXPENSE_LINES_CTE + " SELECT COALESCE(a.account_type, 'unknown') AS account_type,"
             "        SUM(el.amount_base_cents) AS amount_base_cents,"
             "        COUNT(*) AS line_count"
             " FROM expense_lines el"
@@ -140,8 +134,7 @@ class ExpensesMetric(Metric):
 
     async def _by_vendor(self, start: date, end: date) -> list[dict[str, Any]]:
         sql = (
-            _EXPENSE_LINES_CTE
-            + " SELECT v.id AS vendor_id,"
+            _EXPENSE_LINES_CTE + " SELECT v.id AS vendor_id,"
             "        v.name AS vendor_name,"
             "        SUM(el.amount_base_cents) AS amount_base_cents,"
             "        COUNT(*) AS line_count"
@@ -162,16 +155,13 @@ class ExpensesMetric(Metric):
             for r in result.mappings().all()
         ]
 
-    async def _series(
-        self, start: date, end: date, interval: str
-    ) -> list[dict[str, Any]]:
+    async def _series(self, start: date, end: date, interval: str) -> list[dict[str, Any]]:
         # Mirrors MRR/retention DATE_TRUNC convention so client-side period
         # keys line up across metrics.
         if interval not in ("day", "week", "month", "quarter", "year"):
             raise ValueError(f"Unsupported interval: {interval}")
         sql = (
-            _EXPENSE_LINES_CTE
-            + f" SELECT DATE_TRUNC('{interval}', el.txn_date)::date AS period,"
+            _EXPENSE_LINES_CTE + f" SELECT DATE_TRUNC('{interval}', el.txn_date)::date AS period,"
             "        COALESCE(a.account_type, 'unknown') AS account_type,"
             "        SUM(el.amount_base_cents) AS amount_base_cents"
             " FROM expense_lines el"

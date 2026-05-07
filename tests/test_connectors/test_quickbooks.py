@@ -69,13 +69,19 @@ class TestExtractDimensions:
     def test_no_class_or_department(self):
         assert QuickBooksConnector.extract_dimensions({}) == {}
 
-    def test_class_ref(self):
+    def test_class_ref_uses_id_with_name_alongside(self):
         line = {"ClassRef": {"value": "1", "name": "Engineering"}}
-        assert QuickBooksConnector.extract_dimensions(line) == {"class": "Engineering"}
+        assert QuickBooksConnector.extract_dimensions(line) == {
+            "class": "1",
+            "class_name": "Engineering",
+        }
 
-    def test_department_ref(self):
+    def test_department_ref_uses_id_with_name_alongside(self):
         line = {"DepartmentRef": {"value": "10", "name": "EMEA"}}
-        assert QuickBooksConnector.extract_dimensions(line) == {"department": "EMEA"}
+        assert QuickBooksConnector.extract_dimensions(line) == {
+            "department": "10",
+            "department_name": "EMEA",
+        }
 
     def test_both(self):
         line = {
@@ -83,9 +89,15 @@ class TestExtractDimensions:
             "DepartmentRef": {"value": "10", "name": "EMEA"},
         }
         assert QuickBooksConnector.extract_dimensions(line) == {
-            "class": "Eng",
-            "department": "EMEA",
+            "class": "1",
+            "class_name": "Eng",
+            "department": "10",
+            "department_name": "EMEA",
         }
+
+    def test_value_only_no_name(self):
+        line = {"ClassRef": {"value": "1"}}
+        assert QuickBooksConnector.extract_dimensions(line) == {"class": "1"}
 
 
 # ── signature verification ───────────────────────────────────────────────
@@ -212,9 +224,7 @@ class TestTranslateVendor:
 
 
 class TestTranslateAccount:
-    def test_emits_account_created_with_normalized_type(
-        self, connector: QuickBooksConnector
-    ):
+    def test_emits_account_created_with_normalized_type(self, connector: QuickBooksConnector):
         events = connector._translate_entity("Account", _ACCOUNT_PAYLOAD, REALM)
         assert len(events) == 1
         evt = events[0]
@@ -240,12 +250,25 @@ class TestTranslateBill:
         assert evt.payload["doc_number"] == "INV-001"
         assert evt.payload["currency"] == "USD"
         assert evt.payload["total_cents"] == 420000
-        # Lines preserved with account ref + dimensions
+        # No tax in this fixture → subtotal == total, but they are
+        # separate fields now so adding tax later won't double-count.
+        assert evt.payload["tax_cents"] == 0
+        assert evt.payload["subtotal_cents"] == 420000
+        # Lines preserved with account ref + dimensions (using stable QBO ID)
         assert len(evt.payload["lines"]) == 1
         line = evt.payload["lines"][0]
         assert line["account_external_id"] == "100"
         assert line["amount_cents"] == 420000
-        assert line["dimensions"] == {"class": "Engineering"}
+        assert line["dimensions"] == {"class": "1", "class_name": "Engineering"}
+
+    def test_subtotal_excludes_tax(self, connector: QuickBooksConnector):
+        with_tax = dict(_BILL_PAYLOAD)
+        with_tax["TxnTaxDetail"] = {"TotalTax": 200.00}
+        events = connector._translate_entity("Bill", with_tax, REALM)
+        payload = events[0].payload
+        assert payload["total_cents"] == 420000
+        assert payload["tax_cents"] == 20000
+        assert payload["subtotal_cents"] == 400000
 
     def test_paid_bill_emits_two_events(self, connector: QuickBooksConnector):
         paid_payload = dict(_BILL_PAYLOAD)
@@ -255,9 +278,7 @@ class TestTranslateBill:
         assert "bill.created" in types
         assert "bill.paid" in types
 
-    def test_partial_status_when_balance_below_total(
-        self, connector: QuickBooksConnector
-    ):
+    def test_partial_status_when_balance_below_total(self, connector: QuickBooksConnector):
         partial_payload = dict(_BILL_PAYLOAD)
         partial_payload["Balance"] = 2000.00
         events = connector._translate_entity("Bill", partial_payload, REALM)
@@ -279,9 +300,7 @@ class TestTranslatePurchase:
         assert evt.payload["total_cents"] == 32000
         assert evt.payload["lines"][0]["amount_cents"] == 32000
 
-    def test_non_vendor_entity_drops_vendor_link(
-        self, connector: QuickBooksConnector
-    ):
+    def test_non_vendor_entity_drops_vendor_link(self, connector: QuickBooksConnector):
         payload = dict(_PURCHASE_PAYLOAD)
         payload["EntityRef"] = {"value": "99", "type": "Customer"}
         events = connector._translate_entity("Purchase", payload, REALM)
@@ -290,9 +309,7 @@ class TestTranslatePurchase:
 
 class TestTranslateBillPayment:
     def test_links_to_bill(self, connector: QuickBooksConnector):
-        events = connector._translate_entity(
-            "BillPayment", _BILL_PAYMENT_PAYLOAD, REALM
-        )
+        events = connector._translate_entity("BillPayment", _BILL_PAYMENT_PAYLOAD, REALM)
         assert len(events) == 1
         evt = events[0]
         assert evt.type == "bill_payment.created"

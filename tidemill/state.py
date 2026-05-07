@@ -13,12 +13,38 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import text
 
-from tidemill.fx import normalize_currency
+from tidemill.fx import normalize_currency, to_base_cents
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from tidemill.events import Event
+
+
+# Default currency to assume when an expense-side payload arrives without
+# one — only happens for connector bugs / partial payloads. USD matches
+# the default BASE_CURRENCY.
+_DEFAULT_CURRENCY = "USD"
+
+
+async def _to_base(
+    session: AsyncSession,
+    amount_cents: int | None,
+    currency: str | None,
+    on_date: datetime | None,
+) -> int:
+    """Convert *amount_cents* to base currency for the FX-rate row at *on_date*.
+
+    Same-currency values pass through; missing FX rates raise
+    ``FxRateMissingError``, which the consumer worker dead-letters. ``None``
+    inputs are coerced to 0 / BASE / today so a partial payload doesn't crash
+    the handler.
+    """
+    if not amount_cents:
+        return 0
+    cur = normalize_currency(currency) or _DEFAULT_CURRENCY
+    when = on_date.date() if on_date is not None else datetime.now().date()
+    return await to_base_cents(amount_cents, cur, when, session)
 
 
 async def handle_state_event(session: AsyncSession, event: Event) -> None:
@@ -448,9 +474,18 @@ async def _handle_vendor(session: AsyncSession, event: Event) -> None:
                 },
             )
         case "vendor.deleted":
+            # Soft-delete: hard DELETE would fail (FK from bill/expense)
+            # and dead-letter the partition. Mark inactive instead.
             await session.execute(
-                text("DELETE FROM vendor WHERE source_id = :src AND external_id = :eid"),
-                {"src": event.source_id, "eid": p["external_id"]},
+                text(
+                    "UPDATE vendor SET active = FALSE, updated_at = :now"
+                    " WHERE source_id = :src AND external_id = :eid"
+                ),
+                {
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "now": event.occurred_at,
+                },
             )
 
 
@@ -505,18 +540,24 @@ async def _upsert_lines(
     parent_col: str,
     parent_id: str,
     lines: list[dict[str, Any]],
+    on_date: datetime | None = None,
 ) -> None:
     """Replace all line rows for a bill/expense with the freshly translated set.
 
     Bill/expense lines have no stable external ID across platforms — many
     accounting systems regenerate line IDs on every update. Replacing in
     bulk (DELETE + INSERT) is simpler and idempotent than diff-based upserts.
+    Always called (even with an empty list) so stale lines are removed when
+    a header is updated to a smaller line set.
     """
     await session.execute(
         text(f"DELETE FROM {table} WHERE {parent_col} = :pid"),
         {"pid": parent_id},
     )
     for line in lines:
+        amount = line.get("amount_cents", 0)
+        currency = line.get("currency")
+        amount_base = await _to_base(session, amount, currency, on_date)
         await session.execute(
             text(
                 f"INSERT INTO {table}"
@@ -534,9 +575,9 @@ async def _upsert_lines(
                 "acct_eid": line.get("account_external_id", ""),
                 "desc": line.get("description"),
                 "qty": line.get("quantity"),
-                "amt": line.get("amount_cents", 0),
-                "amtb": line.get("amount_base_cents", 0),
-                "cur": normalize_currency(line.get("currency")),
+                "amt": amount,
+                "amtb": amount_base,
+                "cur": normalize_currency(currency),
                 "dims": json.dumps(line.get("dimensions") or {}),
             },
         )
@@ -559,6 +600,15 @@ async def _handle_bill(session: AsyncSession, event: Event) -> None:
 
     match event.type:
         case "bill.created" | "bill.updated":
+            currency = p.get("currency")
+            txn_date = _parse_ts(p.get("txn_date")) or event.occurred_at
+            sub = p.get("subtotal_cents", 0)
+            tax = p.get("tax_cents", 0)
+            total = p.get("total_cents", 0)
+            sub_base = await _to_base(session, sub, currency, txn_date)
+            tax_base = await _to_base(session, tax, currency, txn_date)
+            total_base = await _to_base(session, total, currency, txn_date)
+
             await session.execute(
                 text(
                     "INSERT INTO bill"
@@ -572,6 +622,7 @@ async def _handle_bill(session: AsyncSession, event: Event) -> None:
                     "  :status, :doc, :cur, :sub, :subb, :tax, :taxb,"
                     "  :total, :totalb, :txn, :due, :memo, :meta, :now, :now)"
                     " ON CONFLICT ON CONSTRAINT uq_bill_source DO UPDATE SET"
+                    "  vendor_id = COALESCE(EXCLUDED.vendor_id, bill.vendor_id),"
                     "  status = EXCLUDED.status,"
                     "  doc_number = EXCLUDED.doc_number,"
                     "  currency = EXCLUDED.currency,"
@@ -594,14 +645,14 @@ async def _handle_bill(session: AsyncSession, event: Event) -> None:
                     "vendor_eid": p.get("vendor_external_id", ""),
                     "status": p.get("status", "open"),
                     "doc": p.get("doc_number"),
-                    "cur": normalize_currency(p.get("currency")),
-                    "sub": p.get("subtotal_cents", 0),
-                    "subb": p.get("subtotal_base_cents", 0),
-                    "tax": p.get("tax_cents", 0),
-                    "taxb": p.get("tax_base_cents", 0),
-                    "total": p.get("total_cents", 0),
-                    "totalb": p.get("total_base_cents", 0),
-                    "txn": _parse_ts(p.get("txn_date")),
+                    "cur": normalize_currency(currency),
+                    "sub": sub,
+                    "subb": sub_base,
+                    "tax": tax,
+                    "taxb": tax_base,
+                    "total": total,
+                    "totalb": total_base,
+                    "txn": txn_date,
                     "due": _parse_ts(p.get("due_date")),
                     "memo": p.get("memo"),
                     "meta": json.dumps(p.get("metadata", {})),
@@ -609,16 +660,20 @@ async def _handle_bill(session: AsyncSession, event: Event) -> None:
                 },
             )
             bill_id = await _resolve_id(session, "bill", event.source_id, ext_id)
-            lines = p.get("lines") or []
-            if bill_id and lines:
+            if bill_id is not None:
+                # Always replace — passing an empty list correctly drops
+                # all stale lines from a prior version of the bill.
+                lines = p.get("lines") or []
                 for line in lines:
                     line["source_id"] = event.source_id
+                    line.setdefault("currency", currency)
                 await _upsert_lines(
                     session,
                     table="bill_line",
                     parent_col="bill_id",
                     parent_id=bill_id,
                     lines=lines,
+                    on_date=txn_date,
                 )
         case "bill.paid":
             await session.execute(
@@ -659,6 +714,15 @@ async def _handle_expense(session: AsyncSession, event: Event) -> None:
 
     match event.type:
         case "expense.created" | "expense.updated":
+            currency = p.get("currency")
+            txn_date = _parse_ts(p.get("txn_date")) or event.occurred_at
+            sub = p.get("subtotal_cents", 0)
+            tax = p.get("tax_cents", 0)
+            total = p.get("total_cents", 0)
+            sub_base = await _to_base(session, sub, currency, txn_date)
+            tax_base = await _to_base(session, tax, currency, txn_date)
+            total_base = await _to_base(session, total, currency, txn_date)
+
             await session.execute(
                 text(
                     "INSERT INTO expense"
@@ -672,6 +736,7 @@ async def _handle_expense(session: AsyncSession, event: Event) -> None:
                     "  :ptype, :doc, :cur, :sub, :subb, :tax, :taxb,"
                     "  :total, :totalb, :txn, :memo, :meta, :now, :now)"
                     " ON CONFLICT ON CONSTRAINT uq_expense_source DO UPDATE SET"
+                    "  vendor_id = COALESCE(EXCLUDED.vendor_id, expense.vendor_id),"
                     "  payment_type = EXCLUDED.payment_type,"
                     "  doc_number = EXCLUDED.doc_number,"
                     "  currency = EXCLUDED.currency,"
@@ -693,30 +758,34 @@ async def _handle_expense(session: AsyncSession, event: Event) -> None:
                     "vendor_eid": p.get("vendor_external_id", ""),
                     "ptype": p.get("payment_type", "other"),
                     "doc": p.get("doc_number"),
-                    "cur": normalize_currency(p.get("currency")),
-                    "sub": p.get("subtotal_cents", 0),
-                    "subb": p.get("subtotal_base_cents", 0),
-                    "tax": p.get("tax_cents", 0),
-                    "taxb": p.get("tax_base_cents", 0),
-                    "total": p.get("total_cents", 0),
-                    "totalb": p.get("total_base_cents", 0),
-                    "txn": _parse_ts(p.get("txn_date")),
+                    "cur": normalize_currency(currency),
+                    "sub": sub,
+                    "subb": sub_base,
+                    "tax": tax,
+                    "taxb": tax_base,
+                    "total": total,
+                    "totalb": total_base,
+                    "txn": txn_date,
                     "memo": p.get("memo"),
                     "meta": json.dumps(p.get("metadata", {})),
                     "now": event.occurred_at,
                 },
             )
             expense_id = await _resolve_id(session, "expense", event.source_id, ext_id)
-            lines = p.get("lines") or []
-            if expense_id and lines:
+            if expense_id is not None:
+                # Always replace — empty list drops stale lines from a
+                # prior version of the expense.
+                lines = p.get("lines") or []
                 for line in lines:
                     line["source_id"] = event.source_id
+                    line.setdefault("currency", currency)
                 await _upsert_lines(
                     session,
                     table="expense_line",
                     parent_col="expense_id",
                     parent_id=expense_id,
                     lines=lines,
+                    on_date=txn_date,
                 )
         case "expense.voided":
             await session.execute(
@@ -741,6 +810,11 @@ async def _handle_bill_payment(session: AsyncSession, event: Event) -> None:
 
     match event.type:
         case "bill_payment.created":
+            currency = p.get("currency")
+            paid_at = _parse_ts(p.get("paid_at")) or event.occurred_at
+            amt = p.get("amount_cents", 0)
+            amt_base = await _to_base(session, amt, currency, paid_at)
+
             await session.execute(
                 text(
                     "INSERT INTO bill_payment"
@@ -751,19 +825,21 @@ async def _handle_bill_payment(session: AsyncSession, event: Event) -> None:
                     "     AND external_id = :bill_eid LIMIT 1),"
                     "  :paid, :amt, :amtb, :cur, :meta, :now)"
                     " ON CONFLICT ON CONSTRAINT uq_bill_payment_source DO UPDATE SET"
+                    "  bill_id = COALESCE(EXCLUDED.bill_id, bill_payment.bill_id),"
                     "  paid_at = EXCLUDED.paid_at,"
                     "  amount_cents = EXCLUDED.amount_cents,"
-                    "  amount_base_cents = EXCLUDED.amount_base_cents"
+                    "  amount_base_cents = EXCLUDED.amount_base_cents,"
+                    "  currency = EXCLUDED.currency"
                 ),
                 {
                     "id": str(uuid.uuid4()),
                     "src": event.source_id,
                     "eid": p["external_id"],
                     "bill_eid": p.get("bill_external_id", ""),
-                    "paid": _parse_ts(p.get("paid_at")) or event.occurred_at,
-                    "amt": p.get("amount_cents", 0),
-                    "amtb": p.get("amount_base_cents", 0),
-                    "cur": normalize_currency(p.get("currency")),
+                    "paid": paid_at,
+                    "amt": amt,
+                    "amtb": amt_base,
+                    "cur": normalize_currency(currency),
                     "meta": json.dumps(p.get("metadata", {})),
                     "now": event.occurred_at,
                 },
