@@ -7,10 +7,11 @@ auditing meter events or reconciling against Stripe.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
+from pandas.io.formats.style import Styler
 
 from tidemill.reports._style import COLORS, apply_period_xaxis
 
@@ -106,20 +107,22 @@ def plot_series(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def style_total(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+def style_total(data: dict[str, Any]) -> Styler:
     """Format usage revenue total as a one-row table.
 
     Args:
         data: Dict from :func:`total`.
     """
     df = pd.DataFrame([{"Usage Revenue": data["revenue"]}])
-    return df.style.format("${:,.2f}").hide(axis="index")
+    styler = cast(Styler, df.style.format("${:,.2f}"))
+    return styler.hide(axis="index")
 
 
-def style_by_customer(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_by_customer(df: pd.DataFrame) -> Styler:
     """Format per-customer usage revenue as a styled table.
 
     Args:
         df: DataFrame from :func:`by_customer`.
     """
-    return df.style.format({"revenue": "${:,.2f}"}).hide(axis="index")
+    styler = cast(Styler, df.style.format({"revenue": "${:,.2f}"}))
+    return styler.hide(axis="index")

@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
+from pandas.io.formats.style import Styler
 
 from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
 
 if TYPE_CHECKING:
-    from pandas.io.formats.style import Styler
-
     from tidemill.reports.client import TidemillClient
 
 
