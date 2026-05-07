@@ -35,8 +35,12 @@ async def receive_quickbooks_webhook(
     body = await request.body()
     try:
         payload = json.loads(body) if body else {}
-    except json.JSONDecodeError as exc:
-        return Response(status_code=400, content=f"Invalid JSON body: {exc}")
+    except json.JSONDecodeError:
+        # Log full details server-side; return a generic message so we
+        # don't leak parser internals to the caller (CodeQL: information
+        # exposure through an exception).
+        logger.warning("quickbooks webhook received invalid JSON", exc_info=True)
+        return Response(status_code=400, content="Invalid JSON body")
     if not isinstance(payload, dict):
         return Response(status_code=400, content="JSON body must be an object")
 
@@ -150,10 +154,11 @@ async def oauth_callback(
             headers={"Accept": "application/json"},
         )
     if resp.status_code != 200:
-        return Response(
-            status_code=400,
-            content=f"Token exchange failed: {resp.status_code} {resp.text}",
-        )
+        # Log Intuit's full response server-side; the user just sees a
+        # generic failure so we don't echo upstream error bodies (which
+        # may include token-exchange internals) into a public response.
+        logger.warning("quickbooks token exchange failed: %s %s", resp.status_code, resp.text)
+        return Response(status_code=400, content="Token exchange failed")
     body = resp.json()
     expires_at = datetime.now(UTC) + timedelta(seconds=int(body.get("expires_in", 3600)))
     config = {
