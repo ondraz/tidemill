@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import stripe
 
@@ -802,7 +802,8 @@ class StripeConnector(WebhookConnector):
         if created_filter:
             prod_params["created"] = created_filter
         for prod in stripe.Product.list(**prod_params).auto_paging_iter():
-            prod_dict: dict[str, Any] = dict(prod)
+            # Stripe ``Product`` extends dict at runtime; cast to satisfy mypy.
+            prod_dict = cast("dict[str, Any]", prod)
             yield self._make_event(
                 "product.created",
                 customer_id="",
@@ -818,7 +819,7 @@ class StripeConnector(WebhookConnector):
         if created_filter:
             price_params["created"] = created_filter
         for price in stripe.Price.list(**price_params).auto_paging_iter():
-            price_dict: dict[str, Any] = dict(price)
+            price_dict = cast("dict[str, Any]", price)
             if not price_dict.get("recurring"):
                 continue
             yield self._make_event(

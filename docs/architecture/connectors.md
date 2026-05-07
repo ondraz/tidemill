@@ -249,14 +249,30 @@ async def backfill(self, since: datetime | None = None) -> AsyncIterator[Event]:
     """
     stripe.api_key = self.config["api_key"]
 
-    # 1. Customers
+    # 1a. Products (catalog — populates the `product` table)
+    for prod in await self._paginate(stripe.Product.list):
+        yield self._make_event("product.created",
+            customer_id="",
+            payload=self._product_payload(prod),
+            occurred_at=datetime.fromtimestamp(prod["created"], tz=UTC))
+
+    # 1b. Prices (catalog — emitted as `plan.*` internally, recurring only)
+    for price in await self._paginate(stripe.Price.list):
+        if not price.get("recurring"):
+            continue  # one-time charges aren't plans
+        yield self._make_event("plan.created",
+            customer_id="",
+            payload=self._price_payload(price),
+            occurred_at=datetime.fromtimestamp(price["created"], tz=UTC))
+
+    # 2. Customers
     for customer in await self._paginate(stripe.Customer.list, created={"gte": since}):
         yield self._make_event("customer.created",
             customer_id=customer["id"],
             payload=self._extract_customer(customer),
             occurred_at=datetime.fromtimestamp(customer["created"], tz=UTC))
 
-    # 2. Subscriptions (includes current state + computed MRR)
+    # 3. Subscriptions (includes current state + computed MRR)
     for sub in await self._paginate(stripe.Subscription.list, created={"gte": since}):
         yield self._make_event("subscription.created",
             customer_id=sub["customer"],
@@ -272,13 +288,13 @@ async def backfill(self, since: datetime | None = None) -> AsyncIterator[Event]:
         elif sub["status"] == "canceled":
             yield self._make_event("subscription.churned", ...)
 
-    # 3. Invoices
+    # 4. Invoices
     for invoice in await self._paginate(stripe.Invoice.list, created={"gte": since}):
         yield self._make_event("invoice.created", ...)
         if invoice["status"] == "paid":
             yield self._make_event("invoice.paid", ...)
 
-    # 4. Payments
+    # 5. Payments
     for pi in await self._paginate(stripe.PaymentIntent.list, created={"gte": since}):
         if pi["status"] == "succeeded":
             yield self._make_event("payment.succeeded", ...)
