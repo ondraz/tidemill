@@ -141,6 +141,7 @@ class TestFanOut:
             source_id="src_1",
             customer_id="cus_a",
             metadata={"tier": "enterprise", "seats": "42", "active": "true"},
+            origin="stripe",
         )
         assert count == 3
 
@@ -156,6 +157,7 @@ class TestFanOut:
             source_id="src_1",
             customer_id="cus_a",
             metadata={"tier": "enterprise"},
+            origin="stripe",
         )
         # Second fan-out with same value → no writes
         c2 = await fan_out_customer_metadata(
@@ -163,6 +165,7 @@ class TestFanOut:
             source_id="src_1",
             customer_id="cus_a",
             metadata={"tier": "enterprise"},
+            origin="stripe",
         )
         assert c1 == 1
         assert c2 == 0
@@ -176,12 +179,14 @@ class TestFanOut:
             source_id="src_1",
             customer_id="cus_a",
             metadata={"tier": "enterprise", "account_manager": "Alice"},
+            origin="stripe",
         )
         await fan_out_customer_metadata(
             db,
             source_id="src_1",
             customer_id="cus_a",
             metadata={"tier": "plus"},  # account_manager absent
+            origin="stripe",
         )
         rows = (
             (

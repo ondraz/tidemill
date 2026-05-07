@@ -95,7 +95,7 @@ class TestCubeIntrospection:
         # New Stripe-sourced dimensions
         assert "plan_name" in dims
         assert "product_name" in dims
-        assert "billing_scheme" in dims
+        assert "pricing_model" in dims
         assert "usage_type" in dims
         assert "collection_method" in dims
         assert "cancel_at_period_end" in dims
@@ -296,13 +296,13 @@ class TestMRRSnapshotCompilation:
         assert "JOIN plan" in sql
         assert "GROUP BY" in sql
 
-    def test_billing_scheme_dimension(self):
+    def test_pricing_model_dimension(self):
         m = MRRSnapshotCube
-        q = m.measures.mrr + m.dimension("billing_scheme")
+        q = m.measures.mrr + m.dimension("pricing_model")
         stmt, params = q.compile(m)
         sql = _normalize(_sql(stmt))
 
-        assert "p.billing_scheme" in sql
+        assert "p.pricing_model" in sql
         assert "JOIN plan" in sql
 
     def test_collection_method_dimension(self):

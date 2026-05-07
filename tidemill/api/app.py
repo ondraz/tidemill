@@ -35,6 +35,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
     kafka_url = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 
+    # Connector type determines which default source row to bootstrap.
+    # Multiple sources can co-exist in the same database; this just ensures
+    # the "primary" one for this deployment exists so webhook handlers and
+    # backfill jobs have a source_id to attach events to.
+    connector_type = os.environ.get("TIDEMILL_CONNECTOR", "stripe").lower()
+    _CONNECTOR_DEFAULTS: dict[str, dict[str, str]] = {
+        "stripe": {"id": "stripe", "type": "stripe", "name": "Stripe"},
+        "lago": {"id": "lago", "type": "lago", "name": "Lago"},
+        "killbill": {"id": "killbill", "type": "killbill", "name": "Kill Bill"},
+    }
+
     engine = make_engine(db_url)
 
     async with engine.begin() as conn:
@@ -42,16 +53,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
         await conn.run_sync(sa_metadata.create_all)
 
-        # Ensure the "stripe" connector source exists.
-        from sqlalchemy import text
+        default = _CONNECTOR_DEFAULTS.get(connector_type)
+        if default is not None:
+            from sqlalchemy import text
 
-        await conn.execute(
-            text(
-                "INSERT INTO connector_source (id, type, name, created_at)"
-                " VALUES ('stripe', 'stripe', 'Stripe', NOW())"
-                " ON CONFLICT (id) DO NOTHING"
+            await conn.execute(
+                text(
+                    "INSERT INTO connector_source (id, type, name, created_at)"
+                    " VALUES (:id, :type, :name, NOW())"
+                    " ON CONFLICT (id) DO NOTHING"
+                ),
+                default,
             )
-        )
 
     factory = make_session_factory(engine)
     app.state.session_factory = factory

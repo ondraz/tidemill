@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import stripe
 
@@ -117,6 +117,12 @@ class StripeConnector(WebhookConnector):
         "customer.created": "_translate_customer_created",
         "customer.updated": "_translate_customer_updated",
         "customer.deleted": "_translate_customer_deleted",
+        "product.created": "_translate_product_created",
+        "product.updated": "_translate_product_updated",
+        "product.deleted": "_translate_product_deleted",
+        "price.created": "_translate_price_created",
+        "price.updated": "_translate_price_updated",
+        "price.deleted": "_translate_price_deleted",
         "customer.subscription.created": "_translate_subscription_created",
         "customer.subscription.updated": "_translate_subscription_updated",
         "customer.subscription.deleted": "_translate_subscription_deleted",
@@ -256,6 +262,145 @@ class StripeConnector(WebhookConnector):
         if ts:
             return datetime.fromtimestamp(ts, tz=UTC)
         return datetime.now(UTC)
+
+    # ── product handlers ─────────────────────────────────────────────────
+
+    def _translate_product_created(self, wh: dict[str, Any]) -> list[Event]:
+        # Created uses the object's ``created`` field (== event time).
+        prod = wh["data"]["object"]
+        return [
+            self._make_event(
+                "product.created",
+                customer_id="",
+                external_id=prod["id"],
+                occurred_at=self._occurred(prod),
+                payload=self._product_payload(prod),
+            )
+        ]
+
+    def _translate_product_updated(self, wh: dict[str, Any]) -> list[Event]:
+        # Updated must use the webhook event timestamp — the object's
+        # ``created`` field still points at the original creation time.
+        prod = wh["data"]["object"]
+        return [
+            self._make_event(
+                "product.updated",
+                customer_id="",
+                external_id=prod["id"],
+                occurred_at=self._event_occurred(wh),
+                payload=self._product_payload(prod),
+            )
+        ]
+
+    def _translate_product_deleted(self, wh: dict[str, Any]) -> list[Event]:
+        prod = wh["data"]["object"]
+        return [
+            self._make_event(
+                "product.deleted",
+                customer_id="",
+                external_id=prod["id"],
+                occurred_at=self._event_occurred(wh),
+                payload={"external_id": prod["id"]},
+            )
+        ]
+
+    @staticmethod
+    def _product_payload(prod: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "external_id": prod["id"],
+            "name": prod.get("name"),
+            "description": prod.get("description"),
+            "active": bool(prod.get("active", True)),
+            "metadata": prod.get("metadata") or {},
+        }
+
+    # ── price (plan) handlers ────────────────────────────────────────────
+    #
+    # The ``plan`` table only models recurring plans (it has a non-nullable
+    # ``interval`` column).  Stripe Prices can also represent one-time
+    # charges — those have no ``recurring`` block and would otherwise
+    # arrive with ``interval=None``, polluting analytics dimensions.  We
+    # filter them out here so non-recurring prices never reach state.
+
+    def _translate_price_created(self, wh: dict[str, Any]) -> list[Event]:
+        price = wh["data"]["object"]
+        if not price.get("recurring"):
+            return []
+        return [
+            self._make_event(
+                "plan.created",
+                customer_id="",
+                external_id=price["id"],
+                occurred_at=self._occurred(price),
+                payload=self._price_payload(price),
+            )
+        ]
+
+    def _translate_price_updated(self, wh: dict[str, Any]) -> list[Event]:
+        price = wh["data"]["object"]
+        if not price.get("recurring"):
+            return []
+        return [
+            self._make_event(
+                "plan.updated",
+                customer_id="",
+                external_id=price["id"],
+                occurred_at=self._event_occurred(wh),
+                payload=self._price_payload(price),
+            )
+        ]
+
+    def _translate_price_deleted(self, wh: dict[str, Any]) -> list[Event]:
+        price = wh["data"]["object"]
+        if not price.get("recurring"):
+            return []
+        return [
+            self._make_event(
+                "plan.deleted",
+                customer_id="",
+                external_id=price["id"],
+                occurred_at=self._event_occurred(wh),
+                payload={"external_id": price["id"]},
+            )
+        ]
+
+    @staticmethod
+    def _price_payload(price: dict[str, Any]) -> dict[str, Any]:
+        recurring = price["recurring"]
+        product_ref = price.get("product")
+        if isinstance(product_ref, dict):
+            product_ref = product_ref.get("id")
+        usage_type = recurring.get("usage_type")
+        return {
+            "external_id": price["id"],
+            "product_external_id": product_ref,
+            "name": price.get("nickname"),
+            "interval": recurring.get("interval"),
+            "interval_count": recurring.get("interval_count") or 1,
+            "amount_cents": price.get("unit_amount"),
+            "currency": price.get("currency"),
+            "pricing_model": StripeConnector._canonical_pricing_model(
+                price.get("billing_scheme"), usage_type, price.get("tiers_mode")
+            ),
+            "usage_type": usage_type,
+            "trial_period_days": recurring.get("trial_period_days"),
+            "active": bool(price.get("active", True)),
+            "metadata": price.get("metadata") or {},
+        }
+
+    @staticmethod
+    def _canonical_pricing_model(
+        billing_scheme: str | None,
+        usage_type: str | None,
+        tiers_mode: str | None,
+    ) -> str | None:
+        # Canonical values: flat | tiered | volume | usage_based
+        # See docs/architecture/canonical-vocabulary.md.
+        if billing_scheme == "tiered":
+            return "volume" if tiers_mode == "volume" else "tiered"
+        if billing_scheme == "per_unit":
+            return "usage_based" if usage_type == "metered" else "flat"
+        return None
 
     # ── customer handlers ────────────────────────────────────────────────
 
@@ -741,6 +886,39 @@ class StripeConnector(WebhookConnector):
         clock_ids: list[str | None] = [None]  # None = non-test-clock entities
         for clock in stripe.test_helpers.TestClock.list(limit=100).auto_paging_iter():
             clock_ids.append(clock.id)
+
+        # 1a. Products (catalog — global, no test_clock filter)
+        prod_params: dict[str, Any] = {"limit": 100, "active": None}
+        if created_filter:
+            prod_params["created"] = created_filter
+        for prod in stripe.Product.list(**prod_params).auto_paging_iter():
+            # Stripe ``Product`` extends dict at runtime; cast to satisfy mypy.
+            prod_dict = cast("dict[str, Any]", prod)
+            yield self._make_event(
+                "product.created",
+                customer_id="",
+                external_id=str(prod.id),
+                occurred_at=datetime.fromtimestamp(prod.created, tz=UTC),
+                payload=self._product_payload(prod_dict),
+            )
+
+        # 1b. Prices (catalog — emitted as ``plan.*`` internally).
+        # Skip non-recurring (one-time) Prices — the ``plan`` table only
+        # models recurring plans; one-time charges have no ``interval``.
+        price_params: dict[str, Any] = {"limit": 100, "active": None}
+        if created_filter:
+            price_params["created"] = created_filter
+        for price in stripe.Price.list(**price_params).auto_paging_iter():
+            price_dict = cast("dict[str, Any]", price)
+            if not price_dict.get("recurring"):
+                continue
+            yield self._make_event(
+                "plan.created",
+                customer_id="",
+                external_id=str(price.id),
+                occurred_at=datetime.fromtimestamp(price.created, tz=UTC),
+                payload=self._price_payload(price_dict),
+            )
 
         # 1. Customers
         for clock_id in clock_ids:

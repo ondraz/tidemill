@@ -2,7 +2,7 @@
 
 Called from:
 - ``tidemill/state.py`` on ``customer.created``/``customer.updated`` events
-  (origin='stripe')
+  (origin = the connector type, e.g. 'stripe', 'lago', 'killbill')
 - ``tidemill/attributes/routes.py`` for CSV upload (origin='csv') and REST API
   upserts (origin='api')
 
@@ -259,7 +259,7 @@ async def fan_out_customer_metadata(
     source_id: str,
     customer_id: str,
     metadata: dict[str, Any],
-    origin: str = "stripe",
+    origin: str,
 ) -> int:
     """Fan a customer's metadata dict into ``customer_attribute`` rows.
 
@@ -268,9 +268,13 @@ async def fan_out_customer_metadata(
     - Upserts ``customer_attribute`` rows only for keys that are new or
       changed vs. what's already stored — avoids write amplification when
       a webhook replays unchanged metadata.
-    - Does NOT delete rows for keys absent from *metadata*; Stripe
-      sometimes sends partial updates and we don't want to lose history
-      from an accidental ``customer.updated`` with empty metadata.
+    - Does NOT delete rows for keys absent from *metadata*; webhooks may
+      send partial updates and we don't want to lose history from an
+      accidental ``customer.updated`` with empty metadata.
+
+    *origin* names the writer (``'stripe'``, ``'lago'``, ``'csv'``,
+    ``'api'``, …) — used as the attribute-definition source on first
+    sight and recorded on every value upsert.
 
     Returns the number of rows upserted.
     """

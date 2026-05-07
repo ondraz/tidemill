@@ -81,6 +81,7 @@ Each metric (MRR, Churn, Retention) is a self-contained class (`Metric` subclass
 
 Start with `docs/architecture/overview.md` for the full system design. Key files:
 
+- **Canonical vocabulary:** `canonical-vocabulary.md` — provider-agnostic enums every connector must map onto (interval, pricing model, status, line item type, payment status)
 - **Connectors:** `connectors.md` — `WebhookConnector` (Stripe), `DatabaseConnector` (Lago/Kill Bill), and `ExpenseConnector` (QuickBooks Online) patterns
 - **Metrics:** `metrics.md` — `Metric` base class, built-in metrics (MRR, Churn, Retention, LTV, Trials, Expenses) with SQL
 - **Expenses:** `expenses.md` — Platform-neutral expense data model + canonical enums (designed for QBO/Xero/FreshBooks/Wave/Sage)

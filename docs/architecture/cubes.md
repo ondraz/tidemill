@@ -60,7 +60,7 @@ class MRRSnapshotCube(Cube):
         plan_id = Dim("sub.plan_id", join="subscription")
         plan_name = Dim("p.name", join="plan")
         plan_interval = Dim("p.interval", join="plan")
-        billing_scheme = Dim("p.billing_scheme", join="plan")   # per_unit | tiered
+        pricing_model = Dim("p.pricing_model", join="plan")     # flat | tiered | volume | usage_based
         usage_type = Dim("p.usage_type", join="plan")           # licensed | metered
         product_name = Dim("prod.name", join="product")         # via plan → product
         customer_country = Dim("c.country", join="customer")
@@ -79,7 +79,7 @@ Key properties:
 
 !!! note "Plan/product dimensions require plan ingestion"
     The MRR cubes declare `plan_id`, `plan_name`, `plan_interval`,
-    `billing_scheme`, `usage_type`, and `product_name`, but these join
+    `pricing_model`, `usage_type`, and `product_name`, but these join
     through the `plan` (and `product`) table. The Stripe connector
     currently does **not** emit `plan.*` / `product.*` events, so
     `subscription.plan_id` is NULL for Stripe-sourced data and any query
@@ -90,9 +90,9 @@ Key properties:
 
 ```python
 MRRSnapshotCube.available_dimensions()
-# ['billing_scheme', 'cancel_at_period_end', 'collection_method', 'currency',
+# ['cancel_at_period_end', 'collection_method', 'currency',
 #  'customer_country', 'plan_id', 'plan_interval', 'plan_name',
-#  'product_name', 'source_id', 'usage_type']
+#  'pricing_model', 'product_name', 'source_id', 'usage_type']
 
 MRRSnapshotCube.available_measures()
 # ['mrr', 'mrr_original', 'count']
@@ -217,7 +217,7 @@ A `to_sql(model)` helper compiles the statement against the PostgreSQL dialect a
 
 These are the cubes for the project's [metric tables](database.md#metric-tables). Each maps a fact table to its available joins, measures, and dimensions. Every cube lives next to its metric (e.g., `tidemill/metrics/mrr/cubes.py`, `tidemill/metrics/churn/cubes.py`).
 
-Dimensions sourced from Stripe API objects: Customer (`name`, `address.country`), Subscription (`status`, `collection_method`, `cancel_at_period_end`, `cancellation_details`), Price/Plan (`interval`, `interval_count`, `billing_scheme`, `usage_type`), Product (`name`). See [Stripe API mapping](#stripe-api-mapping) below for the full field comparison.
+Dimensions sourced from Stripe API objects: Customer (`name`, `address.country`), Subscription (`status`, `collection_method`, `cancel_at_period_end`, `cancellation_details`), Price/Plan (`interval`, `interval_count`, `billing_scheme` → canonical `pricing_model`, `usage_type`), Product (`name`). See [Stripe API mapping](#stripe-api-mapping) below for the full field comparison.
 
 ### MRR Snapshot Cube
 
@@ -250,7 +250,7 @@ class MRRSnapshotCube(Cube):
         plan_id = Dim("sub.plan_id", join="subscription")
         plan_name = Dim("p.name", join="plan", label="plan_name")
         plan_interval = Dim("p.interval", join="plan", label="plan_interval")
-        billing_scheme = Dim("p.billing_scheme", join="plan")       # per_unit | tiered
+        pricing_model = Dim("p.pricing_model", join="plan")         # flat | tiered | volume | usage_based
         usage_type = Dim("p.usage_type", join="plan")               # licensed | metered
         # Product (subscription → plan → product)
         product_name = Dim("prod.name", join="product", label="product_name")
@@ -308,7 +308,7 @@ class MRRMovementCube(Cube):
         plan_id = Dim("sub.plan_id", join="subscription")
         plan_name = Dim("p.name", join="plan", label="plan_name")
         plan_interval = Dim("p.interval", join="plan", label="plan_interval")
-        billing_scheme = Dim("p.billing_scheme", join="plan")
+        pricing_model = Dim("p.pricing_model", join="plan")
         usage_type = Dim("p.usage_type", join="plan")
         product_name = Dim("prod.name", join="product", label="product_name")
         customer_name = Dim("c.name", join="customer", label="customer_name")
@@ -512,7 +512,7 @@ The table below maps Stripe API fields to our schema columns and cube dimensions
 | `recurring.interval_count` | `interval_count` | — | 1=monthly, 3=quarterly, 12=annual |
 | `unit_amount` | `amount_cents` | — | Per-unit price |
 | `currency` | `currency` | — | |
-| `billing_scheme` | `billing_scheme` | **`billing_scheme`** | per_unit, tiered |
+| `billing_scheme` | `pricing_model` | **`pricing_model`** | Stripe `per_unit`/`tiered` → canonical `flat`/`tiered`/`volume`/`usage_based` |
 | `recurring.usage_type` | `usage_type` | **`usage_type`** | licensed, metered |
 | `type` | — | — | one_time vs recurring; filter at ingest |
 | `trial_period_days` | `trial_period_days` | — | |
