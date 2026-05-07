@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Open-source subscription analytics engine — transparent, auditable metric computation (MRR, Churn, Retention, LTV) for any billing system. Stripe is the primary integration; Lago and Kill Bill are supported as secondary connectors via same-database mode.
+Open-source subscription analytics engine — transparent, auditable metric computation (MRR, Churn, Retention, LTV) for any billing system, plus expense-side analytics from accounting platforms. Stripe is the primary revenue integration; QuickBooks Online is the first expense integration. Lago and Kill Bill are supported as secondary revenue connectors via same-database mode.
 
-**Current state:** Core application implemented — connectors (Stripe), metrics (MRR, Churn, Retention, LTV, Trials), event pipeline, query algebra, FastAPI, and deployment infrastructure. Lago/Kill Bill connectors are P1.
+**Current state:** Core application implemented — connectors (Stripe revenue, QuickBooks Online expense), metrics (MRR, Churn, Retention, LTV, Trials, Expenses), event pipeline, query algebra, FastAPI, and deployment infrastructure. Lago/Kill Bill connectors are P1.
 
 **Stack:** Python 3.11+ (tidemill package) + PostgreSQL + Kafka/Redpanda + FastAPI + CLI.
 
@@ -25,7 +25,8 @@ tidemill/
 │   │   ├── events.md                   # Internal event schema, Kafka topics
 │   │   ├── metrics.md                  # Metrics (dual-mode computation)
 │   │   ├── cubes.md                    # Cubes & query algebra
-│   │   ├── connectors.md               # Webhook (Stripe) + database (Lago) connectors
+│   │   ├── connectors.md               # Webhook (Stripe), database (Lago), expense (QuickBooks) connectors
+│   │   ├── expenses.md                 # Platform-neutral expense data model + canonical enums
 │   │   ├── api.md                      # FastAPI endpoints + CLI interface
 │   ├── development/                    # Local development setup, testing, deployment
 │   │   ├── development.md              # Local development environment setup
@@ -39,9 +40,12 @@ tidemill/
 │   │   ├── Dockerfile
 │   │   ├── Caddyfile
 │   │   └── .env.example
-│   ├── seed/                           # Stripe test data generation
+│   ├── seed/                           # Stripe + QuickBooks test data generation
 │   │   ├── stripe_seed.py
-│   │   └── stripe_fixtures.json
+│   │   ├── stripe_fixtures.json
+│   │   ├── quickbooks_seed.py
+│   │   ├── quickbooks_fixtures.json
+│   │   └── seed.sh                     # End-to-end: starts compose, runs both seeds
 │   └── terraform/
 │       ├── single-server/              # Hetzner single server (~€4/mo)
 │       └── kubernetes/                 # k3s HA cluster (~€33/mo)
@@ -77,9 +81,10 @@ Each metric (MRR, Churn, Retention) is a self-contained class (`Metric` subclass
 
 Start with `docs/architecture/overview.md` for the full system design. Key files:
 
-- **Connectors:** `connectors.md` — `WebhookConnector` (Stripe) vs `DatabaseConnector` (Lago/Kill Bill) patterns
 - **Canonical vocabulary:** `canonical-vocabulary.md` — provider-agnostic enums every connector must map onto (interval, pricing model, status, line item type, payment status)
-- **Metrics:** `metrics.md` — `Metric` base class, built-in metrics (MRR, Churn, Retention, LTV, Trials) with SQL
+- **Connectors:** `connectors.md` — `WebhookConnector` (Stripe), `DatabaseConnector` (Lago/Kill Bill), and `ExpenseConnector` (QuickBooks Online) patterns
+- **Metrics:** `metrics.md` — `Metric` base class, built-in metrics (MRR, Churn, Retention, LTV, Trials, Expenses) with SQL
+- **Expenses:** `expenses.md` — Platform-neutral expense data model + canonical enums (designed for QBO/Xero/FreshBooks/Wave/Sage)
 - **Query Algebra:** `cubes.md` — Cubes, `QueryFragment` composition, declarative SQL building
 - **Segmentation:** `segments.md` — customer attribute EAV, segment DSL, compare-mode compilation
 - **Database:** `database.md` — Core schema (ER diagram), metric tables, deployment topologies
@@ -99,8 +104,9 @@ tidemill/
 ├── _logging.py              # Shared stdout logging config (adds trace_id/span_id)
 ├── state.py                 # Core consumer: events → base tables
 ├── connectors/
-│   ├── base.py              # WebhookConnector + DatabaseConnector ABCs
-│   ├── stripe.py            # Stripe webhook translator
+│   ├── base.py              # WebhookConnector + DatabaseConnector + ExpenseConnector ABCs + canonical enum tuples
+│   ├── stripe/              # Stripe webhook translator (revenue)
+│   ├── quickbooks/          # QuickBooks Online connector (expense, P1) — connector, client, routes, oauth
 │   ├── lago.py              # Lago database connector (P1)
 │   └── killbill.py          # Kill Bill database connector (P1)
 ├── metrics/
@@ -113,6 +119,7 @@ tidemill/
 │   ├── retention/           # Cohort retention, NRR, GRR
 │   ├── ltv/                 # LTV, ARPU, cohort LTV
 │   ├── trials/              # Trial conversion rate, funnel
+│   └── expenses/            # Total expense by account_type / vendor / period (reads bill + expense tables)
 │   └── usage_revenue/       # Raw monthly usage charges (actuals — sibling to MRR)
 ├── segments/                # Customer segmentation DSL + compiler
 │   ├── model.py             # SegmentDef, Condition, Group, Segment.to_fragment, Compare
@@ -188,7 +195,19 @@ tidemill mrr
 ### Test Data
 
 ```bash
-# Generate Stripe test data via Test Clocks
+# Generate Stripe revenue + (optionally) QuickBooks expense data over the
+# same 18-month window. seed.sh runs the full local stack end-to-end.
+cd deploy/seed
+./seed.sh
+
+# QBO expense seed alone (requires sandbox OAuth — see docs/development/testing.md):
+#   QUICKBOOKS_CLIENT_ID=...
+#   QUICKBOOKS_CLIENT_SECRET=...
+#   QUICKBOOKS_SANDBOX_REFRESH_TOKEN=...
+#   QUICKBOOKS_SANDBOX_REALM_ID=...
+python quickbooks_seed.py --months 18
+
+# Generate Stripe test data via Test Clocks (no QBO)
 cd deploy/seed
 python stripe_seed.py
 
@@ -207,6 +226,11 @@ Copy `.env.example` to `.env` and configure:
 - `CONNECTOR` — `stripe`, `lago`, or `killbill`
 - `STRIPE_API_KEY` — Stripe API key
 - `STRIPE_WEBHOOK_SECRET` — Webhook signing secret
+- `QUICKBOOKS_CLIENT_ID` / `QUICKBOOKS_CLIENT_SECRET` — Intuit Developer OAuth credentials (optional; expense source)
+- `QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN` — verifier token for HMAC-SHA256 signed QBO webhooks
+- `QUICKBOOKS_REDIRECT_URI` — OAuth callback URL (`/api/connectors/quickbooks/oauth/callback`)
+- `QUICKBOOKS_ENVIRONMENT` — `sandbox` or `production`
+- `QUICKBOOKS_SANDBOX_REFRESH_TOKEN` / `QUICKBOOKS_SANDBOX_REALM_ID` — used by `quickbooks_seed.py` only
 - `KAFKA_BOOTSTRAP_SERVERS` — Kafka/Redpanda address
 - `TIDEMILL_OTEL_ENABLED` — turn on OpenTelemetry tracing/metrics (default `false`)
 - `OTEL_EXPORTER_OTLP_ENDPOINT` — OTLP gRPC endpoint (defaults to `http://otel-collector:4317`)
@@ -232,6 +256,13 @@ Copy `.env.example` to `.env` and configure:
 1. Create `tidemill/connectors/myplatform.py`
 2. Subclass `DatabaseConnector`, implement `get_mrr_cents()`, `get_subscription_changes()`, etc.
 3. Decorate with `@register("myplatform")`
+
+**Expense connector** (for accounting platforms — Xero, FreshBooks, Wave, Sage):
+1. Create `tidemill/connectors/myplatform/`
+2. Subclass `ExpenseConnector`, implement `translate()` (or `fetch_and_translate()` for ID-only webhooks) + `backfill()`
+3. Implement the four normalize/extract methods (`normalize_account_type`, `normalize_bill_status`, `normalize_payment_type`, `extract_dimensions`) — map native vocabulary to canonical enums in `tidemill.connectors.base`
+4. Emit canonical event types: `vendor.*`, `account.*`, `bill.*`, `expense.*`, `bill_payment.*`. State handlers and the expenses metric stay untouched.
+5. Decorate with `@register("myplatform")`
 
 ## Key Design Conventions
 

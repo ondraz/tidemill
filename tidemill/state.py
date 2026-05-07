@@ -7,8 +7,9 @@ Entity events upsert the corresponding core tables.
 from __future__ import annotations
 
 import json
+import os
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import text
@@ -16,9 +17,89 @@ from sqlalchemy import text
 from tidemill.fx import FxRateMissingError, normalize_currency, to_base_cents
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from tidemill.events import Event
+
+
+def _base_currency() -> str:
+    """Read the configured base currency (matches ``tidemill.fx_sync``)."""
+    return os.environ.get("BASE_CURRENCY", "USD").upper()
+
+
+class _FxCache:
+    """Per-handler cache that stores ``fx_rate`` rows by (currency, date, base).
+
+    ``to_base_cents`` runs a SELECT against ``fx_rate`` for every non-base
+    conversion; bills/expenses commonly batch many lines on the same
+    ``(currency, txn_date)`` pair. We cache the *rate* itself (keyed
+    independent of amount) so a multi-line bill triggers exactly one SELECT
+    per ``(currency, date)`` pair, then applies the rate locally to each
+    line. Missing rates raise ``FxRateMissingError`` (consumer dead-letters).
+    """
+
+    def __init__(self) -> None:
+        # Cached rate per (from_currency, ISO date, base_currency).
+        # ``None`` means same-currency passthrough; an absent key means
+        # we haven't looked it up yet.
+        self._rates: dict[tuple[str, str, str], Decimal | None] = {}
+
+    async def to_base(
+        self,
+        session: AsyncSession,
+        amount_cents: int | None,
+        currency: str | None,
+        on_date: datetime | None,
+        base_currency: str,
+    ) -> int:
+        if not amount_cents:
+            return 0
+        # Missing currency falls back to the configured base — assuming USD
+        # would be wrong on a deployment with a non-USD BASE_CURRENCY.
+        cur = (normalize_currency(currency) or base_currency).upper()
+        base = base_currency.upper()
+        when = on_date.date() if on_date is not None else datetime.now(UTC).date()
+        if cur == base:
+            return amount_cents
+        key = (cur, when.isoformat(), base)
+        if key not in self._rates:
+            result = await session.execute(
+                text(
+                    "SELECT rate FROM fx_rate"
+                    " WHERE from_currency = :c AND to_currency = :base"
+                    " AND date <= :d ORDER BY date DESC LIMIT 1"
+                ),
+                {"c": cur, "base": base, "d": when},
+            )
+            self._rates[key] = result.scalar()
+        rate = self._rates[key]
+        if rate is None:
+            raise FxRateMissingError(cur, base, when)
+        return int(amount_cents * rate)
+
+
+async def _to_base(
+    session: AsyncSession,
+    amount_cents: int | None,
+    currency: str | None,
+    on_date: datetime | None,
+    fx_cache: _FxCache | None = None,
+) -> int:
+    """Convert *amount_cents* to base currency using the FX rate at *on_date*.
+
+    Same-currency values pass through; missing FX rates raise
+    ``FxRateMissingError``, which the consumer worker dead-letters. ``None``
+    inputs are coerced to 0 / BASE / today so a partial payload doesn't crash
+    the handler. ``fx_cache`` (when provided) deduplicates lookups across
+    a bill/expense with many same-day, same-currency lines.
+    """
+    if not amount_cents:
+        return 0
+    base = _base_currency()
+    cache = fx_cache or _FxCache()
+    return await cache.to_base(session, amount_cents, currency, on_date, base)
 
 
 async def handle_state_event(session: AsyncSession, event: Event) -> None:
@@ -624,6 +705,434 @@ async def _handle_payment(session: AsyncSession, event: Event) -> None:
             )
 
 
+# ── vendor ───────────────────────────────────────────────────────────────
+
+
+async def _handle_vendor(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+    match event.type:
+        case "vendor.created" | "vendor.updated":
+            await session.execute(
+                text(
+                    "INSERT INTO vendor"
+                    " (id, source_id, external_id, name, email, country,"
+                    "  currency, active, metadata_, created_at, updated_at)"
+                    " VALUES (:id, :src, :eid, :name, :email, :country,"
+                    "  :currency, :active, :meta, :now, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_vendor_source DO UPDATE SET"
+                    "  name = COALESCE(EXCLUDED.name, vendor.name),"
+                    "  email = COALESCE(EXCLUDED.email, vendor.email),"
+                    "  country = COALESCE(EXCLUDED.country, vendor.country),"
+                    "  currency = COALESCE(EXCLUDED.currency, vendor.currency),"
+                    "  active = EXCLUDED.active,"
+                    "  metadata_ = COALESCE(EXCLUDED.metadata_, vendor.metadata_),"
+                    "  updated_at = EXCLUDED.updated_at"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "name": p.get("name"),
+                    "email": p.get("email"),
+                    "country": p.get("country"),
+                    "currency": normalize_currency(p.get("currency")),
+                    "active": p.get("active", True),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "now": event.occurred_at,
+                },
+            )
+        case "vendor.deleted":
+            # Soft-delete: hard DELETE would fail (FK from bill/expense)
+            # and dead-letter the partition. Mark inactive instead.
+            await session.execute(
+                text(
+                    "UPDATE vendor SET active = FALSE, updated_at = :now"
+                    " WHERE source_id = :src AND external_id = :eid"
+                ),
+                {
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "now": event.occurred_at,
+                },
+            )
+
+
+# ── account (chart of accounts) ──────────────────────────────────────────
+
+
+async def _handle_account(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+    match event.type:
+        case "account.created" | "account.updated":
+            await session.execute(
+                text(
+                    "INSERT INTO account"
+                    " (id, source_id, external_id, name, account_type,"
+                    "  account_subtype, parent_external_id, currency, active,"
+                    "  metadata_, created_at, updated_at)"
+                    " VALUES (:id, :src, :eid, :name, :atype, :asubtype,"
+                    "  :parent, :currency, :active, :meta, :now, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_account_source DO UPDATE SET"
+                    "  name = EXCLUDED.name,"
+                    "  account_type = EXCLUDED.account_type,"
+                    "  account_subtype = EXCLUDED.account_subtype,"
+                    "  parent_external_id = EXCLUDED.parent_external_id,"
+                    "  currency = EXCLUDED.currency,"
+                    "  active = EXCLUDED.active,"
+                    "  metadata_ = EXCLUDED.metadata_,"
+                    "  updated_at = EXCLUDED.updated_at"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "name": p.get("name"),
+                    "atype": p.get("account_type", "other"),
+                    "asubtype": p.get("account_subtype"),
+                    "parent": p.get("parent_external_id"),
+                    "currency": normalize_currency(p.get("currency")),
+                    "active": p.get("active", True),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "now": event.occurred_at,
+                },
+            )
+
+
+# ── bill ─────────────────────────────────────────────────────────────────
+
+
+async def _upsert_lines(
+    session: AsyncSession,
+    *,
+    table: str,
+    parent_col: str,
+    parent_id: str,
+    lines: list[dict[str, Any]],
+    on_date: datetime | None = None,
+    fx_cache: _FxCache | None = None,
+) -> None:
+    """Replace all line rows for a bill/expense with the freshly translated set.
+
+    Bill/expense lines have no stable external ID across platforms — many
+    accounting systems regenerate line IDs on every update. Replacing in
+    bulk (DELETE + INSERT) is simpler and idempotent than diff-based upserts.
+    Always called (even with an empty list) so stale lines are removed when
+    a header is updated to a smaller line set. ``fx_cache`` (when provided)
+    avoids an N+1 ``fx_rate`` lookup pattern across same-day same-currency
+    line items.
+    """
+    await session.execute(
+        text(f"DELETE FROM {table} WHERE {parent_col} = :pid"),
+        {"pid": parent_id},
+    )
+    cache = fx_cache or _FxCache()
+    for line in lines:
+        amount = line.get("amount_cents", 0)
+        currency = line.get("currency")
+        amount_base = await _to_base(session, amount, currency, on_date, fx_cache=cache)
+        await session.execute(
+            text(
+                f"INSERT INTO {table}"
+                f" (id, {parent_col}, account_id, description, quantity,"
+                "  amount_cents, amount_base_cents, currency, dimensions)"
+                " VALUES (:id, :pid,"
+                "  (SELECT id FROM account WHERE source_id = :src"
+                "     AND external_id = :acct_eid LIMIT 1),"
+                "  :desc, :qty, :amt, :amtb, :cur, :dims)"
+            ),
+            {
+                "id": str(uuid.uuid4()),
+                "pid": parent_id,
+                "src": line["source_id"],
+                "acct_eid": line.get("account_external_id", ""),
+                "desc": line.get("description"),
+                "qty": line.get("quantity"),
+                "amt": amount,
+                "amtb": amount_base,
+                "cur": normalize_currency(currency),
+                "dims": json.dumps(line.get("dimensions") or {}),
+            },
+        )
+
+
+async def _resolve_id(
+    session: AsyncSession, table: str, source_id: str, external_id: str
+) -> str | None:
+    result = await session.execute(
+        text(f"SELECT id FROM {table} WHERE source_id = :src AND external_id = :eid"),
+        {"src": source_id, "eid": external_id},
+    )
+    row = result.mappings().first()
+    return row["id"] if row else None
+
+
+async def _handle_bill(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+    ext_id = p["external_id"]
+
+    match event.type:
+        case "bill.created" | "bill.updated":
+            currency = p.get("currency")
+            txn_date = _parse_ts(p.get("txn_date")) or event.occurred_at
+            sub = p.get("subtotal_cents", 0)
+            tax = p.get("tax_cents", 0)
+            total = p.get("total_cents", 0)
+            # Single FX cache for header + every line item — deduplicates
+            # the (currency, txn_date) lookup across all conversions.
+            fx_cache = _FxCache()
+            sub_base = await _to_base(session, sub, currency, txn_date, fx_cache=fx_cache)
+            tax_base = await _to_base(session, tax, currency, txn_date, fx_cache=fx_cache)
+            total_base = await _to_base(session, total, currency, txn_date, fx_cache=fx_cache)
+
+            await session.execute(
+                text(
+                    "INSERT INTO bill"
+                    " (id, source_id, external_id, vendor_id, status, doc_number,"
+                    "  currency, subtotal_cents, subtotal_base_cents,"
+                    "  tax_cents, tax_base_cents, total_cents, total_base_cents,"
+                    "  txn_date, due_date, memo, metadata_, created_at, updated_at)"
+                    " VALUES (:id, :src, :eid,"
+                    "  (SELECT id FROM vendor WHERE source_id = :src"
+                    "     AND external_id = :vendor_eid LIMIT 1),"
+                    "  :status, :doc, :cur, :sub, :subb, :tax, :taxb,"
+                    "  :total, :totalb, :txn, :due, :memo, :meta, :now, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_bill_source DO UPDATE SET"
+                    "  vendor_id = COALESCE(EXCLUDED.vendor_id, bill.vendor_id),"
+                    "  status = EXCLUDED.status,"
+                    "  doc_number = EXCLUDED.doc_number,"
+                    "  currency = EXCLUDED.currency,"
+                    "  subtotal_cents = EXCLUDED.subtotal_cents,"
+                    "  subtotal_base_cents = EXCLUDED.subtotal_base_cents,"
+                    "  tax_cents = EXCLUDED.tax_cents,"
+                    "  tax_base_cents = EXCLUDED.tax_base_cents,"
+                    "  total_cents = EXCLUDED.total_cents,"
+                    "  total_base_cents = EXCLUDED.total_base_cents,"
+                    "  txn_date = EXCLUDED.txn_date,"
+                    "  due_date = EXCLUDED.due_date,"
+                    "  memo = EXCLUDED.memo,"
+                    "  metadata_ = EXCLUDED.metadata_,"
+                    "  updated_at = EXCLUDED.updated_at"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": ext_id,
+                    "vendor_eid": p.get("vendor_external_id", ""),
+                    "status": p.get("status", "open"),
+                    "doc": p.get("doc_number"),
+                    "cur": normalize_currency(currency),
+                    "sub": sub,
+                    "subb": sub_base,
+                    "tax": tax,
+                    "taxb": tax_base,
+                    "total": total,
+                    "totalb": total_base,
+                    "txn": txn_date,
+                    "due": _parse_ts(p.get("due_date")),
+                    "memo": p.get("memo"),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "now": event.occurred_at,
+                },
+            )
+            bill_id = await _resolve_id(session, "bill", event.source_id, ext_id)
+            if bill_id is not None:
+                # Always replace — passing an empty list correctly drops
+                # all stale lines from a prior version of the bill.
+                lines = p.get("lines") or []
+                for line in lines:
+                    line["source_id"] = event.source_id
+                    line.setdefault("currency", currency)
+                await _upsert_lines(
+                    session,
+                    table="bill_line",
+                    parent_col="bill_id",
+                    parent_id=bill_id,
+                    lines=lines,
+                    on_date=txn_date,
+                    fx_cache=fx_cache,
+                )
+        case "bill.paid":
+            await session.execute(
+                text(
+                    "UPDATE bill SET status = 'paid', paid_at = :paid,"
+                    "  updated_at = :now"
+                    " WHERE source_id = :src AND external_id = :eid"
+                ),
+                {
+                    "src": event.source_id,
+                    "eid": ext_id,
+                    "paid": _parse_ts(p.get("paid_at")) or event.occurred_at,
+                    "now": event.occurred_at,
+                },
+            )
+        case "bill.voided":
+            await session.execute(
+                text(
+                    "UPDATE bill SET status = 'voided', voided_at = :voided,"
+                    "  updated_at = :now"
+                    " WHERE source_id = :src AND external_id = :eid"
+                ),
+                {
+                    "src": event.source_id,
+                    "eid": ext_id,
+                    "voided": _parse_ts(p.get("voided_at")) or event.occurred_at,
+                    "now": event.occurred_at,
+                },
+            )
+
+
+# ── expense (cash/credit/check direct expense, no bill) ──────────────────
+
+
+async def _handle_expense(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+    ext_id = p["external_id"]
+
+    match event.type:
+        case "expense.created" | "expense.updated":
+            currency = p.get("currency")
+            txn_date = _parse_ts(p.get("txn_date")) or event.occurred_at
+            sub = p.get("subtotal_cents", 0)
+            tax = p.get("tax_cents", 0)
+            total = p.get("total_cents", 0)
+            fx_cache = _FxCache()
+            sub_base = await _to_base(session, sub, currency, txn_date, fx_cache=fx_cache)
+            tax_base = await _to_base(session, tax, currency, txn_date, fx_cache=fx_cache)
+            total_base = await _to_base(session, total, currency, txn_date, fx_cache=fx_cache)
+
+            await session.execute(
+                text(
+                    "INSERT INTO expense"
+                    " (id, source_id, external_id, vendor_id, payment_type,"
+                    "  doc_number, currency, subtotal_cents, subtotal_base_cents,"
+                    "  tax_cents, tax_base_cents, total_cents, total_base_cents,"
+                    "  txn_date, memo, metadata_, created_at, updated_at)"
+                    " VALUES (:id, :src, :eid,"
+                    "  (SELECT id FROM vendor WHERE source_id = :src"
+                    "     AND external_id = :vendor_eid LIMIT 1),"
+                    "  :ptype, :doc, :cur, :sub, :subb, :tax, :taxb,"
+                    "  :total, :totalb, :txn, :memo, :meta, :now, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_expense_source DO UPDATE SET"
+                    "  vendor_id = COALESCE(EXCLUDED.vendor_id, expense.vendor_id),"
+                    "  payment_type = EXCLUDED.payment_type,"
+                    "  doc_number = EXCLUDED.doc_number,"
+                    "  currency = EXCLUDED.currency,"
+                    "  subtotal_cents = EXCLUDED.subtotal_cents,"
+                    "  subtotal_base_cents = EXCLUDED.subtotal_base_cents,"
+                    "  tax_cents = EXCLUDED.tax_cents,"
+                    "  tax_base_cents = EXCLUDED.tax_base_cents,"
+                    "  total_cents = EXCLUDED.total_cents,"
+                    "  total_base_cents = EXCLUDED.total_base_cents,"
+                    "  txn_date = EXCLUDED.txn_date,"
+                    "  memo = EXCLUDED.memo,"
+                    "  metadata_ = EXCLUDED.metadata_,"
+                    "  updated_at = EXCLUDED.updated_at"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": ext_id,
+                    "vendor_eid": p.get("vendor_external_id", ""),
+                    "ptype": p.get("payment_type", "other"),
+                    "doc": p.get("doc_number"),
+                    "cur": normalize_currency(currency),
+                    "sub": sub,
+                    "subb": sub_base,
+                    "tax": tax,
+                    "taxb": tax_base,
+                    "total": total,
+                    "totalb": total_base,
+                    "txn": txn_date,
+                    "memo": p.get("memo"),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "now": event.occurred_at,
+                },
+            )
+            expense_id = await _resolve_id(session, "expense", event.source_id, ext_id)
+            if expense_id is not None:
+                # Always replace — empty list drops stale lines from a
+                # prior version of the expense.
+                lines = p.get("lines") or []
+                for line in lines:
+                    line["source_id"] = event.source_id
+                    line.setdefault("currency", currency)
+                await _upsert_lines(
+                    session,
+                    table="expense_line",
+                    parent_col="expense_id",
+                    parent_id=expense_id,
+                    lines=lines,
+                    on_date=txn_date,
+                    fx_cache=fx_cache,
+                )
+        case "expense.voided":
+            await session.execute(
+                text(
+                    "UPDATE expense SET voided_at = :voided, updated_at = :now"
+                    " WHERE source_id = :src AND external_id = :eid"
+                ),
+                {
+                    "src": event.source_id,
+                    "eid": ext_id,
+                    "voided": _parse_ts(p.get("voided_at")) or event.occurred_at,
+                    "now": event.occurred_at,
+                },
+            )
+
+
+# ── bill_payment (payment applied to a bill) ─────────────────────────────
+
+
+async def _handle_bill_payment(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+
+    match event.type:
+        case "bill_payment.created":
+            currency = p.get("currency")
+            paid_at = _parse_ts(p.get("paid_at")) or event.occurred_at
+            amt = p.get("amount_cents", 0)
+            amt_base = await _to_base(session, amt, currency, paid_at)
+
+            await session.execute(
+                text(
+                    "INSERT INTO bill_payment"
+                    " (id, source_id, external_id, bill_id, paid_at,"
+                    "  amount_cents, amount_base_cents, currency, metadata_, created_at)"
+                    " VALUES (:id, :src, :eid,"
+                    "  (SELECT id FROM bill WHERE source_id = :src"
+                    "     AND external_id = :bill_eid LIMIT 1),"
+                    "  :paid, :amt, :amtb, :cur, :meta, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_bill_payment_source DO UPDATE SET"
+                    "  bill_id = COALESCE(EXCLUDED.bill_id, bill_payment.bill_id),"
+                    "  paid_at = EXCLUDED.paid_at,"
+                    "  amount_cents = EXCLUDED.amount_cents,"
+                    "  amount_base_cents = EXCLUDED.amount_base_cents,"
+                    "  currency = EXCLUDED.currency"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "bill_eid": p.get("bill_external_id", ""),
+                    "paid": paid_at,
+                    "amt": amt,
+                    "amtb": amt_base,
+                    "cur": normalize_currency(currency),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "now": event.occurred_at,
+                },
+            )
+        case "bill_payment.deleted":
+            # QBO emits Delete/Void for a payment when the user reverses it.
+            # Drop the row so trailing-A/P analytics don't keep counting an
+            # already-reversed payment. (No FK risk — bill_payment is a
+            # leaf table; nothing references it.)
+            await session.execute(
+                text("DELETE FROM bill_payment WHERE source_id = :src AND external_id = :eid"),
+                {"src": event.source_id, "eid": p["external_id"]},
+            )
+
+
 # ── dispatch table ───────────────────────────────────────────────────────
 
 _HANDLERS: dict[str, Any] = {
@@ -633,4 +1142,9 @@ _HANDLERS: dict[str, Any] = {
     "subscription": _handle_subscription,
     "invoice": _handle_invoice,
     "payment": _handle_payment,
+    "vendor": _handle_vendor,
+    "account": _handle_account,
+    "bill": _handle_bill,
+    "bill_payment": _handle_bill_payment,
+    "expense": _handle_expense,
 }
