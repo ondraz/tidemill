@@ -101,7 +101,12 @@ def style_timeline(df: pd.DataFrame) -> Styler:
     interval = df.attrs.get("interval", "month")
     display = df.copy()
     display["period"] = format_periods(display["period"], interval)
-    return cast("Styler", display.set_index("period").style.format({"conversion_rate": fmt_rate}))
+    return cast(
+        "Styler",
+        display.set_index("period").style.format(
+            {"conversion_rate": fmt_rate}
+        ),
+    )
 
 
 # ── charts ───────────────────────────────────────────────────────────
