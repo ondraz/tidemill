@@ -243,3 +243,4 @@ Copy `.env.example` to `.env` and configure:
 - **Metric transparency:** every metric must document its formula, SQL, assumptions, edge cases.
 - **Query Algebra:** all segmented metric SQL is built through `Cube` definitions and composable `QueryFragment` objects (SQLAlchemy `Select`-based, no string concatenation). See `docs/architecture/cubes.md`.
 - **Documentation:** when making code changes, always update the corresponding documentation in `docs/`. This includes architecture docs (`docs/architecture/`), development guides (`docs/development/`), and `CLAUDE.md` itself when the project structure, conventions, or workflows change.
+- **Verification:** after every code change, run `make check` and fix all issues it reports before declaring the task complete.
