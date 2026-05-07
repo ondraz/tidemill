@@ -12,8 +12,11 @@ What's created:
   - Bill payments marking ~80% of bills as paid
 
 QBO has no test-clock equivalent, so historical data is created by backdating
-``TxnDate`` / ``DueDate``. Idempotent re-runs: every entity name is prefixed
-with ``SEED-`` so ``--cleanup`` can find and void/delete them.
+``TxnDate`` / ``DueDate``. Re-running the seed without ``--cleanup`` first
+will create *additional* copies of every entity — every name is prefixed
+with ``SEED-`` so ``--cleanup`` can void/deactivate prior runs explicitly.
+Use ``python quickbooks_seed.py --cleanup`` before re-seeding if you want
+a clean sandbox.
 
 Prerequisites:
     pip install httpx
