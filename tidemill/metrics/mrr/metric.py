@@ -25,7 +25,7 @@ def _resolve_currency(event: Event, kind: str) -> str:
     """
     cur = event.payload.get("currency")
     if cur:
-        return cur.upper()
+        return str(cur).upper()
     logger.warning(
         "%s event missing currency, defaulting to USD",
         kind,

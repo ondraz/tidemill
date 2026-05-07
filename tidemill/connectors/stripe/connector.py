@@ -677,7 +677,11 @@ class StripeConnector(WebhookConnector):
             if clock_id:
                 params["test_clock"] = clock_id
             for cust in stripe.Customer.list(**params).auto_paging_iter():
-                address = dict(cust.address) if cust.address else {}
+                address: dict[str, Any] = cust.address.to_dict() if cust.address else {}
+                metadata_obj = cust.metadata
+                metadata: dict[str, Any] = (
+                    metadata_obj.to_dict() if metadata_obj is not None else {}
+                )
                 yield self._make_event(
                     "customer.created",
                     customer_id=str(cust.id),
@@ -689,7 +693,7 @@ class StripeConnector(WebhookConnector):
                         "email": cust.email,
                         "currency": cust.currency,
                         "country": address.get("country"),
-                        "metadata": dict(cust.metadata or {}),
+                        "metadata": metadata,
                     },
                 )
 
@@ -701,7 +705,7 @@ class StripeConnector(WebhookConnector):
             if clock_id:
                 params["test_clock"] = clock_id
             for sub in stripe.Subscription.list(**params).auto_paging_iter():
-                sub_dict: dict[str, Any] = dict(sub)
+                sub_dict: dict[str, Any] = sub.to_dict()
                 mrr = self._compute_mrr(sub_dict)
                 occurred = datetime.fromtimestamp(sub.created, tz=UTC)
                 plan_id = ""
@@ -884,6 +888,7 @@ class StripeConnector(WebhookConnector):
                 ended_at is not None and trial_end is not None and ended_at < trial_end
             )
             if canceled_in_trial:
+                assert ended_at is not None  # narrowed via canceled_in_trial
                 yield self._make_event(
                     "subscription.trial_expired",
                     customer_id=customer_id,

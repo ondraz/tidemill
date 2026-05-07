@@ -120,7 +120,15 @@ module = ["jwt", "jwt.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["aiokafka", "aiokafka.*"]
+module = ["requests"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["plotly", "plotly.graph_objects", "plotly.io", "plotly.subplots"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["aiokafka"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

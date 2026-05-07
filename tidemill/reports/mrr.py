@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -10,6 +10,8 @@ import plotly.graph_objects as go
 from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
 
 if TYPE_CHECKING:
+    from pandas.io.formats.style import Styler
+
     from tidemill.reports.client import TidemillClient
 
 
@@ -121,10 +123,10 @@ def movement_log(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     type_order = {"new": 0, "expansion": 1, "reactivation": 2, "contraction": 3, "churn": 4}
     df["_order"] = df["movement_type"].map(type_order).fillna(5)
     df = df.sort_values(["date", "_order", "customer_name"]).reset_index(drop=True)
-    return df[cols]
+    return cast("pd.DataFrame", df[cols])
 
 
-def style_movement_log(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_movement_log(df: pd.DataFrame) -> Styler:
     """Format movement log with colour-coded movement types and monthly subtotals.
 
     Args:
@@ -137,10 +139,11 @@ def style_movement_log(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     subtotal_indices: list[int] = []
 
     for month, grp in df.groupby("month", sort=True):
+        month_str = str(month)
         for _, r in grp.iterrows():
             rows.append(
                 {
-                    "month": month,
+                    "month": month_str,
                     "date": r["date"],
                     "customer": r["customer_name"] or r["customer_id"],
                     "customer_id": r["customer_id"],
@@ -157,7 +160,7 @@ def style_movement_log(df: pd.DataFrame) -> pd.io.formats.style.Styler:
         subtotal_indices.append(len(rows))
         rows.append(
             {
-                "month": month,
+                "month": month_str,
                 "date": "",
                 "customer": "",
                 "customer_id": "",
@@ -230,7 +233,7 @@ def quick_ratio(tm: TidemillClient, start: str, end: str) -> dict[str, Any]:
     }
 
 
-def style_quick_ratio(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+def style_quick_ratio(data: dict[str, Any]) -> Styler:
     """Format Quick Ratio as a styled one-row summary.
 
     Args:
@@ -251,12 +254,16 @@ def style_quick_ratio(data: dict[str, Any]) -> pd.io.formats.style.Styler:
         ]
     )
     money = ["New", "Expansion", "Reactivation", "Gains", "Churn", "Contraction", "Losses"]
-    return df.style.format(
-        {
-            **{c: "${:,.2f}" for c in money},
-            "Quick Ratio": lambda v: f"{v:.2f}" if v is not None else "N/A",
-        }
-    ).hide(axis="index")
+    styler = cast(
+        "Styler",
+        df.style.format(
+            {
+                **{c: "${:,.2f}" for c in money},
+                "Quick Ratio": lambda v: f"{v:.2f}" if v is not None else "N/A",
+            }
+        ),
+    )
+    return styler.hide(axis="index")
 
 
 def trend(tm: TidemillClient, start: str, end: str, interval: str = "month") -> pd.DataFrame:
@@ -283,17 +290,18 @@ def trend(tm: TidemillClient, start: str, end: str, interval: str = "month") -> 
 # ── style ────────────────────────────────────────────────────────────
 
 
-def style_snapshot(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+def style_snapshot(data: dict[str, Any]) -> Styler:
     """Format MRR/ARR snapshot as a styled table.
 
     Args:
         data: Dict from :func:`snapshot`.
     """
     df = pd.DataFrame([{"MRR": data["mrr"], "ARR": data["arr"]}])
-    return df.style.format("${:,.2f}").hide(axis="index")
+    styler = cast("Styler", df.style.format("${:,.2f}"))
+    return styler.hide(axis="index")
 
 
-def style_waterfall(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_waterfall(df: pd.DataFrame) -> Styler:
     """Format waterfall DataFrame as a styled table.
 
     Args:
@@ -313,7 +321,7 @@ def style_waterfall(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     display = df.copy()
     display["period"] = format_periods(display["period"], interval)
     styled = display.set_index("period")[display_cols]
-    return styled.style.format("${:,.2f}")
+    return cast("Styler", styled.style.format("${:,.2f}"))
 
 
 # ── charts ───────────────────────────────────────────────────────────

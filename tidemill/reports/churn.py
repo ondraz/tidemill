@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -10,6 +10,8 @@ import plotly.graph_objects as go
 from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
 
 if TYPE_CHECKING:
+    from pandas.io.formats.style import Styler
+
     from tidemill.reports.client import TidemillClient
 
 
@@ -111,7 +113,7 @@ def revenue_events(
         rows.append(
             {
                 "customer": cid,
-                "customer_name": r.get("customer_name", ""),
+                "customer_name": r["customer_name"] if "customer_name" in r else "",  # noqa: SIM401
                 "starting_mrr_cents": int(r["starting_mrr_cents"]),
                 "churned_mrr_cents": int(ev["mrr_cents"]) if ev else 0,
                 "fully_churned": bool(r["fully_churned"]),
@@ -179,14 +181,19 @@ def monthly_lost_mrr(
 # ── style ────────────────────────────────────────────────────────────
 
 
-def style_snapshot(data: dict[str, Any]) -> pd.io.formats.style.Styler:
+def style_snapshot(data: dict[str, Any]) -> Styler:
     """Format churn snapshot as a styled table.
 
     Args:
         data: Dict from :func:`snapshot`.
     """
-    pct = lambda v: f"{v:.1%}" if v is not None else "N/A"  # noqa: E731
-    dlr = lambda c: f"${c / 100:,.2f}"  # noqa: E731
+
+    def pct(v: float | None) -> str:
+        return f"{v:.1%}" if v is not None else "N/A"
+
+    def dlr(c: int) -> str:
+        return f"${c / 100:,.2f}"
+
     rows = [
         {
             "Metric": "Logo churn",
@@ -204,7 +211,7 @@ def style_snapshot(data: dict[str, Any]) -> pd.io.formats.style.Styler:
     return pd.DataFrame(rows).style.hide(axis="index")
 
 
-def style_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_timeline(df: pd.DataFrame) -> Styler:
     """Format monthly churn rates as a styled table.
 
     Args:
@@ -213,15 +220,18 @@ def style_timeline(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     interval = df.attrs.get("interval", "month")
     display = df.copy()
     display["month"] = format_periods(display["month"], interval)
-    return display.set_index("month").style.format(
-        {
-            "logo_churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
-            "revenue_churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
-        }
+    return cast(
+        "Styler",
+        display.set_index("month").style.format(
+            {
+                "logo_churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
+                "revenue_churn": lambda v: f"{v:.1%}" if v is not None else "N/A",
+            }
+        ),
     )
 
 
-def style_revenue_events(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_revenue_events(df: pd.DataFrame) -> Styler:
     """Format per-customer revenue churn table with totals.
 
     Args:
@@ -249,22 +259,24 @@ def style_revenue_events(df: pd.DataFrame) -> pd.io.formats.style.Styler:
     cols = ["customer", "customer_name", "starting_mrr", "churned_mrr", "fully_churned"]
 
     def _highlight(row: pd.Series) -> list[str]:
-        if row.get("churned_mrr") not in ("$0.00", ""):
+        churned = row["churned_mrr"] if "churned_mrr" in row else None  # noqa: SIM401
+        if churned not in ("$0.00", ""):
             return ["background-color: #FEF3C7"] * len(row)
         return [""] * len(row)
 
     rate = total_churned / total_start if total_start else 0
-    return (
+    styler = cast(
+        "Styler",
         display[cols]
         .style.apply(_highlight, axis=1)
         .set_caption(
             f"Revenue churn: {rate:.1%} = ${total_churned / 100:,.2f} / ${total_start / 100:,.2f}"
-        )
-        .hide(axis="index")
+        ),
     )
+    return styler.hide(axis="index")
 
 
-def style_c_start(detail: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_c_start(detail: pd.DataFrame) -> Styler:
     """C_start — customers active at period start, with starting MRR.
 
     Args:
@@ -284,14 +296,16 @@ def style_c_start(detail: pd.DataFrame) -> pd.io.formats.style.Styler:
         if "customer_name" in display.columns
         else ["customer", "starting_mrr"]
     )
-    return (
-        display[cols]
-        .style.set_caption(f"C_start: {len(detail)} customers, ${total / 100:,.2f} MRR")
-        .hide(axis="index")
+    styler = cast(
+        "Styler",
+        display[cols].style.set_caption(
+            f"C_start: {len(detail)} customers, ${total / 100:,.2f} MRR"
+        ),
     )
+    return styler.hide(axis="index")
 
 
-def style_c_churned(detail: pd.DataFrame) -> pd.io.formats.style.Styler:
+def style_c_churned(detail: pd.DataFrame) -> Styler:
     """C_churned — customers who fully churned, with churned MRR.
 
     Args:
@@ -321,13 +335,13 @@ def style_c_churned(detail: pd.DataFrame) -> pd.io.formats.style.Styler:
         if "customer_name" in display.columns
         else ["customer", "starting_mrr", "churned_mrr"]
     )
-    return (
-        display[cols]
-        .style.set_caption(
+    styler = cast(
+        "Styler",
+        display[cols].style.set_caption(
             f"C_churned: {len(churned)} customers, ${total_churned / 100:,.2f} lost MRR"
-        )
-        .hide(axis="index")
+        ),
     )
+    return styler.hide(axis="index")
 
 
 # ── charts ───────────────────────────────────────────────────────────

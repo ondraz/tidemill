@@ -147,8 +147,8 @@ def format_period(period: Any, granularity: str = "month") -> str:
     if g == "month":
         return ts.strftime("%b %Y")
     if g == "week":
-        iso = ts.isocalendar()
-        return f"{iso.year}-W{iso.week:02d}"
+        iso_year, iso_week, _ = ts.isocalendar()
+        return f"{iso_year}-W{iso_week:02d}"
     if g == "quarter":
         q = (ts.month - 1) // 3 + 1
         return f"{ts.year}-Q{q}"
