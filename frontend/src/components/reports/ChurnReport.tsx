@@ -11,12 +11,11 @@ import { fetchChurn } from '@/api/metrics'
 import { KPICard } from '@/components/charts/KPICard'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
-import { DimensionPicker } from '@/components/controls/DimensionPicker'
-import { SegmentPicker } from '@/components/controls/SegmentPicker'
+import { ReportControls } from '@/components/controls/ReportControls'
 import { formatCurrency, formatPercent, formatPeriod } from '@/lib/formatters'
 import { periodStarts, periodEnd } from '@/lib/periods'
 import { COLORS } from '@/lib/colors'
-import { CHURN_DIMENSIONS } from '@/lib/constants'
+import { chartTimeRangeConfig } from '@/lib/chartTimeRange'
 import type {
   ChurnCustomerDetail,
   ChurnRevenueEvent,
@@ -39,13 +38,16 @@ function rateWindow(
 }
 
 export function ChurnReport() {
-  const { start, end, interval } = useTimeRange({ range: 'last_1y' })
+  const { start, end, interval, range } = useTimeRange({ range: 'last_1y' })
+  const timeCfg = chartTimeRangeConfig({ start, end, interval, range })
   const [dimensions, setDimensions] = useState<string[]>([])
   const [segment, setSegment] = useState<string | null>(null)
   const [compareSegments, setCompareSegments] = useState<string[]>([])
-  const segParams = {
+  const [filters, setFilters] = useState<Record<string, string>>({})
+  const scopeParams = {
     segment: segment ?? undefined,
     compare_segments: compareSegments.length ? compareSegments : undefined,
+    filters: Object.keys(filters).length ? filters : undefined,
   }
   const dimKey = dimensions[0]
   const { rateStart, rateEnd } = useMemo(
@@ -54,10 +56,10 @@ export function ChurnReport() {
   )
 
   const { data: logoRate, isLoading: logoRateLoading } = useChurn<number | null>({
-    start: rateStart, end: rateEnd, type: 'logo', ...segParams,
+    start: rateStart, end: rateEnd, type: 'logo', ...scopeParams,
   })
   const { data: revRate, isLoading: revRateLoading } = useChurn<number | null>({
-    start: rateStart, end: rateEnd, type: 'revenue', ...segParams,
+    start: rateStart, end: rateEnd, type: 'revenue', ...scopeParams,
   })
 
   // Segmented lost-revenue breakdown over the full window. The churn
@@ -70,7 +72,7 @@ export function ChurnReport() {
     end,
     type: 'revenue',
     ...(dimKey ? { dimensions: [dimKey] } : {}),
-    ...segParams,
+    ...scopeParams,
   })
   const segmentChart = useMemo(() => {
     if (!dimKey || !Array.isArray(segmentData)) return []
@@ -81,11 +83,11 @@ export function ChurnReport() {
   }, [segmentData, dimKey])
 
   const { data: detail, isLoading: detailLoading } =
-    useChurnCustomers<ChurnCustomerDetail[]>({ start: rateStart, end: rateEnd, ...segParams })
+    useChurnCustomers<ChurnCustomerDetail[]>({ start: rateStart, end: rateEnd, ...scopeParams })
   const { data: revEvents } =
-    useChurnRevenueEvents<ChurnRevenueEvent[]>({ start: rateStart, end: rateEnd, ...segParams })
+    useChurnRevenueEvents<ChurnRevenueEvent[]>({ start: rateStart, end: rateEnd, ...scopeParams })
   const { data: waterfall, isLoading: waterfallLoading } =
-    useMRRWaterfall<WaterfallEntry[]>({ start, end, interval, ...segParams })
+    useMRRWaterfall<WaterfallEntry[]>({ start, end, interval, ...scopeParams })
 
   // Churn timeline — one API call per period for both logo + revenue,
   // each queried closed-closed [period-start, period-end]. The interval
@@ -96,13 +98,13 @@ export function ChurnReport() {
       const pEnd = periodEnd(p, interval)
       return [
         {
-          queryKey: ['metrics', 'churn', { start: p, end: pEnd, type: 'logo', ...segParams }],
-          queryFn: () => fetchChurn<number | null>({ start: p, end: pEnd, type: 'logo', ...segParams }),
+          queryKey: ['metrics', 'churn', { start: p, end: pEnd, type: 'logo', ...scopeParams }],
+          queryFn: () => fetchChurn<number | null>({ start: p, end: pEnd, type: 'logo', ...scopeParams }),
           staleTime: 60_000,
         },
         {
-          queryKey: ['metrics', 'churn', { start: p, end: pEnd, type: 'revenue', ...segParams }],
-          queryFn: () => fetchChurn<number | null>({ start: p, end: pEnd, type: 'revenue', ...segParams }),
+          queryKey: ['metrics', 'churn', { start: p, end: pEnd, type: 'revenue', ...scopeParams }],
+          queryFn: () => fetchChurn<number | null>({ start: p, end: pEnd, type: 'revenue', ...scopeParams }),
           staleTime: 60_000,
         },
       ]
@@ -140,18 +142,16 @@ export function ChurnReport() {
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Churn</h2>
 
-      <DimensionPicker
-        available={CHURN_DIMENSIONS}
-        selected={dimensions}
-        onChange={setDimensions}
-        single
-      />
-
-      <SegmentPicker
+      <ReportControls
+        metric="churn"
+        dimensions={dimensions}
+        onDimensionsChange={setDimensions}
         segment={segment}
         onSegmentChange={setSegment}
         compareSegments={compareSegments}
         onCompareSegmentsChange={setCompareSegments}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
 
       <div className="text-xs text-muted-foreground">
@@ -187,12 +187,12 @@ export function ChurnReport() {
           name: 'Churn Rate',
           metric: 'churn',
           endpoint: '/api/metrics/churn',
-          params: { start, end, interval },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'churn_timeline',
           chartType: 'line',
-          timeRangeMode: 'fixed',
         }}
       >
         <TimelineChurnChart data={timelineData} loading={timelineLoading} />
@@ -204,12 +204,12 @@ export function ChurnReport() {
           name: 'Lost MRR',
           metric: 'churn',
           endpoint: '/api/metrics/mrr/waterfall',
-          params: { start, end, interval },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'lost_mrr_bars',
           chartType: 'bar',
-          timeRangeMode: 'fixed',
         }}
       >
         <BarBreakdownChart
@@ -227,13 +227,14 @@ export function ChurnReport() {
             name: `Lost Revenue by ${dimKey}`,
             metric: 'churn',
             endpoint: '/api/metrics/churn',
-            params: { start, end, type: 'revenue' },
+            ...timeCfg,
+            params: { ...timeCfg.params, type: 'revenue' },
             dimensions: [dimKey],
             segment: segment ?? undefined,
             compareSegments: compareSegments.length ? compareSegments : undefined,
+            filters: Object.keys(filters).length ? filters : undefined,
             transform: 'lost_mrr_bars',
             chartType: 'bar',
-            timeRangeMode: 'fixed',
           }}
         >
           <BarBreakdownChart

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Calendar, X } from 'lucide-react'
 import { useTimeRange } from '@/hooks/useTimeRange'
+import { RELATIVE_RANGES } from '@/lib/constants'
 import type { Interval, RelativeRange } from '@/lib/types'
 
 // ── helpers ─────────────────────────────────────────────────────────
@@ -32,10 +33,6 @@ function monthLabel(d: Date): string {
 
 function monthYearLabel(d: Date): string {
   return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-}
-
-function quarterIndex(d: Date): number {
-  return Math.floor(d.getMonth() / 3)
 }
 
 function yearsBetween(firstYear: number, lastYear: number): number[] {
@@ -117,68 +114,25 @@ interface Preset {
     | { range: RelativeRange; interval?: Interval }
 }
 
-function startOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1)
-}
-
+// Every preset persists as a RelativeRange key so the selection re-resolves
+// on each read and auto-shifts when the calendar crosses a day/month/quarter
+// boundary (e.g. on May 1 "Last 12 full months" silently updates from
+// Apr→Mar 2025 to May→Apr 2026 without user action).
 const PRESETS: Preset[] = [
-  {
-    label: 'This month',
-    resolve: () => {
-      const now = new Date()
-      return { start: fmt(startOfMonth(now)), end: fmt(now), interval: 'month' }
-    },
-  },
-  // The "full months" presets persist as RelativeRange keys so they auto-shift
-  // forward when the calendar crosses a month boundary (e.g. on May 1 the
-  // "Last 12 full months" selection silently updates from Apr→Mar 2025 to
-  // May→Apr 2026 without user action).
-  {
-    label: 'Last full month',
-    resolve: () => ({ range: 'last_full_month', interval: 'month' }),
-  },
-  {
-    label: 'Last 3 full months',
-    resolve: () => ({ range: 'last_3_full_months', interval: 'month' }),
-  },
-  {
-    label: 'Last 6 full months',
-    resolve: () => ({ range: 'last_6_full_months', interval: 'month' }),
-  },
-  {
-    label: 'Last 12 full months',
-    resolve: () => ({ range: 'last_12_full_months', interval: 'month' }),
-  },
-  {
-    label: 'Quarter to date',
-    resolve: () => {
-      const now = new Date()
-      const q = quarterIndex(now)
-      const s = new Date(now.getFullYear(), q * 3, 1)
-      return { start: fmt(s), end: fmt(now), interval: 'month' }
-    },
-  },
-  {
-    label: 'Year to date',
-    resolve: () => {
-      const now = new Date()
-      const s = new Date(now.getFullYear(), 0, 1)
-      return { start: fmt(s), end: fmt(now), interval: 'month' }
-    },
-  },
-  {
-    label: 'All time',
-    resolve: () => {
-      const now = new Date()
-      return { start: '2020-01-01', end: fmt(now), interval: 'month' }
-    },
-  },
+  { label: 'This month', resolve: () => ({ range: 'this_month', interval: 'month' }) },
+  { label: 'Last full month', resolve: () => ({ range: 'last_full_month', interval: 'month' }) },
+  { label: 'Last 3 full months', resolve: () => ({ range: 'last_3_full_months', interval: 'month' }) },
+  { label: 'Last 6 full months', resolve: () => ({ range: 'last_6_full_months', interval: 'month' }) },
+  { label: 'Last 12 full months', resolve: () => ({ range: 'last_12_full_months', interval: 'month' }) },
+  { label: 'Quarter to date', resolve: () => ({ range: 'qtd', interval: 'month' }) },
+  { label: 'Year to date', resolve: () => ({ range: 'ytd', interval: 'month' }) },
+  { label: 'All time', resolve: () => ({ range: 'all_time', interval: 'month' }) },
 ]
 
 // ── component ───────────────────────────────────────────────────────
 
 export function GlobalTimeRangePicker() {
-  const { start, end, interval, setRange } = useTimeRange({ range: 'last_90d' })
+  const { start, end, interval, range, setRange } = useTimeRange({ range: 'last_90d' })
   const [open, setOpen] = useState(false)
   const grain: Grain = interval === 'day' ? 'month' : (interval as Grain)
   const [pending, setPending] = useState<Cell | null>(null)
@@ -294,6 +248,10 @@ export function GlobalTimeRangePicker() {
   }
 
   const triggerLabel = useMemo(() => {
+    if (range) {
+      const named = RELATIVE_RANGES.find((r) => r.value === range)
+      if (named) return named.label
+    }
     const s = selectedStart
     const e = selectedEnd
     const sameMonth =
@@ -314,7 +272,7 @@ export function GlobalTimeRangePicker() {
       year: 'numeric',
     })
     return `${sLabel} – ${eLabel}`
-  }, [selectedStart, selectedEnd])
+  }, [range, selectedStart, selectedEnd])
 
   const intervalLabel =
     interval === 'day'

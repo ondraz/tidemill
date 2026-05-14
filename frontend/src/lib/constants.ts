@@ -6,6 +6,12 @@ export const RELATIVE_RANGES: { label: string; value: RelativeRange }[] = [
   { label: 'Last 30 days', value: 'last_30d' },
   { label: 'Last 90 days', value: 'last_90d' },
   { label: 'Last year', value: 'last_1y' },
+  { label: 'This month', value: 'this_month' },
+  { label: 'Last full month', value: 'last_full_month' },
+  { label: 'Last 3 full months', value: 'last_3_full_months' },
+  { label: 'Last 6 full months', value: 'last_6_full_months' },
+  { label: 'Last 12 full months', value: 'last_12_full_months' },
+  { label: 'Quarter to date', value: 'qtd' },
   { label: 'Year to date', value: 'ytd' },
   { label: 'All time', value: 'all_time' },
 ]
@@ -28,6 +34,13 @@ export function resolveRelativeRange(range: RelativeRange): { start: string; end
       return { start: format(subDays(now, 90), 'yyyy-MM-dd'), end }
     case 'last_1y':
       return { start: format(subYears(now, 1), 'yyyy-MM-dd'), end }
+    case 'this_month':
+      return { start: format(startOfMonth(now), 'yyyy-MM-dd'), end }
+    case 'qtd': {
+      const q = Math.floor(now.getMonth() / 3)
+      const start = new Date(now.getFullYear(), q * 3, 1)
+      return { start: format(start, 'yyyy-MM-dd'), end }
+    }
     case 'ytd':
       return { start: format(startOfYear(now), 'yyyy-MM-dd'), end }
     case 'all_time':
@@ -55,17 +68,50 @@ export function resolveRelativeRange(range: RelativeRange): { start: string; end
   }
 }
 
-// Dimensions here must be (a) declared on the metric's Cube and (b) backed
-// by real data in the current connectors.
-export const MRR_DIMENSIONS = ['currency', 'customer_country', 'plan_name']
-
+// Dimensions here must be (a) declared on the metric's primary Cube and
+// (b) backed by real data in the current connectors. The MRR list is the
+// intersection between MRRSnapshotCube and MRRMovementCube so the picker
+// works on every MRR chart (overview + over-time + breakdown + waterfall).
 // `churn_type` is excluded because the endpoint already filters on it
-// (type=logo|revenue), so grouping by it is a no-op. The remaining dims
-// are on ChurnEventCube via the `customer` join.
-export const CHURN_DIMENSIONS = ['cancel_reason', 'customer_country']
+// (type=logo|revenue), so grouping by it is a no-op.
+export const MRR_DIMENSIONS = [
+  'currency',
+  'plan_name',
+  'plan_interval',
+  'pricing_model',
+  'usage_type',
+  'product_name',
+  'customer_country',
+  'collection_method',
+  'tenure_months',
+  'cohort_month',
+]
 
-export const RETENTION_DIMENSIONS: string[] = []
+export const CHURN_DIMENSIONS = [
+  'cancel_reason',
+  'customer_country',
+  'tenure_months',
+  'cohort_month',
+]
 
-export const LTV_DIMENSIONS: string[] = []
+export const RETENTION_DIMENSIONS = ['customer_country', 'tenure_months']
 
-export const TRIALS_DIMENSIONS: string[] = []
+// `customer_created_month` is omitted because the LTV cohort metric joins
+// MRRMovementCube internally for the segment filter and that cube doesn't
+// declare the dim — the request 500s. Use `cohort_month` instead.
+export const LTV_DIMENSIONS = [
+  'currency',
+  'customer_country',
+  'cohort_month',
+  'tenure_months',
+]
+
+export const TRIALS_DIMENSIONS = ['customer_country', 'tenure_months']
+
+export const DIMENSIONS_BY_METRIC: Record<string, string[]> = {
+  mrr: MRR_DIMENSIONS,
+  churn: CHURN_DIMENSIONS,
+  retention: RETENTION_DIMENSIONS,
+  ltv: LTV_DIMENSIONS,
+  trials: TRIALS_DIMENSIONS,
+}

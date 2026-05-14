@@ -7,35 +7,38 @@ import { MRRBreakdownChart } from '@/components/charts/MRRBreakdownChart'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { WaterfallChart } from '@/components/charts/WaterfallChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
-import { DimensionPicker } from '@/components/controls/DimensionPicker'
-import { SegmentPicker } from '@/components/controls/SegmentPicker'
+import { ReportControls } from '@/components/controls/ReportControls'
 import { formatCurrency } from '@/lib/formatters'
+import { chartTimeRangeConfig } from '@/lib/chartTimeRange'
 import {
   cumulativeMrrSeries,
   type CumulativeMrrGroupBy,
   type MrrMovementRow,
 } from '@/lib/mrrSeries'
-import { MRR_DIMENSIONS } from '@/lib/constants'
 import { useMemo, useState } from 'react'
 import type { WaterfallEntry } from '@/lib/types'
 
 type MRRSeriesRow = MrrMovementRow
 
 export function MRRReport() {
-  const { start, end, interval } = useTimeRange({ range: 'last_1y' })
+  const { start, end, interval, range } = useTimeRange({ range: 'last_1y' })
+  const timeCfg = chartTimeRangeConfig({ start, end, interval, range })
   const [dimensions, setDimensions] = useState<string[]>([])
   const [segment, setSegment] = useState<string | null>(null)
   const [compareSegments, setCompareSegments] = useState<string[]>([])
-  // Segment params are piped into every hook below so MRR cards + charts
-  // all narrow consistently.  Compare mode is informational here — the
-  // breakdown chart doesn't render per-segment bars yet; that's the next
-  // iteration.
-  const segParams = { segment: segment ?? undefined, compare_segments: compareSegments.length ? compareSegments : undefined }
+  const [filters, setFilters] = useState<Record<string, string>>({})
+  // Segment + filter params are piped into every hook below so MRR cards +
+  // charts all narrow consistently.
+  const scopeParams = {
+    segment: segment ?? undefined,
+    compare_segments: compareSegments.length ? compareSegments : undefined,
+    filters: Object.keys(filters).length ? filters : undefined,
+  }
 
-  const { data: breakdown, isLoading: breakdownLoading } = useMRRBreakdown<Record<string, unknown>[]>({ start, end, dimensions, ...segParams })
-  const { data: waterfall, isLoading: waterfallLoading } = useMRRWaterfall<WaterfallEntry[]>({ start, end, interval, ...segParams })
-  const { data: currentMrr, isLoading: mrrLoading } = useMRR<number>({ ...segParams })
-  const { data: currentArr, isLoading: arrLoading } = useARR<number>({ ...segParams })
+  const { data: breakdown, isLoading: breakdownLoading } = useMRRBreakdown<Record<string, unknown>[]>({ start, end, dimensions, ...scopeParams })
+  const { data: waterfall, isLoading: waterfallLoading } = useMRRWaterfall<WaterfallEntry[]>({ start, end, interval, ...scopeParams })
+  const { data: currentMrr, isLoading: mrrLoading } = useMRR<number>({ ...scopeParams })
+  const { data: currentArr, isLoading: arrLoading } = useARR<number>({ ...scopeParams })
 
   // Fetch MRR movements from beginning of time so cumulative sum = MRR level.
   // Pass the picked dimension so the API returns one row per (period, value)
@@ -45,7 +48,7 @@ export function MRRReport() {
     end,
     interval,
     dimensions,
-    ...segParams,
+    ...scopeParams,
   })
 
   const { data: segmentDefs } = useSegments()
@@ -142,18 +145,16 @@ export function MRRReport() {
         <h2 className="text-lg font-semibold">Monthly Recurring Revenue</h2>
       </div>
 
-      <DimensionPicker
-        available={MRR_DIMENSIONS}
-        selected={dimensions}
-        onChange={setDimensions}
-        single
-      />
-
-      <SegmentPicker
+      <ReportControls
+        metric="mrr"
+        dimensions={dimensions}
+        onDimensionsChange={setDimensions}
         segment={segment}
         onSegmentChange={setSegment}
         compareSegments={compareSegments}
         onCompareSegmentsChange={setCompareSegments}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -181,13 +182,13 @@ export function MRRReport() {
           name: 'MRR Over Time',
           metric: 'mrr',
           endpoint: '/api/metrics/mrr',
-          params: { start, end, interval },
+          ...timeCfg,
           dimensions: dimensions.length ? dimensions : undefined,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'mrr_cumulative_series',
           chartType: 'line',
-          timeRangeMode: 'fixed',
         }}
       >
         <TimeSeriesChart
@@ -205,13 +206,13 @@ export function MRRReport() {
           name: dimKey ? `MRR Breakdown by ${dimKey}` : 'MRR Breakdown',
           metric: 'mrr',
           endpoint: '/api/metrics/mrr/breakdown',
-          params: { start, end },
+          ...timeCfg,
           dimensions: dimKey ? [dimKey] : undefined,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'mrr_breakdown_bars',
           chartType: 'bar',
-          timeRangeMode: 'fixed',
         }}
       >
         {dimKey ? (
@@ -237,12 +238,12 @@ export function MRRReport() {
           name: 'MRR Waterfall',
           metric: 'mrr',
           endpoint: '/api/metrics/mrr/waterfall',
-          params: { start, end, interval },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'waterfall',
           chartType: 'waterfall',
-          timeRangeMode: 'fixed',
         }}
       >
         <WaterfallChart data={waterfall ?? []} interval={interval} loading={waterfallLoading} />

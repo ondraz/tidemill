@@ -7,9 +7,10 @@ import { KPICard } from '@/components/charts/KPICard'
 import { CohortHeatmap } from '@/components/charts/CohortHeatmap'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
-import { SegmentPicker } from '@/components/controls/SegmentPicker'
+import { ReportControls } from '@/components/controls/ReportControls'
 import { formatPercent, formatPeriod } from '@/lib/formatters'
 import { periodStarts, periodEnd } from '@/lib/periods'
+import { chartTimeRangeConfig } from '@/lib/chartTimeRange'
 import type { CohortEntry, Interval } from '@/lib/types'
 
 interface RawCohortRow {
@@ -41,24 +42,28 @@ function rateWindow(
 }
 
 export function RetentionReport() {
-  const { start, end, interval } = useTimeRange({ range: 'last_1y' })
+  const { start, end, interval, range } = useTimeRange({ range: 'last_1y' })
+  const timeCfg = chartTimeRangeConfig({ start, end, interval, range })
+  const [dimensions, setDimensions] = useState<string[]>([])
   const [segment, setSegment] = useState<string | null>(null)
   const [compareSegments, setCompareSegments] = useState<string[]>([])
-  const segParams = {
+  const [filters, setFilters] = useState<Record<string, string>>({})
+  const scopeParams = {
     segment: segment ?? undefined,
     compare_segments: compareSegments.length ? compareSegments : undefined,
+    filters: Object.keys(filters).length ? filters : undefined,
   }
   const { rateStart, rateEnd } = useMemo(
     () => rateWindow(start, end, interval),
     [start, end, interval],
   )
 
-  const { data: cohortRaw, isLoading: cohortLoading } = useRetention<RawCohortRow[]>({ start, end, ...segParams })
+  const { data: cohortRaw, isLoading: cohortLoading } = useRetention<RawCohortRow[]>({ start, end, ...scopeParams })
   const { data: nrr, isLoading: nrrLoading } = useRetention<number | null>({
-    start: rateStart, end: rateEnd, query_type: 'nrr', ...segParams,
+    start: rateStart, end: rateEnd, query_type: 'nrr', ...scopeParams,
   })
   const { data: grr, isLoading: grrLoading } = useRetention<number | null>({
-    start: rateStart, end: rateEnd, query_type: 'grr', ...segParams,
+    start: rateStart, end: rateEnd, query_type: 'grr', ...scopeParams,
   })
 
   const cohortEntries: CohortEntry[] = Array.isArray(cohortRaw)
@@ -79,13 +84,13 @@ export function RetentionReport() {
       const pEnd = periodEnd(p, interval)
       return [
         {
-          queryKey: ['metrics', 'retention', { start: p, end: pEnd, query_type: 'nrr', ...segParams }],
-          queryFn: () => fetchRetention<number | null>({ start: p, end: pEnd, query_type: 'nrr', ...segParams }),
+          queryKey: ['metrics', 'retention', { start: p, end: pEnd, query_type: 'nrr', ...scopeParams }],
+          queryFn: () => fetchRetention<number | null>({ start: p, end: pEnd, query_type: 'nrr', ...scopeParams }),
           staleTime: 60_000,
         },
         {
-          queryKey: ['metrics', 'retention', { start: p, end: pEnd, query_type: 'grr', ...segParams }],
-          queryFn: () => fetchRetention<number | null>({ start: p, end: pEnd, query_type: 'grr', ...segParams }),
+          queryKey: ['metrics', 'retention', { start: p, end: pEnd, query_type: 'grr', ...scopeParams }],
+          queryFn: () => fetchRetention<number | null>({ start: p, end: pEnd, query_type: 'grr', ...scopeParams }),
           staleTime: 60_000,
         },
       ]
@@ -103,11 +108,16 @@ export function RetentionReport() {
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Retention</h2>
 
-      <SegmentPicker
+      <ReportControls
+        metric="retention"
+        dimensions={dimensions}
+        onDimensionsChange={setDimensions}
         segment={segment}
         onSegmentChange={setSegment}
         compareSegments={compareSegments}
         onCompareSegmentsChange={setCompareSegments}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
 
       <div className="text-xs text-muted-foreground">
@@ -135,12 +145,13 @@ export function RetentionReport() {
           name: 'Revenue Retention',
           metric: 'retention',
           endpoint: '/api/metrics/retention',
-          params: { start, end, interval },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          dimensions: dimensions.length ? dimensions : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'retention_nrr_grr',
           chartType: 'bar',
-          timeRangeMode: 'fixed',
         }}
       >
         <BarBreakdownChart
@@ -157,12 +168,13 @@ export function RetentionReport() {
           name: 'Cohort Retention',
           metric: 'retention',
           endpoint: '/api/metrics/retention',
-          params: { start, end },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          dimensions: dimensions.length ? dimensions : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'cohort_heatmap',
           chartType: 'cohort_heatmap',
-          timeRangeMode: 'fixed',
         }}
       >
         <CohortHeatmap data={cohortEntries} loading={cohortLoading} />

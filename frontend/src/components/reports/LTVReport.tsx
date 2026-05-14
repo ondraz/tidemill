@@ -7,25 +7,30 @@ import { KPICard } from '@/components/charts/KPICard'
 import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
-import { SegmentPicker } from '@/components/controls/SegmentPicker'
+import { ReportControls } from '@/components/controls/ReportControls'
 import { formatCurrency, formatPercent, formatMonthYear, formatPeriod } from '@/lib/formatters'
 import { periodStarts, periodEnd } from '@/lib/periods'
 import { COLORS } from '@/lib/colors'
+import { chartTimeRangeConfig } from '@/lib/chartTimeRange'
 import type { CohortLTVEntry } from '@/lib/types'
 
 export function LTVReport() {
-  const { start, end, interval } = useTimeRange({ range: 'last_1y' })
+  const { start, end, interval, range } = useTimeRange({ range: 'last_1y' })
+  const timeCfg = chartTimeRangeConfig({ start, end, interval, range })
+  const [dimensions, setDimensions] = useState<string[]>([])
   const [segment, setSegment] = useState<string | null>(null)
   const [compareSegments, setCompareSegments] = useState<string[]>([])
-  const segParams = {
+  const [filters, setFilters] = useState<Record<string, string>>({})
+  const scopeParams = {
     segment: segment ?? undefined,
     compare_segments: compareSegments.length ? compareSegments : undefined,
+    filters: Object.keys(filters).length ? filters : undefined,
   }
 
-  const { data: ltv, isLoading: ltvLoading } = useLTV<number | null>({ start, end, ...segParams })
-  const { data: arpu, isLoading: arpuLoading } = useARPU<number | null>(segParams)
+  const { data: ltv, isLoading: ltvLoading } = useLTV<number | null>({ start, end, ...scopeParams })
+  const { data: arpu, isLoading: arpuLoading } = useARPU<number | null>(scopeParams)
   const { data: cohortLtv, isLoading: cohortLoading } =
-    useCohortLTV<CohortLTVEntry[]>({ start, end, ...segParams })
+    useCohortLTV<CohortLTVEntry[]>({ start, end, ...scopeParams })
 
   // Implied monthly churn = ARPU / LTV (inverse of simple LTV formula).
   const impliedChurn = useMemo(() => {
@@ -42,13 +47,13 @@ export function LTVReport() {
       const at = periodEnd(p, interval)
       return [
         {
-          queryKey: ['metrics', 'arpu', { at, ...segParams }],
-          queryFn: () => fetchARPU<number | null>({ at, ...segParams }),
+          queryKey: ['metrics', 'arpu', { at, ...scopeParams }],
+          queryFn: () => fetchARPU<number | null>({ at, ...scopeParams }),
           staleTime: 60_000,
         },
         {
-          queryKey: ['metrics', 'mrr', { at, ...segParams }],
-          queryFn: () => fetchMRR<number | null>({ at, ...segParams }),
+          queryKey: ['metrics', 'mrr', { at, ...scopeParams }],
+          queryFn: () => fetchMRR<number | null>({ at, ...scopeParams }),
           staleTime: 60_000,
         },
       ]
@@ -73,11 +78,16 @@ export function LTVReport() {
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Lifetime Value</h2>
 
-      <SegmentPicker
+      <ReportControls
+        metric="ltv"
+        dimensions={dimensions}
+        onDimensionsChange={setDimensions}
         segment={segment}
         onSegmentChange={setSegment}
         compareSegments={compareSegments}
         onCompareSegmentsChange={setCompareSegments}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -105,12 +115,13 @@ export function LTVReport() {
           name: 'ARPU',
           metric: 'ltv',
           endpoint: '/api/metrics/ltv/arpu',
-          params: { start, end, interval },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          dimensions: dimensions.length ? dimensions : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'arpu_timeline',
           chartType: 'line',
-          timeRangeMode: 'fixed',
         }}
       >
         <TimeSeriesChart
@@ -128,12 +139,13 @@ export function LTVReport() {
           name: 'Cohort LTV',
           metric: 'ltv',
           endpoint: '/api/metrics/ltv/cohort',
-          params: { start, end },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          dimensions: dimensions.length ? dimensions : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'cohort_ltv_bars',
           chartType: 'bar',
-          timeRangeMode: 'fixed',
         }}
       >
         <BarBreakdownChart

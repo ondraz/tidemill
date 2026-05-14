@@ -99,19 +99,38 @@ function samplesPerBucket(
   })
 }
 
+// Reserved keys that are never the dimension column — `period` is the time
+// axis, `amount_base` is the measure, `segment_id` tags compare branches.
+const RESERVED_ROW_KEYS = new Set(['period', 'amount_base', 'segment_id'])
+
+// Find the row column that holds the dimension value. The API returns
+// computed dims under their *label* (e.g. ``Cohort month``) while the
+// caller passes the *key* (``cohort_month``), so a strict lookup misses;
+// pick whichever non-reserved column is present instead.
+function detectDimColumn(rows: MrrMovementRow[], key: string): string | null {
+  if (rows.some((r) => key in r)) return key
+  for (const r of rows) {
+    for (const k of Object.keys(r)) {
+      if (!RESERVED_ROW_KEYS.has(k)) return k
+    }
+  }
+  return null
+}
+
 function groupedByDimension(
   rows: MrrMovementRow[],
   periods: string[],
   interval: Interval,
   key: string,
 ): CumulativeMrrResult {
-  if (!rows.some((r) => key in r)) {
+  const col = detectDimColumn(rows, key)
+  if (!col) {
     // Dimension not actually present in payload — fall back to single line.
     return { data: singleSeries(rows, periods, interval, 'mrr') }
   }
   const byValue = new Map<string, MrrMovementRow[]>()
   for (const r of rows) {
-    const v = r[key] == null ? 'Unknown' : String(r[key])
+    const v = r[col] == null ? 'Unknown' : String(r[col])
     if (!byValue.has(v)) byValue.set(v, [])
     byValue.get(v)!.push(r)
   }

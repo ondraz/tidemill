@@ -5,23 +5,28 @@ import { KPICard } from '@/components/charts/KPICard'
 import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart'
 import { BarBreakdownChart } from '@/components/charts/BarBreakdownChart'
 import { ChartContainer } from '@/components/charts/ChartContainer'
-import { SegmentPicker } from '@/components/controls/SegmentPicker'
+import { ReportControls } from '@/components/controls/ReportControls'
 import { formatPercent, formatNumber, formatPeriod } from '@/lib/formatters'
 import { COLORS } from '@/lib/colors'
+import { chartTimeRangeConfig } from '@/lib/chartTimeRange'
 import type { TrialFunnel, TrialSeriesRow } from '@/lib/types'
 
 export function TrialsReport() {
-  const { start, end, interval } = useTimeRange({ range: 'last_1y' })
+  const { start, end, interval, range } = useTimeRange({ range: 'last_1y' })
+  const timeCfg = chartTimeRangeConfig({ start, end, interval, range })
+  const [dimensions, setDimensions] = useState<string[]>([])
   const [segment, setSegment] = useState<string | null>(null)
   const [compareSegments, setCompareSegments] = useState<string[]>([])
-  const segParams = {
+  const [filters, setFilters] = useState<Record<string, string>>({})
+  const scopeParams = {
     segment: segment ?? undefined,
     compare_segments: compareSegments.length ? compareSegments : undefined,
+    filters: Object.keys(filters).length ? filters : undefined,
   }
 
-  const { data: funnel, isLoading: funnelLoading } = useTrialFunnel<TrialFunnel>({ start, end, ...segParams })
+  const { data: funnel, isLoading: funnelLoading } = useTrialFunnel<TrialFunnel>({ start, end, ...scopeParams })
   const { data: rawSeries, isLoading: seriesLoading } = useTrialSeries<TrialSeriesRow[]>({
-    start, end, interval, ...segParams,
+    start, end, interval, ...scopeParams,
   })
 
   const series = Array.isArray(rawSeries) ? rawSeries : []
@@ -51,11 +56,16 @@ export function TrialsReport() {
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Trials</h2>
 
-      <SegmentPicker
+      <ReportControls
+        metric="trials"
+        dimensions={dimensions}
+        onDimensionsChange={setDimensions}
         segment={segment}
         onSegmentChange={setSegment}
         compareSegments={compareSegments}
         onCompareSegmentsChange={setCompareSegments}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -87,12 +97,13 @@ export function TrialsReport() {
           name: 'Trial Funnel',
           metric: 'trials',
           endpoint: '/api/metrics/trials/funnel',
-          params: { start, end },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          dimensions: dimensions.length ? dimensions : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'trial_funnel_bars',
           chartType: 'bar',
-          timeRangeMode: 'fixed',
         }}
       >
         <BarBreakdownChart
@@ -110,12 +121,13 @@ export function TrialsReport() {
           name: 'Monthly Trial Outcomes',
           metric: 'trials',
           endpoint: '/api/metrics/trials/series',
-          params: { start, end, interval },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          dimensions: dimensions.length ? dimensions : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'trial_outcomes_bars',
           chartType: 'stacked_bar',
-          timeRangeMode: 'fixed',
         }}
       >
         <BarBreakdownChart
@@ -133,12 +145,13 @@ export function TrialsReport() {
           name: 'Trial Conversion Rate',
           metric: 'trials',
           endpoint: '/api/metrics/trials/series',
-          params: { start, end, interval },
+          ...timeCfg,
           segment: segment ?? undefined,
           compareSegments: compareSegments.length ? compareSegments : undefined,
+          dimensions: dimensions.length ? dimensions : undefined,
+          filters: Object.keys(filters).length ? filters : undefined,
           transform: 'trial_conversion_line',
           chartType: 'line',
-          timeRangeMode: 'fixed',
         }}
       >
         <TimeSeriesChart

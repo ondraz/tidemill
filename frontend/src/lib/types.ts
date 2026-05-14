@@ -67,6 +67,8 @@ export type RelativeRange =
   | 'last_30d'
   | 'last_90d'
   | 'last_1y'
+  | 'this_month'
+  | 'qtd'
   | 'ytd'
   | 'all_time'
   | 'last_full_month'
