@@ -228,3 +228,4 @@ deploy/backup/
 .claude/scheduled_tasks.lock
 
 tidemill.code-workspace
+.claude-account
