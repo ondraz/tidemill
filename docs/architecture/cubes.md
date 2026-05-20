@@ -65,7 +65,7 @@ class MRRSnapshotCube(Cube):
         product_name = Dim("prod.name", join="product")         # via plan → product
         customer_country = Dim("c.country", join="customer")
         collection_method = Dim("sub.collection_method", join="subscription")
-        cancel_at_period_end = Dim("sub.cancel_at_period_end", join="subscription")
+        pending_cancellation = Dim("sub.pending_cancellation", join="subscription")
 
     class TimeDimensions:
         snapshot_at = TimeDim("s.snapshot_at")
@@ -90,9 +90,9 @@ Key properties:
 
 ```python
 MRRSnapshotCube.available_dimensions()
-# ['cancel_at_period_end', 'collection_method', 'currency',
-#  'customer_country', 'plan_id', 'plan_interval', 'plan_name',
-#  'pricing_model', 'product_name', 'source_id', 'usage_type']
+# ['collection_method', 'currency',
+#  'customer_country', 'pending_cancellation', 'plan_id', 'plan_interval',
+#  'plan_name', 'pricing_model', 'product_name', 'source_id', 'usage_type']
 
 MRRSnapshotCube.available_measures()
 # ['mrr', 'mrr_original', 'count']
@@ -217,7 +217,7 @@ A `to_sql(model)` helper compiles the statement against the PostgreSQL dialect a
 
 These are the cubes for the project's [metric tables](database.md#metric-tables). Each maps a fact table to its available joins, measures, and dimensions. Every cube lives next to its metric (e.g., `tidemill/metrics/mrr/cubes.py`, `tidemill/metrics/churn/cubes.py`).
 
-Dimensions sourced from Stripe API objects: Customer (`name`, `address.country`), Subscription (`status`, `collection_method`, `cancel_at_period_end`, `cancellation_details`), Price/Plan (`interval`, `interval_count`, `billing_scheme` → canonical `pricing_model`, `usage_type`), Product (`name`). See [Stripe API mapping](#stripe-api-mapping) below for the full field comparison.
+Dimensions sourced from Stripe API objects: Customer (`name`, `address.country`), Subscription (`status`, `collection_method`, `cancel_at_period_end` → canonical `pending_cancellation`, `cancellation_details`), Price/Plan (`interval`, `interval_count`, `billing_scheme` → canonical `pricing_model`, `usage_type`), Product (`name`). See [Stripe API mapping](#stripe-api-mapping) below for the full field comparison.
 
 ### MRR Snapshot Cube
 
@@ -259,7 +259,7 @@ class MRRSnapshotCube(Cube):
         customer_country = Dim("c.country", join="customer", label="customer_country")
         # Subscription attributes
         collection_method = Dim("sub.collection_method", join="subscription")
-        cancel_at_period_end = Dim("sub.cancel_at_period_end", join="subscription")
+        pending_cancellation = Dim("sub.pending_cancellation", join="subscription")
         # Computed — CASE / DATE_TRUNC expressions on c.created_at and the
         # MRR column.  Surfaced through the same /fields endpoint as regular
         # dims; segment definitions reach them via the `computed.<name>`
@@ -529,7 +529,7 @@ The table below maps Stripe API fields to our schema columns and cube dimensions
 | `items[].quantity` | `quantity` | — | Seat/unit count |
 | `currency` | `currency` | — | |
 | `collection_method` | `collection_method` | **`collection_method`** | charge_automatically, send_invoice |
-| `cancel_at_period_end` | `cancel_at_period_end` | **`cancel_at_period_end`** | Churn early warning |
+| `cancel_at_period_end` | `pending_cancellation` | **`pending_cancellation`** | Churn early warning |
 | `cancellation_details.reason` | `cancel_reason` | — | customer, payment_failure, etc. |
 | `cancellation_details.feedback` | `cancel_feedback` | — | too_expensive, missing_features, etc. |
 | `start_date` | `started_at` | — | |

@@ -122,8 +122,8 @@ class MRRSnapshotCube(Cube):
         collection_method = Dim(
             "sub.collection_method", join="subscription", label="collection_method"
         )
-        cancel_at_period_end = Dim(
-            "sub.cancel_at_period_end", join="subscription", label="cancel_at_period_end"
+        pending_cancellation = Dim(
+            "sub.pending_cancellation", join="subscription", label="pending_cancellation"
         )
         # Computed — buckets and customer-tenure derived from c.created_at.
         mrr_band = Dim(_mrr_band_sql("s.mrr_base_cents"), join="customer", label="MRR band")

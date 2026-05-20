@@ -246,7 +246,11 @@ subscription = Table(
     Column("currency", Text),
     Column("quantity", Integer, default=1),
     Column("collection_method", Text),
-    Column("cancel_at_period_end", Boolean, default=False),
+    # True when the subscription is scheduled to cancel at the end of the
+    # current period but is still active until then. Provider-agnostic name —
+    # Stripe calls this ``cancel_at_period_end``, Chargebee ``non_renewing``,
+    # Recurly ``state='canceled' AND expires_at > now()``.
+    Column("pending_cancellation", Boolean, default=False),
     Column("cancel_reason", Text),
     Column("cancel_feedback", Text),
     Column("started_at", DateTime(timezone=True)),

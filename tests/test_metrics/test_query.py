@@ -98,7 +98,7 @@ class TestCubeIntrospection:
         assert "pricing_model" in dims
         assert "usage_type" in dims
         assert "collection_method" in dims
-        assert "cancel_at_period_end" in dims
+        assert "pending_cancellation" in dims
 
     def test_mrr_snapshot_measures(self):
         measures = MRRSnapshotCube.available_measures()
@@ -316,13 +316,13 @@ class TestMRRSnapshotCompilation:
         # collection_method is on subscription, no plan join needed
         assert "JOIN plan" not in sql
 
-    def test_cancel_at_period_end_dimension(self):
+    def test_pending_cancellation_dimension(self):
         m = MRRSnapshotCube
-        q = m.measures.mrr + m.dimension("cancel_at_period_end")
+        q = m.measures.mrr + m.dimension("pending_cancellation")
         stmt, params = q.compile(m)
         sql = _normalize(_sql(stmt))
 
-        assert "sub.cancel_at_period_end" in sql
+        assert "sub.pending_cancellation" in sql
 
     def test_between_filter(self):
         m = MRRSnapshotCube

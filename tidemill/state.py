@@ -14,6 +14,16 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import text
 
+from tidemill.connectors.base import (
+    CANONICAL_INTERVALS,
+    CANONICAL_INVOICE_STATUSES,
+    CANONICAL_LINE_ITEM_KINDS,
+    CANONICAL_PAYMENT_METHOD_TYPES,
+    CANONICAL_PRICING_MODELS,
+    CANONICAL_SUBSCRIPTION_STATUSES,
+    CANONICAL_USAGE_TYPES,
+    validate_canonical,
+)
 from tidemill.fx import FxRateMissingError, normalize_currency, to_base_cents
 
 if TYPE_CHECKING:
@@ -223,12 +233,20 @@ async def _handle_plan(session: AsyncSession, event: Event) -> None:
                     "eid": p["external_id"],
                     "prod_eid": p.get("product_external_id", ""),
                     "name": p.get("name"),
-                    "interval": p["interval"],
+                    "interval": validate_canonical(
+                        p["interval"], CANONICAL_INTERVALS, "plan.interval"
+                    ),
                     "ic": p.get("interval_count") or 1,
                     "amount": p.get("amount_cents"),
                     "currency": normalize_currency(p.get("currency")),
-                    "pricing_model": p.get("pricing_model"),
-                    "usage": p.get("usage_type"),
+                    "pricing_model": validate_canonical(
+                        p.get("pricing_model"),
+                        CANONICAL_PRICING_MODELS,
+                        "plan.pricing_model",
+                    ),
+                    "usage": validate_canonical(
+                        p.get("usage_type"), CANONICAL_USAGE_TYPES, "plan.usage_type"
+                    ),
                     "trial": p.get("trial_period_days"),
                     "meta": json.dumps(p.get("metadata", {})),
                     "active": p.get("active", True),
@@ -358,7 +376,15 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
                     "eid": ext_id,
                     "cust_eid": p.get("customer_external_id", event.customer_id),
                     "plan_eid": p.get("plan_external_id", ""),
-                    "status": p.get("status", "active"),
+                    "status": validate_canonical(
+                        p.get("status", "active"),
+                        CANONICAL_SUBSCRIPTION_STATUSES,
+                        "subscription.status",
+                    ),
+                    # Connectors that source MRR server-side (Chargebee, Recurly)
+                    # populate ``mrr_cents`` directly; Stripe computes via
+                    # ``compute_mrr_cents`` in the connector. Either way the
+                    # state layer trusts the payload value verbatim.
                     "mrr": p.get("mrr_cents", 0),
                     "currency": normalize_currency(p.get("currency")),
                     "qty": p.get("quantity", 1),
@@ -414,7 +440,7 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
                 text(
                     "UPDATE subscription SET"
                     "  status = 'canceled',"
-                    "  cancel_at_period_end = TRUE,"
+                    "  pending_cancellation = TRUE,"
                     "  canceled_at = :canceled,"
                     "  cancel_reason = COALESCE(:reason, cancel_reason),"
                     "  cancel_feedback = COALESCE(:feedback, cancel_feedback),"
@@ -554,15 +580,25 @@ async def _resolve_line_kind(
     price_external_id: str | None,
     amount_cents: int,
 ) -> str | None:
-    """Decide the canonical ``kind`` for an invoice line at insert time.
+    """Pick the canonical ``kind`` for an invoice line at insert time.
 
-    Modern Stripe payloads carry only a price ID, not the full recurring
-    block — so the connector's classifier can't distinguish
-    ``subscription`` from ``usage`` and falls back to ``other``. We recover
-    the distinction here by joining the price ID against the ``plan``
-    table's ``usage_type``. Falls back to whatever the connector supplied
-    when we don't have a price ID or the plan hasn't been ingested yet.
+    The connector is authoritative whenever it can determine the kind from
+    its own payload (Chargebee, Recurly, modern Stripe with embedded price
+    objects) — we trust the connector value after validating it against
+    :data:`CANONICAL_LINE_ITEM_KINDS`.
+
+    The plan-table fallback exists only for older Stripe API versions
+    whose webhook lines carry just a price ID and no ``recurring`` block —
+    the connector can't classify those, returns ``other``, and we recover
+    the kind by joining the price ID against ``plan.usage_type``. It's a
+    no-op for other connectors (the price ID won't match a Stripe plan).
     """
+    # Trust the connector when it gave us a real canonical value.
+    validated = validate_canonical(connector_kind, CANONICAL_LINE_ITEM_KINDS, "line_item.kind")
+    if validated is not None and validated != "other":
+        return validated
+
+    # Stripe-specific fallback: recover kind from the plan table.
     if price_external_id:
         result = await session.execute(
             text(
@@ -577,11 +613,10 @@ async def _resolve_line_kind(
                 return "usage"
             if usage_type == "licensed":
                 return "subscription"
-    if connector_kind and connector_kind != "other":
-        return connector_kind
+
     if amount_cents < 0:
         return "discount"
-    return connector_kind or "other"
+    return validated or "other"
 
 
 async def _handle_invoice(session: AsyncSession, event: Event) -> None:
@@ -614,7 +649,9 @@ async def _handle_invoice(session: AsyncSession, event: Event) -> None:
                     "eid": p["external_id"],
                     "cust_eid": p.get("customer_external_id", event.customer_id),
                     "sub_eid": p.get("subscription_external_id", ""),
-                    "status": p.get("status"),
+                    "status": validate_canonical(
+                        p.get("status"), CANONICAL_INVOICE_STATUSES, "invoice.status"
+                    ),
                     "cur": invoice_currency,
                     "sub_cents": p.get("subtotal_cents", 0),
                     "tax": p.get("tax_cents", 0),
@@ -698,7 +735,11 @@ async def _handle_payment(session: AsyncSession, event: Event) -> None:
                     "cust_eid": p.get("customer_external_id", event.customer_id),
                     "amount": p.get("amount_cents", 0),
                     "cur": normalize_currency(p.get("currency")),
-                    "pmt": p.get("payment_method_type"),
+                    "pmt": validate_canonical(
+                        p.get("payment_method_type"),
+                        CANONICAL_PAYMENT_METHOD_TYPES,
+                        "payment.payment_method_type",
+                    ),
                     "now": event.occurred_at,
                 },
             )

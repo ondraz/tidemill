@@ -146,7 +146,7 @@ erDiagram
         text currency "ISO 4217"
         int quantity
         text collection_method "charge_automatically | send_invoice"
-        boolean cancel_at_period_end "pending cancellation flag"
+        boolean pending_cancellation "scheduled to cancel at period end"
         text cancel_reason "cancellation_details.reason from Stripe"
         text cancel_feedback "cancellation_details.feedback from Stripe"
         timestamptz started_at

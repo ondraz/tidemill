@@ -7,9 +7,41 @@ from typing import TYPE_CHECKING, Any, cast
 
 import stripe
 
-from tidemill.connectors.base import WebhookConnector
+from tidemill.connectors.base import WebhookConnector, compute_mrr_cents
 from tidemill.connectors.registry import register
 from tidemill.events import Event, make_event_id
+
+# Stripe ``payment_method_types`` → :data:`CANONICAL_PAYMENT_METHOD_TYPES`.
+# Anything not in this map is normalized to ``"other"`` at translate time so
+# the schema never stores raw Stripe tokens. Add entries as new methods are
+# adopted; missing entries don't dead-letter, they degrade to "other".
+_STRIPE_PAYMENT_METHOD_MAP: dict[str, str] = {
+    "card": "card",
+    "card_present": "card",
+    "klarna": "card",
+    "afterpay_clearpay": "card",
+    "affirm": "card",
+    "sepa_debit": "direct_debit",
+    "bacs_debit": "direct_debit",
+    "becs_debit": "direct_debit",
+    "acss_debit": "direct_debit",
+    "ach_debit": "direct_debit",
+    "us_bank_account": "bank_transfer",
+    "customer_balance": "bank_transfer",
+    "paypal": "paypal",
+    "link": "wallet",
+    "wechat_pay": "wallet",
+    "alipay": "wallet",
+    "cashapp": "wallet",
+}
+
+
+def _canonical_payment_method(native: str | None) -> str | None:
+    """Map a Stripe ``payment_method_types[i]`` value to canonical."""
+    if native is None:
+        return None
+    return _STRIPE_PAYMENT_METHOD_MAP.get(native, "other")
+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable, Iterator
@@ -200,7 +232,13 @@ class StripeConnector(WebhookConnector):
 
     @staticmethod
     def _compute_mrr(subscription: dict[str, Any]) -> int:
-        """Compute monthly MRR in cents from a Stripe subscription object."""
+        """Compute monthly MRR in cents from a Stripe subscription object.
+
+        Stripe supports multi-item subscriptions, so we iterate each item
+        and delegate the per-item interval-normalization to the canonical
+        utility. Metered items contribute via the trailing-usage path, not
+        subscription MRR, so they're skipped here.
+        """
         total = 0
         items = subscription.get("items", {})
         items_data = items.get("data", []) if isinstance(items, dict) else []
@@ -209,21 +247,12 @@ class StripeConnector(WebhookConnector):
             recurring = price.get("recurring") or {}
             if recurring.get("usage_type") == "metered":
                 continue
-            qty = item.get("quantity", 1) or 1
-            unit_amount = price.get("unit_amount", 0) or 0
-            amount = unit_amount * qty
-            interval = recurring.get("interval", "month")
-            interval_count = recurring.get("interval_count", 1) or 1
-
-            match interval:
-                case "month":
-                    total += amount // interval_count
-                case "year":
-                    total += amount // (12 * interval_count)
-                case "week":
-                    total += int(amount * 52 / (12 * interval_count))
-                case "day":
-                    total += int(amount * 365 / (12 * interval_count))
+            total += compute_mrr_cents(
+                amount_cents=price.get("unit_amount", 0) or 0,
+                interval=recurring.get("interval", "month"),
+                interval_count=recurring.get("interval_count", 1) or 1,
+                quantity=item.get("quantity", 1) or 1,
+            )
         return total
 
     # ── event factory ────────────────────────────────────────────────────
@@ -872,7 +901,9 @@ class StripeConnector(WebhookConnector):
                     "customer_external_id": pi.get("customer"),
                     "amount_cents": pi.get("amount", 0),
                     "currency": pi.get("currency"),
-                    "payment_method_type": (pi.get("payment_method_types") or [None])[0],
+                    "payment_method_type": _canonical_payment_method(
+                        (pi.get("payment_method_types") or [None])[0]
+                    ),
                 },
             )
         ]
@@ -1135,7 +1166,7 @@ class StripeConnector(WebhookConnector):
                         "customer_external_id": pi.customer,
                         "amount_cents": pi.amount or 0,
                         "currency": pi.currency,
-                        "payment_method_type": (
+                        "payment_method_type": _canonical_payment_method(
                             pi.payment_method_types[0] if pi.payment_method_types else None
                         ),
                     },

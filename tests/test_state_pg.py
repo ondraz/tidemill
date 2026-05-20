@@ -221,7 +221,7 @@ class TestSubscriptionLifecyclePg:
         row = (
             await pg_db.execute(
                 text(
-                    "SELECT status, cancel_at_period_end"
+                    "SELECT status, pending_cancellation"
                     " FROM subscription WHERE external_id = 'sub_1'"
                 )
             )

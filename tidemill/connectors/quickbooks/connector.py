@@ -29,7 +29,6 @@ from tidemill.events import Event, make_event_id
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
-    from datetime import date
 
     from fastapi import APIRouter
 
@@ -145,29 +144,6 @@ class QuickBooksConnector(ExpenseConnector):
             if dept_ref.get("name"):
                 dims["department_name"] = dept_ref["name"]
         return dims
-
-    # ── billing-side stubs (ExpenseConnector ABC) ─────────────────────────
-    # QBO is an *expense* source — vendors, bills, purchases, payments. The
-    # billing-side abstract methods on ``ExpenseConnector`` exist for
-    # connectors that also expose subscription/MRR data via direct query
-    # (none today). For QBO we return empty results: callers querying
-    # subscription-side data through this connector get nothing rather
-    # than an exception, matching the "no subscription data here" intent.
-
-    async def get_active_subscriptions(self, at: date | None = None) -> list[dict[str, Any]]:
-        return []
-
-    async def get_mrr_cents(self, at: date | None = None) -> int:
-        return 0
-
-    async def get_subscription_changes(self, start: date, end: date) -> list[dict[str, Any]]:
-        return []
-
-    async def get_customers(self, at: date | None = None) -> list[dict[str, Any]]:
-        return []
-
-    async def get_invoices(self, start: date, end: date) -> list[dict[str, Any]]:
-        return []
 
     # ── translate / verify_signature ─────────────────────────────────────
 

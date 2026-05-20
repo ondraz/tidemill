@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import text
 
+from tidemill.connectors.base import CanonicalEnumViolation
 from tidemill.fx import FxRateMissingError
 
 if TYPE_CHECKING:
@@ -31,6 +32,8 @@ def classify_error(exc: BaseException) -> str:
     """
     if isinstance(exc, FxRateMissingError):
         return "fx_rate_missing"
+    if isinstance(exc, CanonicalEnumViolation):
+        return "canonical_enum_violation"
     return "unknown"
 
 
