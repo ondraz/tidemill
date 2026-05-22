@@ -154,6 +154,32 @@ def _classify_line_kind(li: dict[str, Any]) -> str:
     return "other"
 
 
+def _line_coupon_id(li: dict[str, Any]) -> str | None:
+    """Extract a coupon ID from a Stripe invoice line's discount, if any.
+
+    Stripe wraps the coupon under ``discount_amounts[i].discount.coupon``
+    (modern) or ``discounts[i].coupon`` (older). The state layer resolves
+    the canonical coupon row via ``(source_id, external_id)``.
+    """
+    discounts = li.get("discount_amounts") or []
+    for d in discounts:
+        disc = d.get("discount") if isinstance(d, dict) else None
+        coupon = disc.get("coupon") if isinstance(disc, dict) else None
+        if isinstance(coupon, dict) and coupon.get("id"):
+            return str(coupon["id"])
+        if isinstance(coupon, str):
+            return coupon
+    legacy = li.get("discounts") or []
+    for d in legacy:
+        if isinstance(d, dict):
+            coupon = d.get("coupon")
+            if isinstance(coupon, dict) and coupon.get("id"):
+                return str(coupon["id"])
+            if isinstance(coupon, str):
+                return coupon
+    return None
+
+
 def _serialize_line(li: dict[str, Any]) -> dict[str, Any]:
     """Project a Stripe invoice line into the connector-internal payload shape."""
     return {
@@ -167,7 +193,44 @@ def _serialize_line(li: dict[str, Any]) -> dict[str, Any]:
         "period_end": _ts((li.get("period") or {}).get("end")),
         "subscription_external_id": _line_subscription_id(li),
         "price_external_id": _line_price_id(li),
+        "coupon_external_id": _line_coupon_id(li),
     }
+
+
+def _serialize_subscription_item(item: dict[str, Any]) -> dict[str, Any]:
+    """Project a Stripe subscription item into the connector-internal payload.
+
+    Metered items contribute to MRR via the trailing-usage path, not
+    subscription MRR, so their ``mrr_cents`` here is 0 — they still get a
+    row so dashboards can break down "metered vs. licensed item count" by
+    plan, but they're correctly excluded from subscription MRR sums.
+    """
+    price = item.get("price") or {}
+    recurring = price.get("recurring") or {}
+    qty = item.get("quantity", 1) or 1
+    if recurring.get("usage_type") == "metered":
+        item_mrr = 0
+    else:
+        item_mrr = compute_mrr_cents(
+            price.get("unit_amount", 0) or 0,
+            recurring.get("interval", "month"),
+            recurring.get("interval_count") or 1,
+            qty,
+        )
+    return {
+        "external_id": str(item.get("id", "")),
+        "plan_external_id": price.get("id") if isinstance(price, dict) else None,
+        "quantity": qty,
+        "mrr_cents": item_mrr,
+        "currency": price.get("currency") if isinstance(price, dict) else None,
+        "metadata": item.get("metadata") or {},
+    }
+
+
+def _serialize_subscription_items(sub: dict[str, Any]) -> list[dict[str, Any]]:
+    items = sub.get("items", {})
+    data = items.get("data", []) if isinstance(items, dict) else []
+    return [_serialize_subscription_item(it) for it in data]
 
 
 @register("stripe")
@@ -206,6 +269,12 @@ class StripeConnector(WebhookConnector):
         "payment_intent.succeeded": "_translate_payment_succeeded",
         "payment_intent.payment_failed": "_translate_payment_failed",
         "charge.refunded": "_translate_charge_refunded",
+        "coupon.created": "_translate_coupon_created",
+        "coupon.updated": "_translate_coupon_updated",
+        "coupon.deleted": "_translate_coupon_deleted",
+        "credit_note.created": "_translate_credit_note_created",
+        "credit_note.updated": "_translate_credit_note_updated",
+        "credit_note.voided": "_translate_credit_note_voided",
     }
 
     def translate(self, webhook_payload: dict[str, Any]) -> list[Event]:
@@ -553,6 +622,7 @@ class StripeConnector(WebhookConnector):
                     "trial_end": _ts(sub.get("trial_end")),
                     "current_period_start": _ts(cps),
                     "current_period_end": _ts(cpe),
+                    "items": _serialize_subscription_items(sub),
                 },
             )
         )
@@ -764,6 +834,7 @@ class StripeConnector(WebhookConnector):
                             "prev_quantity": self._total_quantity(prev_sub),
                             "new_quantity": self._total_quantity(sub),
                             "currency": sub.get("currency"),
+                            "items": _serialize_subscription_items(sub),
                         },
                     )
                 )
@@ -945,6 +1016,123 @@ class StripeConnector(WebhookConnector):
             )
         ]
 
+    # ── coupon handlers ──────────────────────────────────────────────────
+    # Stripe's ``coupon.duration`` already matches canonical
+    # (``forever``/``once``/``repeating``), so no translation is needed.
+    # The ``name`` field is the display name; Stripe doesn't have a
+    # separate ``code`` (the user-facing code lives on a ``promotion_code``
+    # object). We store the coupon ID under both ``external_id`` and
+    # ``code`` for now — promotion-code ingestion is a future expansion.
+
+    def _translate_coupon_created(self, wh: dict[str, Any]) -> list[Event]:
+        return [self._coupon_event("coupon.created", wh, use_event_time=False)]
+
+    def _translate_coupon_updated(self, wh: dict[str, Any]) -> list[Event]:
+        return [self._coupon_event("coupon.updated", wh, use_event_time=True)]
+
+    def _translate_coupon_deleted(self, wh: dict[str, Any]) -> list[Event]:
+        c = wh["data"]["object"]
+        return [
+            self._make_event(
+                "coupon.deleted",
+                customer_id="",
+                external_id=c["id"],
+                occurred_at=self._event_occurred(wh),
+                payload={"external_id": c["id"]},
+            )
+        ]
+
+    def _coupon_event(self, event_type: str, wh: dict[str, Any], *, use_event_time: bool) -> Event:
+        c = wh["data"]["object"]
+        occurred = self._event_occurred(wh) if use_event_time else self._occurred(c)
+        return self._make_event(
+            event_type,
+            customer_id="",
+            external_id=c["id"],
+            occurred_at=occurred,
+            payload=self._coupon_payload(c),
+        )
+
+    @staticmethod
+    def _coupon_payload(c: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "external_id": c["id"],
+            "code": c["id"],
+            "name": c.get("name"),
+            "percent_off": c.get("percent_off"),
+            "amount_off_cents": c.get("amount_off"),
+            "currency": c.get("currency"),
+            "duration": c.get("duration"),
+            "duration_in_months": c.get("duration_in_months"),
+            "max_redemptions": c.get("max_redemptions"),
+            "times_redeemed": c.get("times_redeemed") or 0,
+            "valid": bool(c.get("valid", True)),
+            "redeem_by": _ts(c.get("redeem_by")),
+            "metadata": c.get("metadata") or {},
+        }
+
+    # ── credit_note handlers ─────────────────────────────────────────────
+    # Stripe ``credit_note.status`` is ``issued``/``void`` and
+    # ``credit_note.reason`` is one of the four canonical reasons — both
+    # already match canonical, so no translation is needed beyond
+    # validation in the state layer.
+
+    def _translate_credit_note_created(self, wh: dict[str, Any]) -> list[Event]:
+        cn = wh["data"]["object"]
+        return [
+            self._make_event(
+                "credit_note.created",
+                customer_id=cn.get("customer", ""),
+                external_id=cn["id"],
+                occurred_at=self._occurred(cn),
+                payload=self._credit_note_payload(cn),
+            )
+        ]
+
+    def _translate_credit_note_updated(self, wh: dict[str, Any]) -> list[Event]:
+        cn = wh["data"]["object"]
+        return [
+            self._make_event(
+                "credit_note.created",
+                customer_id=cn.get("customer", ""),
+                external_id=cn["id"],
+                occurred_at=self._event_occurred(wh),
+                payload=self._credit_note_payload(cn),
+            )
+        ]
+
+    def _translate_credit_note_voided(self, wh: dict[str, Any]) -> list[Event]:
+        cn = wh["data"]["object"]
+        return [
+            self._make_event(
+                "credit_note.voided",
+                customer_id=cn.get("customer", ""),
+                external_id=cn["id"],
+                occurred_at=self._event_occurred(wh),
+                payload={
+                    "external_id": cn["id"],
+                    "voided_at": _ts(cn.get("voided_at")) or _ts(cn.get("created")),
+                },
+            )
+        ]
+
+    @staticmethod
+    def _credit_note_payload(cn: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "external_id": cn["id"],
+            "invoice_external_id": cn.get("invoice"),
+            "customer_external_id": cn.get("customer"),
+            "status": cn.get("status", "issued"),
+            "reason": cn.get("reason"),
+            "currency": cn.get("currency"),
+            "subtotal_cents": cn.get("subtotal", 0) or 0,
+            "tax_cents": cn.get("tax", 0) or 0,
+            "total_cents": cn.get("total", 0) or 0,
+            "memo": cn.get("memo"),
+            "issued_at": _ts(cn.get("created")),
+            "metadata": cn.get("metadata") or {},
+        }
+
     # ── backfill ─────────────────────────────────────────────────────────
 
     async def backfill(self, since: datetime | None = None) -> AsyncIterator[Event]:
@@ -1063,6 +1251,7 @@ class StripeConnector(WebhookConnector):
                         "trial_end": _ts(sub_dict.get("trial_end")),
                         "current_period_start": _ts(cps),
                         "current_period_end": _ts(cpe),
+                        "items": _serialize_subscription_items(sub_dict),
                     },
                 )
                 if sub.status == "active":

@@ -187,7 +187,7 @@ erDiagram
         uuid invoice_id FK
         uuid subscription_id FK
         text type "subscription | invoiceitem (Stripe-level type)"
-        text kind "subscription | usage | discount | other (Tidemill classification)"
+        text kind "canonical line-item kind"
         text description
         bigint amount_cents
         bigint amount_base_cents
@@ -195,6 +195,61 @@ erDiagram
         decimal quantity
         timestamptz period_start
         timestamptz period_end
+        uuid coupon_id FK "nullable; set when kind='discount'"
+        uuid credit_note_id FK "nullable; set when kind='credit'"
+    }
+
+    subscription_item {
+        uuid id PK
+        uuid source_id FK
+        text external_id
+        uuid subscription_id FK
+        uuid plan_id FK
+        int quantity
+        bigint mrr_cents "0 for metered items"
+        bigint mrr_base_cents
+        text currency
+        timestamptz created_at
+    }
+
+    coupon {
+        uuid id PK
+        uuid source_id FK
+        text external_id
+        text code
+        text name
+        decimal percent_off
+        bigint amount_off_cents
+        bigint amount_off_base_cents
+        text currency
+        text duration "forever | once | repeating"
+        int duration_in_months
+        int max_redemptions
+        int times_redeemed
+        boolean valid
+        timestamptz redeem_by
+        timestamptz created_at
+    }
+
+    credit_note {
+        uuid id PK
+        uuid source_id FK
+        text external_id
+        uuid invoice_id FK
+        uuid customer_id FK
+        text status "issued | void"
+        text reason "duplicate | fraudulent | order_change | product_unsatisfactory | other"
+        text currency
+        bigint subtotal_cents
+        bigint subtotal_base_cents
+        bigint tax_cents
+        bigint tax_base_cents
+        bigint total_cents
+        bigint total_base_cents
+        text memo
+        timestamptz issued_at
+        timestamptz voided_at
+        timestamptz created_at
     }
 
     payment {

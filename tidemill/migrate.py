@@ -32,6 +32,59 @@ async def migrate_schema(conn: AsyncConnection) -> None:
         return
 
     await _rename_cancel_at_period_end(conn)
+    # Data-backfill steps run *after* ``create_all`` adds the new tables.
+
+
+async def backfill_after_create_all(conn: AsyncConnection) -> None:
+    """Data backfills that require the new tables to already exist.
+
+    Called after :func:`migrate_schema` and ``create_all`` so the new
+    tables ``create_all`` provisioned (subscription_item, coupon,
+    credit_note) are guaranteed to be present. Idempotent.
+    """
+    if conn.dialect.name != "postgresql":
+        return
+
+    await _backfill_subscription_items(conn)
+
+
+async def _backfill_subscription_items(conn: AsyncConnection) -> None:
+    """One placeholder ``subscription_item`` row per existing subscription.
+
+    Old subscriptions stored a single plan + total MRR on the subscription
+    row. The new ``subscription_item`` table breaks that out, but we don't
+    have the per-item native IDs for historical rows — so we synthesize
+    one placeholder item per subscription, using ``external_id ||
+    '#item-0'`` as a clearly-synthetic key. As soon as the next webhook
+    arrives for the subscription, the connector emits the real items and
+    ``_replace_subscription_items`` (state.py) deletes the placeholder
+    and inserts the proper rows.
+
+    Idempotent: the LEFT JOIN guards against re-creating items for
+    subscriptions that already have any item row.
+    """
+    await conn.execute(
+        text(
+            "INSERT INTO subscription_item"
+            " (id, source_id, external_id, subscription_id, plan_id,"
+            "  quantity, mrr_cents, mrr_base_cents, currency, created_at)"
+            " SELECT"
+            "  gen_random_uuid()::text,"
+            "  s.source_id,"
+            "  s.external_id || '#item-0',"
+            "  s.id,"
+            "  s.plan_id,"
+            "  s.quantity,"
+            "  s.mrr_cents,"
+            "  s.mrr_base_cents,"
+            "  s.currency,"
+            "  s.created_at"
+            " FROM subscription s"
+            " LEFT JOIN subscription_item si ON si.subscription_id = s.id"
+            " WHERE si.id IS NULL"
+            " ON CONFLICT ON CONSTRAINT uq_subscription_item_source DO NOTHING"
+        )
+    )
 
 
 async def _rename_cancel_at_period_end(conn: AsyncConnection) -> None:

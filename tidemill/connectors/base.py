@@ -62,6 +62,15 @@ CANONICAL_PAYMENT_METHOD_TYPES = (
     "paypal",
     "other",
 )
+CANONICAL_COUPON_DURATIONS = ("forever", "once", "repeating")
+CANONICAL_CREDIT_NOTE_STATUSES = ("issued", "void")
+CANONICAL_CREDIT_NOTE_REASONS = (
+    "duplicate",
+    "fraudulent",
+    "order_change",
+    "product_unsatisfactory",
+    "other",
+)
 
 # ── Canonical enums (expense side) ───────────────────────────────────────
 # Pre-existing; preserved verbatim for the QuickBooks connector contract.

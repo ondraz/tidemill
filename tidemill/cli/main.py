@@ -155,13 +155,14 @@ def init_db() -> None:
     async def _init() -> None:
         from sqlalchemy.ext.asyncio import create_async_engine
 
-        from tidemill.migrate import migrate_schema
+        from tidemill.migrate import backfill_after_create_all, migrate_schema
         from tidemill.models import metadata
 
         engine = create_async_engine(_db_url())
         async with engine.begin() as conn:
             await migrate_schema(conn)
             await conn.run_sync(metadata.create_all)
+            await backfill_after_create_all(conn)
         await engine.dispose()
         typer.echo("Tables created.")
 

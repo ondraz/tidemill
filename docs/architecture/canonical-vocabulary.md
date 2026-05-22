@@ -132,6 +132,39 @@ canonical values plus `other`.
 | `paypal`         | `paypal`                                                          | `paypal_express_checkout`                 | `paypal`                            |
 | `other`          | anything else                                                     | anything else                             | anything else                       |
 
+## Coupon duration
+
+Stored in `coupon.duration`. Tells dashboards whether a discount applies
+once, forever, or for a bounded number of months.
+
+| Canonical    | Stripe `coupon.duration` | Chargebee `coupon.duration_type` | Recurly `coupon.duration` |
+|--------------|--------------------------|-----------------------------------|---------------------------|
+| `forever`    | `forever`                | `forever`                         | `forever`                 |
+| `once`       | `once`                   | `one_time`                        | `single_use`              |
+| `repeating`  | `repeating` (with `duration_in_months`) | `limited_period` (with `period_unit + period`) | `temporal` (with `temporal_amount + temporal_unit`) |
+
+## Credit note status
+
+Stored in `credit_note.status`.
+
+| Canonical | Stripe `credit_note.status` | Chargebee `credit_note.status` | Recurly `credit_payment.action` |
+|-----------|------------------------------|---------------------------------|---------------------------------|
+| `issued`  | `issued`                     | `refunded`, `refund_due`, `adjusted` | `issued` |
+| `void`    | `void`                       | `voided`                        | `voided`  |
+
+## Credit note reason
+
+Stored in `credit_note.reason`. Matches Stripe's enum, with `other` as the
+catchall for providers that lack a structured reason.
+
+| Canonical               | Stripe `credit_note.reason`     | Chargebee `credit_note.reason_code`            |
+|-------------------------|----------------------------------|-------------------------------------------------|
+| `duplicate`             | `duplicate`                      | `duplicate`                                     |
+| `fraudulent`            | `fraudulent`                     | `fraudulent`                                    |
+| `order_change`          | `order_change`                   | `order_change`, `cancellation`                  |
+| `product_unsatisfactory`| `product_unsatisfactory`         | `product_unsatisfactory`, `service_unsatisfactory` |
+| `other`                 | (n/a — Stripe always has one)    | `other`, `write_off`, `chargeback`              |
+
 ## Codified enums
 
 The canonical sets are mirrored in code as tuples in
@@ -152,6 +185,11 @@ CANONICAL_LINE_ITEM_KINDS = (
 CANONICAL_PAYMENT_STATUSES = ("pending", "succeeded", "failed", "refunded")
 CANONICAL_PAYMENT_METHOD_TYPES = (
     "card", "bank_transfer", "direct_debit", "wallet", "paypal", "other",
+)
+CANONICAL_COUPON_DURATIONS = ("forever", "once", "repeating")
+CANONICAL_CREDIT_NOTE_STATUSES = ("issued", "void")
+CANONICAL_CREDIT_NOTE_REASONS = (
+    "duplicate", "fraudulent", "order_change", "product_unsatisfactory", "other",
 )
 ```
 

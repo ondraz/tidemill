@@ -15,6 +15,9 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import text
 
 from tidemill.connectors.base import (
+    CANONICAL_COUPON_DURATIONS,
+    CANONICAL_CREDIT_NOTE_REASONS,
+    CANONICAL_CREDIT_NOTE_STATUSES,
     CANONICAL_INTERVALS,
     CANONICAL_INVOICE_STATUSES,
     CANONICAL_LINE_ITEM_KINDS,
@@ -343,6 +346,80 @@ def _parse_ts(val: Any) -> datetime | None:
     return datetime.fromisoformat(val)
 
 
+async def _replace_subscription_items(
+    session: AsyncSession,
+    *,
+    event: Event,
+    subscription_external_id: str,
+    items: list[dict[str, Any]],
+) -> None:
+    """Re-materialize the per-item breakdown for a subscription.
+
+    Mirrors the invoice-line approach (``_replace_invoice_line_items``):
+    Stripe and Chargebee 2.0 are the source of truth for the item set, so
+    we DELETE + INSERT on every subscription event rather than diff. Item
+    counts are small (typically 1–3) so the rewrite is cheap.
+
+    Empty ``items`` is legal — it clears the breakdown, which is what we
+    want when a connector emits a subscription event without item data
+    (older payloads, or non-itemized billing sources like Lago).
+    """
+    # Resolve the subscription's internal UUID via (source_id, external_id).
+    sub_row = await session.execute(
+        text("SELECT id FROM subscription WHERE source_id = :src AND external_id = :eid LIMIT 1"),
+        {"src": event.source_id, "eid": subscription_external_id},
+    )
+    row = sub_row.mappings().first()
+    if row is None:
+        return
+    sub_id = row["id"]
+    await session.execute(
+        text("DELETE FROM subscription_item WHERE subscription_id = :sid"),
+        {"sid": sub_id},
+    )
+    if not items:
+        return
+    fx_cache = _FxCache()
+    for it in items:
+        amount_cents = it.get("mrr_cents", 0) or 0
+        currency = normalize_currency(it.get("currency"))
+        amount_base = await _to_base(
+            session, amount_cents, currency, event.occurred_at, fx_cache=fx_cache
+        )
+        await session.execute(
+            text(
+                "INSERT INTO subscription_item"
+                " (id, source_id, external_id, subscription_id, plan_id,"
+                "  quantity, mrr_cents, mrr_base_cents, currency, metadata_, created_at)"
+                " VALUES (:id, :src, :eid, :sid,"
+                "  (SELECT id FROM plan WHERE source_id = :src"
+                "     AND external_id = :plan_eid LIMIT 1),"
+                "  :qty, :mrr, :mrrb, :cur, :meta, :now)"
+                " ON CONFLICT ON CONSTRAINT uq_subscription_item_source DO UPDATE SET"
+                "  subscription_id = EXCLUDED.subscription_id,"
+                "  plan_id = COALESCE(EXCLUDED.plan_id, subscription_item.plan_id),"
+                "  quantity = EXCLUDED.quantity,"
+                "  mrr_cents = EXCLUDED.mrr_cents,"
+                "  mrr_base_cents = EXCLUDED.mrr_base_cents,"
+                "  currency = EXCLUDED.currency,"
+                "  metadata_ = COALESCE(EXCLUDED.metadata_, subscription_item.metadata_)"
+            ),
+            {
+                "id": str(uuid.uuid4()),
+                "src": event.source_id,
+                "eid": it["external_id"],
+                "sid": sub_id,
+                "plan_eid": it.get("plan_external_id", ""),
+                "qty": it.get("quantity", 1),
+                "mrr": amount_cents,
+                "mrrb": amount_base,
+                "cur": currency,
+                "meta": json.dumps(it.get("metadata", {})),
+                "now": event.occurred_at,
+            },
+        )
+
+
 async def _handle_subscription(session: AsyncSession, event: Event) -> None:
     p = event.payload
     ext_id = p["external_id"]
@@ -396,6 +473,13 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
                     "now": event.occurred_at,
                 },
             )
+            if "items" in p:
+                await _replace_subscription_items(
+                    session,
+                    event=event,
+                    subscription_external_id=ext_id,
+                    items=p["items"] or [],
+                )
         case "subscription.activated" | "subscription.reactivated" | "subscription.resumed":
             await session.execute(
                 text(
@@ -435,6 +519,13 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
                     "now": event.occurred_at,
                 },
             )
+            if "items" in p:
+                await _replace_subscription_items(
+                    session,
+                    event=event,
+                    subscription_external_id=ext_id,
+                    items=p["items"] or [],
+                )
         case "subscription.canceled":
             await session.execute(
                 text(
@@ -548,11 +639,15 @@ async def _replace_invoice_line_items(
                 "INSERT INTO invoice_line_item"
                 " (id, invoice_id, subscription_id, type, kind, description,"
                 "  amount_cents, amount_base_cents, currency, quantity,"
-                "  period_start, period_end)"
+                "  period_start, period_end, coupon_id, credit_note_id)"
                 " VALUES (:id, :iid,"
                 "  (SELECT id FROM subscription WHERE source_id = :src"
                 "     AND external_id = :sub_eid LIMIT 1),"
-                "  :type, :kind, :desc, :amt, :amtb, :cur, :qty, :ps, :pe)"
+                "  :type, :kind, :desc, :amt, :amtb, :cur, :qty, :ps, :pe,"
+                "  (SELECT id FROM coupon WHERE source_id = :src"
+                "     AND external_id = :coupon_eid LIMIT 1),"
+                "  (SELECT id FROM credit_note WHERE source_id = :src"
+                "     AND external_id = :cnote_eid LIMIT 1))"
             ),
             {
                 "id": str(uuid.uuid4()),
@@ -568,6 +663,8 @@ async def _replace_invoice_line_items(
                 "qty": li.get("quantity"),
                 "ps": _parse_ts(li.get("period_start")),
                 "pe": _parse_ts(li.get("period_end")),
+                "coupon_eid": li.get("coupon_external_id") or "",
+                "cnote_eid": li.get("credit_note_external_id") or "",
             },
         )
 
@@ -787,6 +884,170 @@ async def _handle_payment(session: AsyncSession, event: Event) -> None:
                     "src": event.source_id,
                     "eid": p["external_id"],
                     "refunded": _parse_ts(p.get("refunded_at")) or event.occurred_at,
+                },
+            )
+
+
+# ── coupon ───────────────────────────────────────────────────────────────
+
+
+async def _handle_coupon(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+    match event.type:
+        case "coupon.created" | "coupon.updated":
+            currency = normalize_currency(p.get("currency"))
+            amount_off_cents = p.get("amount_off_cents")
+            amount_off_base = (
+                await _to_base(session, amount_off_cents, currency, event.occurred_at)
+                if amount_off_cents
+                else 0
+            )
+            await session.execute(
+                text(
+                    "INSERT INTO coupon"
+                    " (id, source_id, external_id, code, name, percent_off,"
+                    "  amount_off_cents, amount_off_base_cents, currency,"
+                    "  duration, duration_in_months, max_redemptions,"
+                    "  times_redeemed, valid, redeem_by, metadata_, created_at)"
+                    " VALUES (:id, :src, :eid, :code, :name, :pct,"
+                    "  :amt, :amtb, :cur, :dur, :dim, :maxr, :tr, :valid,"
+                    "  :rb, :meta, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_coupon_source DO UPDATE SET"
+                    "  code = COALESCE(EXCLUDED.code, coupon.code),"
+                    "  name = COALESCE(EXCLUDED.name, coupon.name),"
+                    "  percent_off = COALESCE(EXCLUDED.percent_off, coupon.percent_off),"
+                    "  amount_off_cents = COALESCE("
+                    "    EXCLUDED.amount_off_cents, coupon.amount_off_cents),"
+                    "  amount_off_base_cents = COALESCE("
+                    "    EXCLUDED.amount_off_base_cents, coupon.amount_off_base_cents),"
+                    "  currency = COALESCE(EXCLUDED.currency, coupon.currency),"
+                    "  duration = COALESCE(EXCLUDED.duration, coupon.duration),"
+                    "  duration_in_months = COALESCE("
+                    "    EXCLUDED.duration_in_months, coupon.duration_in_months),"
+                    "  max_redemptions = COALESCE("
+                    "    EXCLUDED.max_redemptions, coupon.max_redemptions),"
+                    "  times_redeemed = EXCLUDED.times_redeemed,"
+                    "  valid = EXCLUDED.valid,"
+                    "  redeem_by = COALESCE(EXCLUDED.redeem_by, coupon.redeem_by),"
+                    "  metadata_ = COALESCE(EXCLUDED.metadata_, coupon.metadata_)"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "code": p.get("code"),
+                    "name": p.get("name"),
+                    "pct": p.get("percent_off"),
+                    "amt": amount_off_cents,
+                    "amtb": amount_off_base,
+                    "cur": currency,
+                    "dur": validate_canonical(
+                        p.get("duration"), CANONICAL_COUPON_DURATIONS, "coupon.duration"
+                    ),
+                    "dim": p.get("duration_in_months"),
+                    "maxr": p.get("max_redemptions"),
+                    "tr": p.get("times_redeemed") or 0,
+                    "valid": p.get("valid", True),
+                    "rb": _parse_ts(p.get("redeem_by")),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "now": event.occurred_at,
+                },
+            )
+        case "coupon.deleted":
+            # Mark invalid rather than DELETE — invoice_line_item rows may FK
+            # to this coupon for historical discount attribution.
+            await session.execute(
+                text(
+                    "UPDATE coupon SET valid = FALSE WHERE source_id = :src AND external_id = :eid"
+                ),
+                {"src": event.source_id, "eid": p["external_id"]},
+            )
+
+
+# ── credit_note ──────────────────────────────────────────────────────────
+
+
+async def _handle_credit_note(session: AsyncSession, event: Event) -> None:
+    p = event.payload
+    match event.type:
+        case "credit_note.created":
+            currency = normalize_currency(p.get("currency"))
+            issued_at = _parse_ts(p.get("issued_at")) or event.occurred_at
+            sub = p.get("subtotal_cents", 0)
+            tax = p.get("tax_cents", 0)
+            total = p.get("total_cents", 0)
+            fx_cache = _FxCache()
+            sub_base = await _to_base(session, sub, currency, issued_at, fx_cache=fx_cache)
+            tax_base = await _to_base(session, tax, currency, issued_at, fx_cache=fx_cache)
+            total_base = await _to_base(session, total, currency, issued_at, fx_cache=fx_cache)
+            await session.execute(
+                text(
+                    "INSERT INTO credit_note"
+                    " (id, source_id, external_id, invoice_id, customer_id,"
+                    "  status, reason, currency,"
+                    "  subtotal_cents, subtotal_base_cents,"
+                    "  tax_cents, tax_base_cents,"
+                    "  total_cents, total_base_cents,"
+                    "  memo, metadata_, issued_at, created_at)"
+                    " VALUES (:id, :src, :eid,"
+                    "  (SELECT id FROM invoice WHERE source_id = :src"
+                    "     AND external_id = :inv_eid LIMIT 1),"
+                    "  (SELECT id FROM customer WHERE source_id = :src"
+                    "     AND external_id = :cust_eid LIMIT 1),"
+                    "  :status, :reason, :cur,"
+                    "  :sub, :subb, :tax, :taxb, :total, :totalb,"
+                    "  :memo, :meta, :issued, :now)"
+                    " ON CONFLICT ON CONSTRAINT uq_credit_note_source DO UPDATE SET"
+                    "  status = EXCLUDED.status,"
+                    "  reason = COALESCE(EXCLUDED.reason, credit_note.reason),"
+                    "  subtotal_cents = EXCLUDED.subtotal_cents,"
+                    "  subtotal_base_cents = EXCLUDED.subtotal_base_cents,"
+                    "  tax_cents = EXCLUDED.tax_cents,"
+                    "  tax_base_cents = EXCLUDED.tax_base_cents,"
+                    "  total_cents = EXCLUDED.total_cents,"
+                    "  total_base_cents = EXCLUDED.total_base_cents,"
+                    "  memo = COALESCE(EXCLUDED.memo, credit_note.memo),"
+                    "  metadata_ = COALESCE(EXCLUDED.metadata_, credit_note.metadata_)"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "inv_eid": p.get("invoice_external_id", ""),
+                    "cust_eid": p.get("customer_external_id", event.customer_id),
+                    "status": validate_canonical(
+                        p.get("status", "issued"),
+                        CANONICAL_CREDIT_NOTE_STATUSES,
+                        "credit_note.status",
+                    ),
+                    "reason": validate_canonical(
+                        p.get("reason"),
+                        CANONICAL_CREDIT_NOTE_REASONS,
+                        "credit_note.reason",
+                    ),
+                    "cur": currency,
+                    "sub": sub,
+                    "subb": sub_base,
+                    "tax": tax,
+                    "taxb": tax_base,
+                    "total": total,
+                    "totalb": total_base,
+                    "memo": p.get("memo"),
+                    "meta": json.dumps(p.get("metadata", {})),
+                    "issued": issued_at,
+                    "now": event.occurred_at,
+                },
+            )
+        case "credit_note.voided":
+            await session.execute(
+                text(
+                    "UPDATE credit_note SET status = 'void', voided_at = :voided"
+                    " WHERE source_id = :src AND external_id = :eid"
+                ),
+                {
+                    "src": event.source_id,
+                    "eid": p["external_id"],
+                    "voided": _parse_ts(p.get("voided_at")) or event.occurred_at,
                 },
             )
 
@@ -1228,6 +1489,8 @@ _HANDLERS: dict[str, Any] = {
     "subscription": _handle_subscription,
     "invoice": _handle_invoice,
     "payment": _handle_payment,
+    "coupon": _handle_coupon,
+    "credit_note": _handle_credit_note,
     "vendor": _handle_vendor,
     "account": _handle_account,
     "bill": _handle_bill,

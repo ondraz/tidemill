@@ -173,8 +173,8 @@ invoice_line_item = Table(
     Column("invoice_id", Text, ForeignKey("invoice.id"), nullable=False),
     Column("subscription_id", Text, ForeignKey("subscription.id")),
     Column("type", Text),
-    # Tidemill classification: 'subscription' | 'usage' | 'discount' | 'other'.
-    # Drives the trailing-3m usage component of MRR (see metrics/mrr/usage.py).
+    # Canonical kind from CANONICAL_LINE_ITEM_KINDS. Drives the trailing-3m
+    # usage component of MRR (see metrics/mrr/usage.py).
     Column("kind", Text),
     Column("description", Text),
     Column("amount_cents", BigInteger),
@@ -183,6 +183,12 @@ invoice_line_item = Table(
     Column("quantity", Numeric),
     Column("period_start", DateTime(timezone=True)),
     Column("period_end", DateTime(timezone=True)),
+    # Set when this line redeems a coupon (kind='discount') or applies a
+    # credit note (kind='credit'). Nullable so non-discount/non-credit
+    # lines have no FK to chase. Lets dashboards roll up "MRR lost to
+    # coupons" or "credit issued by reason" without scraping descriptions.
+    Column("coupon_id", Text, ForeignKey("coupon.id")),
+    Column("credit_note_id", Text, ForeignKey("credit_note.id")),
     Index("ix_invoice_line_item_invoice", "invoice_id"),
     Index("ix_invoice_line_item_kind_subscription", "kind", "subscription_id"),
 )
@@ -263,6 +269,90 @@ subscription = Table(
     Column("created_at", DateTime(timezone=True), nullable=False),
     Column("updated_at", DateTime(timezone=True)),
     UniqueConstraint("source_id", "external_id", name="uq_subscription_source"),
+)
+
+# Per-item breakdown of a subscription. Stripe and Chargebee 2.0 model
+# subscriptions as a *set* of items (each with its own plan + quantity),
+# and the totals on ``subscription`` are sums across items. Connectors
+# whose source is single-plan (Recurly, Lago, Kill Bill in same-database
+# mode) write a single row per subscription mirroring the totals.
+subscription_item = Table(
+    "subscription_item",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("subscription_id", Text, ForeignKey("subscription.id"), nullable=False),
+    Column("plan_id", Text, ForeignKey("plan.id")),
+    Column("quantity", Integer, default=1),
+    Column("mrr_cents", BigInteger, default=0),
+    Column("mrr_base_cents", BigInteger, default=0),
+    Column("currency", Text),
+    Column("metadata_", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint("source_id", "external_id", name="uq_subscription_item_source"),
+    Index("ix_subscription_item_sub", "subscription_id"),
+)
+
+# Promotional discount object — Stripe ``coupon``, Chargebee ``coupon``,
+# Recurly ``coupon``. ``invoice_line_item.coupon_id`` references this when
+# a line carries a discount redemption.
+coupon = Table(
+    "coupon",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("code", Text),
+    Column("name", Text),
+    Column("percent_off", Numeric),
+    Column("amount_off_cents", BigInteger),
+    Column("amount_off_base_cents", BigInteger),
+    Column("currency", Text),
+    # Canonical: 'forever' | 'once' | 'repeating'. See
+    # docs/architecture/canonical-vocabulary.md.
+    Column("duration", Text),
+    Column("duration_in_months", Integer),
+    Column("max_redemptions", Integer),
+    Column("times_redeemed", Integer, default=0),
+    Column("valid", Boolean, default=True),
+    Column("redeem_by", DateTime(timezone=True)),
+    Column("metadata_", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint("source_id", "external_id", name="uq_coupon_source"),
+)
+
+# Post-invoice credit — Stripe ``credit_note``, Chargebee ``credit_note``,
+# Recurly ``credit_payment``. Issued to refund or correct an invoice
+# without voiding it. ``invoice_line_item.credit_note_id`` references this
+# when a line is the credit application.
+credit_note = Table(
+    "credit_note",
+    metadata,
+    Column("id", Text, primary_key=True),
+    Column("source_id", Text, ForeignKey("connector_source.id"), nullable=False),
+    Column("external_id", Text, nullable=False),
+    Column("invoice_id", Text, ForeignKey("invoice.id")),
+    Column("customer_id", Text, ForeignKey("customer.id")),
+    # Canonical: 'issued' | 'void'.
+    Column("status", Text),
+    # Canonical: 'duplicate' | 'fraudulent' | 'order_change' |
+    # 'product_unsatisfactory' | 'other'.
+    Column("reason", Text),
+    Column("currency", Text),
+    Column("subtotal_cents", BigInteger),
+    Column("subtotal_base_cents", BigInteger),
+    Column("tax_cents", BigInteger),
+    Column("tax_base_cents", BigInteger),
+    Column("total_cents", BigInteger),
+    Column("total_base_cents", BigInteger),
+    Column("memo", Text),
+    Column("metadata_", Text),
+    Column("issued_at", DateTime(timezone=True)),
+    Column("voided_at", DateTime(timezone=True)),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint("source_id", "external_id", name="uq_credit_note_source"),
+    Index("ix_credit_note_invoice", "invoice_id"),
 )
 
 # ── Customer attributes & segments ──────────────────────────────────────

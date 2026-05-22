@@ -718,3 +718,312 @@ class TestPaymentHandler:
             await db.execute(text("SELECT status FROM payment WHERE external_id = 'pi_2'"))
         ).fetchone()
         assert row[0] == "succeeded"
+
+
+# ── subscription_item ────────────────────────────────────────────────────
+
+
+class TestSubscriptionItems:
+    async def _seed_refs(self, db):
+        await handle_state_event(
+            db, _evt("customer.created", {"external_id": "cus_ext_1", "name": "Acme"})
+        )
+        await db.execute(
+            text(
+                "INSERT INTO plan (id, source_id, external_id, name,"
+                ' "interval", interval_count, amount_cents, created_at)'
+                " VALUES ('plan_a', :src, 'plan_a', 'A', 'month', 1, 5000, :now)"
+            ),
+            {"src": SRC, "now": NOW},
+        )
+        await db.execute(
+            text(
+                "INSERT INTO plan (id, source_id, external_id, name,"
+                ' "interval", interval_count, amount_cents, created_at)'
+                " VALUES ('plan_b', :src, 'plan_b', 'B', 'month', 1, 2000, :now)"
+            ),
+            {"src": SRC, "now": NOW},
+        )
+        await db.commit()
+
+    @pytest.mark.asyncio
+    async def test_created_with_items_materializes_breakdown(self, db):
+        await self._seed_refs(db)
+        await handle_state_event(
+            db,
+            _evt(
+                "subscription.created",
+                {
+                    "external_id": "sub_1",
+                    "customer_external_id": "cus_ext_1",
+                    "plan_external_id": "plan_a",
+                    "status": "active",
+                    "mrr_cents": 7000,
+                    "currency": "USD",
+                    "quantity": 1,
+                    "items": [
+                        {
+                            "external_id": "si_1",
+                            "plan_external_id": "plan_a",
+                            "quantity": 1,
+                            "mrr_cents": 5000,
+                            "currency": "USD",
+                        },
+                        {
+                            "external_id": "si_2",
+                            "plan_external_id": "plan_b",
+                            "quantity": 1,
+                            "mrr_cents": 2000,
+                            "currency": "USD",
+                        },
+                    ],
+                },
+                external_id="sub_1",
+            ),
+        )
+        await db.commit()
+
+        rows = (
+            await db.execute(
+                text(
+                    "SELECT external_id, mrr_cents FROM subscription_item"
+                    " WHERE source_id = :src ORDER BY external_id"
+                ),
+                {"src": SRC},
+            )
+        ).fetchall()
+        assert [r[0] for r in rows] == ["si_1", "si_2"]
+        assert [r[1] for r in rows] == [5000, 2000]
+
+    @pytest.mark.asyncio
+    async def test_changed_replaces_item_set(self, db):
+        await self._seed_refs(db)
+        await handle_state_event(
+            db,
+            _evt(
+                "subscription.created",
+                {
+                    "external_id": "sub_1",
+                    "customer_external_id": "cus_ext_1",
+                    "plan_external_id": "plan_a",
+                    "status": "active",
+                    "mrr_cents": 5000,
+                    "currency": "USD",
+                    "quantity": 1,
+                    "items": [
+                        {
+                            "external_id": "si_1",
+                            "plan_external_id": "plan_a",
+                            "quantity": 1,
+                            "mrr_cents": 5000,
+                            "currency": "USD",
+                        },
+                    ],
+                },
+                external_id="sub_1",
+            ),
+        )
+        await db.commit()
+
+        # Plan change drops si_1 and adds si_3 — placeholder must disappear.
+        await handle_state_event(
+            db,
+            _evt(
+                "subscription.changed",
+                {
+                    "external_id": "sub_1",
+                    "new_plan_external_id": "plan_b",
+                    "new_mrr_cents": 2000,
+                    "new_quantity": 1,
+                    "items": [
+                        {
+                            "external_id": "si_3",
+                            "plan_external_id": "plan_b",
+                            "quantity": 1,
+                            "mrr_cents": 2000,
+                            "currency": "USD",
+                        },
+                    ],
+                },
+                external_id="sub_1",
+                occurred_at=LATER,
+            ),
+        )
+        await db.commit()
+
+        rows = (
+            await db.execute(
+                text(
+                    "SELECT external_id FROM subscription_item"
+                    " WHERE source_id = :src ORDER BY external_id"
+                ),
+                {"src": SRC},
+            )
+        ).fetchall()
+        assert [r[0] for r in rows] == ["si_3"]
+
+
+# ── coupon ───────────────────────────────────────────────────────────────
+
+
+class TestCouponHandler:
+    @pytest.mark.asyncio
+    async def test_create(self, db):
+        await handle_state_event(
+            db,
+            _evt(
+                "coupon.created",
+                {
+                    "external_id": "coup_1",
+                    "code": "WELCOME10",
+                    "name": "Welcome 10%",
+                    "percent_off": 10,
+                    "duration": "repeating",
+                    "duration_in_months": 3,
+                    "valid": True,
+                    "metadata": {},
+                },
+                customer_id="",
+                external_id="coup_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(
+                text(
+                    "SELECT code, percent_off, duration, duration_in_months"
+                    " FROM coupon WHERE external_id = 'coup_1'"
+                )
+            )
+        ).fetchone()
+        assert row is not None
+        assert row[0] == "WELCOME10"
+        assert row[2] == "repeating"
+        assert row[3] == 3
+
+    @pytest.mark.asyncio
+    async def test_delete_marks_invalid(self, db):
+        await handle_state_event(
+            db,
+            _evt(
+                "coupon.created",
+                {"external_id": "coup_1", "duration": "once", "valid": True},
+                customer_id="",
+                external_id="coup_1",
+            ),
+        )
+        await db.commit()
+        await handle_state_event(
+            db,
+            _evt(
+                "coupon.deleted",
+                {"external_id": "coup_1"},
+                customer_id="",
+                external_id="coup_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(text("SELECT valid FROM coupon WHERE external_id = 'coup_1'"))
+        ).fetchone()
+        assert row is not None
+        assert row[0] in (False, 0)
+
+    @pytest.mark.asyncio
+    async def test_non_canonical_duration_raises(self, db):
+        from tidemill.connectors.base import CanonicalEnumViolation
+
+        with pytest.raises(CanonicalEnumViolation):
+            await handle_state_event(
+                db,
+                _evt(
+                    "coupon.created",
+                    {"external_id": "coup_1", "duration": "perpetual"},
+                    customer_id="",
+                    external_id="coup_1",
+                ),
+            )
+
+
+# ── credit_note ──────────────────────────────────────────────────────────
+
+
+class TestCreditNoteHandler:
+    @pytest.mark.asyncio
+    async def test_create_and_void(self, db):
+        await handle_state_event(
+            db,
+            _evt(
+                "credit_note.created",
+                {
+                    "external_id": "cn_1",
+                    "invoice_external_id": "inv_1",
+                    "customer_external_id": "cus_ext_1",
+                    "status": "issued",
+                    "reason": "duplicate",
+                    "currency": "USD",
+                    "subtotal_cents": 1000,
+                    "tax_cents": 0,
+                    "total_cents": 1000,
+                    "memo": "Duplicate refund",
+                },
+                customer_id="cus_ext_1",
+                external_id="cn_1",
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(
+                text(
+                    "SELECT status, reason, total_cents"
+                    " FROM credit_note WHERE external_id = 'cn_1'"
+                )
+            )
+        ).fetchone()
+        assert row is not None
+        assert row[0] == "issued"
+        assert row[1] == "duplicate"
+        assert row[2] == 1000
+
+        await handle_state_event(
+            db,
+            _evt(
+                "credit_note.voided",
+                {"external_id": "cn_1"},
+                customer_id="cus_ext_1",
+                external_id="cn_1",
+                occurred_at=LATER,
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(
+                text("SELECT status, voided_at FROM credit_note WHERE external_id = 'cn_1'")
+            )
+        ).fetchone()
+        assert row[0] == "void"
+        assert row[1] is not None
+
+    @pytest.mark.asyncio
+    async def test_non_canonical_reason_raises(self, db):
+        from tidemill.connectors.base import CanonicalEnumViolation
+
+        with pytest.raises(CanonicalEnumViolation):
+            await handle_state_event(
+                db,
+                _evt(
+                    "credit_note.created",
+                    {
+                        "external_id": "cn_1",
+                        "status": "issued",
+                        "reason": "customer_cried",  # not canonical
+                        "currency": "USD",
+                    },
+                    customer_id="",
+                    external_id="cn_1",
+                ),
+            )

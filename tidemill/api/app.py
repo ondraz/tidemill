@@ -49,13 +49,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = make_engine(db_url)
 
     async with engine.begin() as conn:
-        from tidemill.migrate import migrate_schema
+        from tidemill.migrate import backfill_after_create_all, migrate_schema
         from tidemill.models import metadata as sa_metadata
 
         # In-place DDL migrations (column renames) must run before create_all,
-        # which is additive and can't express renames.
+        # which is additive and can't express renames. Data backfills run
+        # after create_all so the new tables they touch already exist.
         await migrate_schema(conn)
         await conn.run_sync(sa_metadata.create_all)
+        await backfill_after_create_all(conn)
 
         default = _CONNECTOR_DEFAULTS.get(connector_type)
         if default is not None:
