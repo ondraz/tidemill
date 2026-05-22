@@ -175,7 +175,20 @@ class WebhookConnector(ABC):
     def translate(self, webhook_payload: dict[str, Any]) -> list[Event]: ...
 
     def verify_signature(self, payload: bytes, signature: str) -> bool:
-        return True
+        """Validate *signature* against *payload*. Subclasses MUST override.
+
+        The base implementation raises so a connector that forgets to wire
+        up signature verification gets a loud failure during integration
+        testing instead of silently accepting every payload in production.
+        A connector that intentionally has no signature scheme (e.g. a
+        test harness, or a provider that signs out-of-band) overrides this
+        explicitly with ``return True`` and documents the choice.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} must override verify_signature() — "
+            "the default rejects to prevent silent auth bypass. Return True "
+            "explicitly if this connector has no signature scheme."
+        )
 
     async def backfill(  # pragma: no cover
         self, since: datetime | None = None

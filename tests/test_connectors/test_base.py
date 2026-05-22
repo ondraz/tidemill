@@ -8,15 +8,21 @@ identically for all connectors.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 import pytest
 
 from tidemill.connectors.base import (
     CANONICAL_LINE_ITEM_KINDS,
     CANONICAL_SUBSCRIPTION_STATUSES,
     CanonicalEnumViolation,
+    WebhookConnector,
     compute_mrr_cents,
     validate_canonical,
 )
+
+if TYPE_CHECKING:
+    from tidemill.events import Event
 
 
 class TestValidateCanonical:
@@ -80,3 +86,28 @@ class TestComputeMrrCents:
 
     def test_default_interval_count_and_quantity(self):
         assert compute_mrr_cents(2500, "month") == 2500
+
+
+class TestVerifySignatureDefault:
+    """A connector that forgets to override verify_signature must NOT silently accept.
+
+    The base class raises so the gap surfaces during integration testing
+    instead of becoming a silent auth bypass in production.
+    """
+
+    class _StubConnector(WebhookConnector):
+        @property
+        def source_type(self) -> str:
+            return "stub"
+
+        def translate(self, webhook_payload: dict[str, Any]) -> list[Event]:
+            return []
+
+    def test_default_raises_not_implemented(self):
+        conn = self._StubConnector(source_id="stub", config={})
+        with pytest.raises(NotImplementedError) as excinfo:
+            conn.verify_signature(b"body", "sig")
+        # Error message names the offending class so test output points
+        # at the connector that forgot to override.
+        assert "_StubConnector" in str(excinfo.value)
+        assert "verify_signature" in str(excinfo.value)

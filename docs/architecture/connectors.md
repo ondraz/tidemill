@@ -542,32 +542,208 @@ lago = get_connector("lago", engine=lago_async_engine)
 mrr = await lago.get_mrr_usd_cents()
 ```
 
-## Adding a New Connector
+## Authoring a New Connector
 
-### Webhook Connector (for any billing system with webhooks)
+This section is the contract a new connector author works against. The
+canonical vocabulary tables in `canonical-vocabulary.md` are the
+companion reference — they spell out the exact provider-to-canonical
+value mappings the `translate()` method has to produce.
 
-1. Create `tidemill/connectors/myplatform.py`
-2. Subclass `WebhookConnector`
-3. Implement `translate()` and optionally `backfill()`
-4. Map each vendor webhook to the appropriate internal events
-5. Implement MRR computation for the vendor's subscription/pricing model
-6. Decorate with `@register("myplatform")`
+### The `translate()` contract
 
-### Database Connector (for billing engines with accessible databases)
+`WebhookConnector.translate(payload) -> list[Event]` is the only required
+behavior. The events it returns flow through Kafka into the state
+consumer and every metric handler. Five rules:
 
-1. Create `tidemill/connectors/myplatform.py`
-2. Subclass `DatabaseConnector`
-3. Implement `get_active_subscriptions()`, `get_mrr_cents()`, `get_subscription_changes()`, etc.
-4. Write SQL queries against the billing engine's tables
-5. Decorate with `@register("myplatform")`
+1. **Canonical event types.** Use the canonical names (`customer.created`,
+   `subscription.created`, `subscription.activated`,
+   `subscription.changed`, `subscription.canceled`, `subscription.churned`,
+   `invoice.created`, `invoice.paid`, `payment.succeeded`,
+   `coupon.created`, `credit_note.created`, …). The state-handler
+   dispatch table at `tidemill/state.py:_HANDLERS` keys on the prefix
+   before the first dot — anything outside this set is silently
+   discarded.
 
-### Expense Connector (for accounting platforms)
+2. **Canonical payload fields.** Every status/interval/usage-type/kind
+   string in the payload must come from the `CANONICAL_*` tuples in
+   `tidemill/connectors/base.py`. The state layer calls
+   `validate_canonical()` before each write; a non-canonical value
+   raises `CanonicalEnumViolation`, the worker DLQs the event, and the
+   row in the core table stays untouched. Translate at the connector
+   boundary, not later.
 
-1. Create `tidemill/connectors/myplatform/`
-2. Subclass `ExpenseConnector` (inherits `WebhookConnector`)
-3. Implement the four normalize/extract methods (`normalize_account_type`, `normalize_bill_status`, `normalize_payment_type`, `extract_dimensions`)
-4. Implement `translate()` + `backfill()` (or `fetch_and_translate()` for ID-only webhooks)
-5. Emit canonical event types: `vendor.*`, `account.*`, `bill.*`, `expense.*`, `bill_payment.*`
-6. Decorate with `@register("myplatform")`
+3. **Deterministic event IDs.** Use `make_event_id(source_id, type,
+   external_id)` (UUID v5) so replays and duplicate webhooks are
+   idempotent — `event_log` has `ON CONFLICT (id) DO NOTHING` and the
+   metric consumers track resolved DLQ rows by `(event_id, consumer)`.
 
-The schema, state handlers, expenses metric, and Kafka topics are all platform-neutral — no schema changes are needed for any accounting platform that fits the canonical model.
+4. **Subscription items go in `items: [...]`.** When the source models
+   subscriptions as a set of items (Stripe, Chargebee 2.0), emit the
+   breakdown on every `subscription.created` and `subscription.changed`
+   payload — the state handler re-materializes via DELETE+INSERT. For
+   single-plan sources (Recurly, Lago, Kill Bill), emit a single-item
+   list mirroring the totals so the table stays populated.
+
+5. **Don't pre-aggregate.** Forward what happened, not the metric — the
+   metric handlers compute MRR/churn/retention from the events. The one
+   exception is `mrr_cents` on subscription event payloads (see "MRR
+   override" below) — that's a connector-provided hint, not a
+   pre-aggregation.
+
+### Signature verification
+
+`verify_signature(payload, signature) -> bool` is **mandatory** —
+`WebhookConnector`'s default now raises `NotImplementedError` so a
+connector that forgets to wire up signature verification gets a loud
+failure during integration testing, not a silent auth-bypass in
+production.
+
+Three legal overrides:
+
+- **Real verification** (Stripe, QuickBooks): use the provider's
+  HMAC/SDK helper. Return `True` only when the signature checks out
+  against the configured secret.
+- **No-op for test harnesses**: explicitly `return True` and document
+  why (e.g. the test connector has no signature scheme).
+- **Lenient with explicit guard** (the pattern Stripe and QuickBooks
+  use today): when the webhook secret is unconfigured, fall back to
+  `return True`. This is appropriate for local development; production
+  deployments must set the secret.
+
+The webhook routes (`api/routers/webhooks.py`,
+`connectors/stripe/routes.py`) only call `verify_signature` when a
+signature header is present. A connector whose provider doesn't send
+signatures is fine, but bear in mind that a request arriving *without*
+a signature header bypasses verification entirely — that's a routing
+concern, not a connector concern.
+
+### MRR computation: shared utility vs. server-provided override
+
+Two paths, picked per connector:
+
+**A. Compute via `compute_mrr_cents()`.** When the source exposes only
+plan-level fields (`amount_cents`, `interval`, `interval_count`,
+`quantity`), import the utility from `tidemill.connectors.base` and
+call it per subscription item:
+
+```python
+from tidemill.connectors.base import compute_mrr_cents
+
+item_mrr = compute_mrr_cents(
+    amount_cents=price["unit_amount"],
+    interval=recurring["interval"],
+    interval_count=recurring.get("interval_count", 1) or 1,
+    quantity=item.get("quantity", 1) or 1,
+)
+```
+
+This is what the Stripe connector does
+(`tidemill/connectors/stripe/connector.py:_compute_mrr`).
+
+**B. Pass through a server-provided value.** When the source already
+computes MRR (Chargebee's `subscription.mrr`, Recurly's billing
+summary), put it on the event payload as `mrr_cents` and the state
+layer trusts it verbatim. This avoids re-implementing the source's
+proration math and is the recommended path when available.
+
+In both cases, **metered items contribute 0 to subscription MRR** —
+their revenue flows through the trailing-usage path (see
+`tidemill/metrics/mrr/usage.py`). Emit a `subscription_item` row for
+them with `mrr_cents=0` so the item count breakdown stays correct.
+
+### Canonical enum validation
+
+Every status / interval / kind / payment-method-type string in your
+event payload must be one of the values in the corresponding
+`CANONICAL_*` tuple. The state layer runs `validate_canonical(value,
+allowed, field)` before each write:
+
+| Field                                | Canonical tuple                       |
+|--------------------------------------|---------------------------------------|
+| `plan.interval`                      | `CANONICAL_INTERVALS`                 |
+| `plan.pricing_model`                 | `CANONICAL_PRICING_MODELS`            |
+| `plan.usage_type`                    | `CANONICAL_USAGE_TYPES`               |
+| `subscription.status`                | `CANONICAL_SUBSCRIPTION_STATUSES`     |
+| `invoice.status`                     | `CANONICAL_INVOICE_STATUSES`          |
+| `invoice_line_item.kind`             | `CANONICAL_LINE_ITEM_KINDS`           |
+| `payment.payment_method_type`        | `CANONICAL_PAYMENT_METHOD_TYPES`      |
+| `coupon.duration`                    | `CANONICAL_COUPON_DURATIONS`          |
+| `credit_note.status`                 | `CANONICAL_CREDIT_NOTE_STATUSES`      |
+| `credit_note.reason`                 | `CANONICAL_CREDIT_NOTE_REASONS`       |
+| `account.account_type` (expense)     | `CANONICAL_ACCOUNT_TYPES`             |
+| `bill.status` (expense)              | `CANONICAL_BILL_STATUSES`             |
+| `expense.payment_type` (expense)     | `CANONICAL_PAYMENT_TYPES`             |
+
+`None` is always legal (treated as "unknown"); any non-`None` string
+must come from the tuple. A non-canonical write raises
+`CanonicalEnumViolation`, the worker records the failure in
+`dead_letter_event` with `error_type='canonical_enum_violation'`, and
+the core table stays untouched — so a malformed connector
+dead-letters its own events instead of corrupting analytics.
+
+### Webhook Connector scaffold (Chargebee, Recurly, Paddle, …)
+
+1. Create `tidemill/connectors/myplatform/{__init__.py, connector.py,
+   routes.py}` (single-file at `tidemill/connectors/myplatform.py` is
+   also fine if there's no separate route or client).
+2. Subclass `WebhookConnector`. Set `source_type` to the registered
+   name.
+3. Implement `translate(payload) -> list[Event]` per the contract
+   above. Cross-check every status/interval/kind against the canonical
+   vocabulary table in `canonical-vocabulary.md`.
+4. Implement `verify_signature(payload, signature)` using the
+   provider's HMAC/SDK helper. Don't fall back to `return True`
+   without a guard; if the provider has no signature scheme, document
+   the override.
+5. Pick the MRR path (compute via `compute_mrr_cents()` or pass
+   through the source's MRR). Emit `items: [...]` on subscription
+   events even for single-plan sources.
+6. Optionally implement `backfill(since) -> AsyncIterator[Event]` for
+   first-run history ingestion. Use the same `translate()` event
+   types so the state and metric layers handle backfill identically
+   to live webhooks.
+7. Decorate with `@register("myplatform")` so the registry picks it up.
+
+### Database Connector scaffold (Lago, Kill Bill, …)
+
+1. Create `tidemill/connectors/myplatform.py`.
+2. Subclass `DatabaseConnector`. Implement `get_active_subscriptions`,
+   `get_mrr_cents`, `get_subscription_changes`, `get_customers`,
+   `get_invoices` against the billing engine's PostgreSQL.
+3. Return canonical-shaped rows (status ∈
+   `CANONICAL_SUBSCRIPTION_STATUSES`, etc.) so metric SQL never sees
+   provider vocabulary.
+4. Decorate with `@register("myplatform")`.
+
+### Expense Connector scaffold (Xero, FreshBooks, Wave, Sage, …)
+
+1. Create `tidemill/connectors/myplatform/`.
+2. Subclass `ExpenseConnector` (inherits `WebhookConnector`).
+3. Implement the four normalize/extract methods
+   (`normalize_account_type`, `normalize_bill_status`,
+   `normalize_payment_type`, `extract_dimensions`) mapping native
+   vocabulary to `CANONICAL_ACCOUNT_TYPES` / `CANONICAL_BILL_STATUSES`
+   / `CANONICAL_PAYMENT_TYPES` / a `dimensions` JSON dict.
+4. Implement `translate()` and `backfill()` (or `fetch_and_translate()`
+   for ID-only webhooks like QBO).
+5. Emit canonical expense event types: `vendor.*`, `account.*`,
+   `bill.*`, `expense.*`, `bill_payment.*`. The schema, state
+   handlers, and expenses metric are all platform-neutral.
+6. Override `verify_signature()` with the provider's HMAC scheme.
+7. Decorate with `@register("myplatform")`.
+
+### Pre-merge checklist
+
+- [ ] Every status / interval / kind in event payloads is in the
+      corresponding `CANONICAL_*` tuple.
+- [ ] `verify_signature` is overridden (no implicit base raise).
+- [ ] Event IDs come from `make_event_id`.
+- [ ] Subscription events carry `items: [...]` (single-plan sources
+      emit a one-item list).
+- [ ] `translate()` is idempotent — feeding the same webhook twice
+      produces events with identical IDs and the state upserts
+      collapse cleanly.
+- [ ] A unit test covers `translate()` for at least the lifecycle
+      events you map (create / update / cancel / change).
+- [ ] If `backfill()` is implemented, it emits the same event types
+      as live webhooks — no separate "historical" types.
