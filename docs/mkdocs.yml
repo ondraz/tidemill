@@ -62,7 +62,7 @@ extra_javascript:
 nav:
   - Home: index.md
   - Definitions: definitions.md
-  - Palette: palette.md
+  - Design System: design-system/design-system.html
   - Architecture:
       - Overview: architecture/overview.md
       - Events: architecture/events.md
