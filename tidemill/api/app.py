@@ -42,6 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     connector_type = os.environ.get("TIDEMILL_CONNECTOR", "stripe").lower()
     _CONNECTOR_DEFAULTS: dict[str, dict[str, str]] = {
         "stripe": {"id": "stripe", "type": "stripe", "name": "Stripe"},
+        "chargebee": {"id": "chargebee", "type": "chargebee", "name": "Chargebee"},
         "lago": {"id": "lago", "type": "lago", "name": "Lago"},
         "killbill": {"id": "killbill", "type": "killbill", "name": "Kill Bill"},
     }
@@ -82,6 +83,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         "stripe": {
             "api_key": os.environ.get("STRIPE_API_KEY", ""),
             "webhook_secret": os.environ.get("STRIPE_WEBHOOK_SECRET", ""),
+        },
+        "chargebee": {
+            # Chargebee Test Site name (e.g. "acme-test"); the SDK appends
+            # ".chargebee.com" itself, so don't include the suffix here.
+            "site": os.environ.get("CHARGEBEE_SITE", ""),
+            "api_key": os.environ.get("CHARGEBEE_API_KEY", ""),
+            # Basic-Auth credentials configured on the Chargebee webhook
+            # endpoint. The connector verifies them on every incoming
+            # webhook; an unset pair falls through to lenient accept for
+            # local dev (production deployments must set both).
+            "webhook_username": os.environ.get("CHARGEBEE_WEBHOOK_USERNAME", ""),
+            "webhook_password": os.environ.get("CHARGEBEE_WEBHOOK_PASSWORD", ""),
         },
         "quickbooks": {
             "client_id": os.environ.get("QUICKBOOKS_CLIENT_ID", ""),

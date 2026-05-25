@@ -11,7 +11,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-04-10T08:38:57.33535Z"
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P14D"
 
 [[package]]
@@ -269,6 +269,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/4e/b5/721b8799b04bf9afe054a3899c6cf4e880fcf8563cc71c15610242490a0c/cfgv-3.5.0.tar.gz", hash = "sha256:d5b1034354820651caa73ede66a6294d6e95c1b00acc5e9b098e917404669132", size = 7334, upload-time = "2025-11-19T20:55:51.612Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/db/3c/33bac158f8ab7f89b2e59426d5fe2e4f63f7ed25df84c036890172b412b5/cfgv-3.5.0-py2.py3-none-any.whl", hash = "sha256:a8dc6b26ad22ff227d2634a65cb388215ce6cc96bbcc5cfde7641ae87e8dacc0", size = 7445, upload-time = "2025-11-19T20:55:50.744Z" },
+]
+
+[[package]]
+name = "chargebee"
+version = "3.22.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/74/f6/b798bd3ec5738a62a9b57196dee3e0d831ad8534d73688b046e1a5782b70/chargebee-3.22.0.tar.gz", hash = "sha256:bdbe7a753fe96e7ea4aabc01e134e5403cb6e4f60e871452b3243156fd77ec4e", size = 268009, upload-time = "2026-05-08T05:48:45.353Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/32/8e/da66f2f965206194bf8c2db34088e32d908a8f9a899732d146274c77cb1a/chargebee-3.22.0-py3-none-any.whl", hash = "sha256:2fe4b72b97c75da1104e879205d4b0d6b4a2303b0f82ef6729af8493fd69ee9d", size = 368944, upload-time = "2026-05-08T05:48:43.071Z" },
 ]
 
 [[package]]
@@ -2480,6 +2492,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aiokafka" },
     { name = "asyncpg" },
+    { name = "chargebee" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "pydantic" },
@@ -2526,6 +2539,7 @@ dev = [
 requires-dist = [
     { name = "aiokafka", specifier = ">=0.12" },
     { name = "asyncpg", specifier = ">=0.29" },
+    { name = "chargebee", specifier = ">=3.0" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "opentelemetry-api", marker = "extra == 'observability'", specifier = ">=1.27" },

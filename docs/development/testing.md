@@ -294,6 +294,82 @@ stripe_seed.py          stripe listen              API server              Worke
       |                       |   {"mrr": 1234.00}      |                     |
 ```
 
+## Chargebee Testing (Test Site + Time Machine)
+
+Chargebee mirrors the Stripe flow but with a few structural differences:
+
+- **One Time Machine, no per-customer clocks.** Chargebee's site-wide
+  ``delorean`` clock advances every subscription in one call —
+  ``stripe_seed.py``'s 3-customers-per-clock batching isn't needed.
+- **Webhooks need a public URL.** Unlike Stripe (which has the local
+  ``stripe listen`` CLI that opens a websocket tunnel), Chargebee posts
+  webhooks to a configured HTTP endpoint. For local dev you need a
+  tunnel from a public URL to ``localhost:8000``.
+
+### Prerequisites
+
+1. **Free Test Site** — sign up at chargebee.com, pick "Test Site" (not
+   Production). Site name becomes the part before ``.chargebee.com``
+   (e.g. ``acme-test``).
+2. **Full-access TEST API key** — Settings → API Keys → "Add API Key" →
+   "Full Access" → Test mode. Starts with ``test_``.
+3. **Public webhook tunnel.** Two options that work locally:
+   - **smee.io** (free, no signup): `npm install -g smee-client`, then
+     run `smee --url https://smee.io/<your-channel> --target
+     http://localhost:8000/api/webhooks/chargebee` in a separate
+     terminal. Grab the channel URL from smee.io.
+   - **ngrok**: `ngrok http 8000` (free tier requires an account).
+4. **Configure the webhook in Chargebee** — Settings → Webhooks → "Add
+   Webhook". URL is the smee/ngrok public URL plus
+   ``/api/webhooks/chargebee``. Enable HTTP Basic Auth and set the same
+   user/pass you put in ``CHARGEBEE_WEBHOOK_USERNAME`` /
+   ``CHARGEBEE_WEBHOOK_PASSWORD``. Subscribe to at least the
+   ``customer.*``, ``subscription.*``, ``invoice.*``, ``payment.*``,
+   ``coupon.*``, and ``credit_note.*`` event groups.
+
+### Environment
+
+```bash
+CHARGEBEE_SITE=acme-test
+CHARGEBEE_API_KEY=test_...
+CHARGEBEE_WEBHOOK_USERNAME=tidemill
+CHARGEBEE_WEBHOOK_PASSWORD=change-me-locally
+```
+
+### Running the seed
+
+```bash
+# Full seed (19 customers, 18 months) against the configured Test Site
+python deploy/seed/chargebee_seed.py
+
+# Smaller / shorter runs
+python deploy/seed/chargebee_seed.py --customers 5
+python deploy/seed/chargebee_seed.py --months 6
+
+# Wipe every entity tagged seed=tidemill
+python deploy/seed/chargebee_seed.py --cleanup
+```
+
+The script:
+
+1. Creates an Item Family ("tidemill"), three Items (Starter,
+   Professional, Enterprise), and their currency/period Item Prices.
+2. Creates customers per the archetype list, each on a subscription.
+3. Travels the Time Machine forward one month at a time, applying
+   scheduled lifecycle changes (churn, upgrade, downgrade, trial
+   conversion, churn → reactivate) at the right months.
+
+While the script runs, the smee/ngrok tunnel forwards Chargebee
+webhooks into Tidemill where the canonical state and metric handlers
+materialize MRR, churn, retention, and cohort tables.
+
+### Cleanup
+
+`--cleanup` deletes subscriptions, customers, item_prices, items, and
+the item_family in dependency order. Best-effort: Chargebee occasionally
+rejects deletes for in-flight test transactions; re-running cleanup
+clears whatever stuck the first time.
+
 ## Lago Testing (Same-Database Mode)
 
 For same-database mode, test data lives in Lago's PostgreSQL. No Kafka or webhooks are involved.
