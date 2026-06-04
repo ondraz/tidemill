@@ -74,7 +74,12 @@ export function resolveRelativeRange(range: RelativeRange): { start: string; end
 // works on every MRR chart (overview + over-time + breakdown + waterfall).
 // `churn_type` is excluded because the endpoint already filters on it
 // (type=logo|revenue), so grouping by it is a no-op.
+//
+// `source` (connector_source.type — Stripe vs. Chargebee) is declared on
+// every subscription/revenue cube, including the ones churn/LTV join
+// internally, so it's safe to group/filter on for all metrics.
 export const MRR_DIMENSIONS = [
+  'source',
   'currency',
   'plan_name',
   'plan_interval',
@@ -88,25 +93,27 @@ export const MRR_DIMENSIONS = [
 ]
 
 export const CHURN_DIMENSIONS = [
+  'source',
   'cancel_reason',
   'customer_country',
   'tenure_months',
   'cohort_month',
 ]
 
-export const RETENTION_DIMENSIONS = ['customer_country', 'tenure_months']
+export const RETENTION_DIMENSIONS = ['source', 'customer_country', 'tenure_months']
 
 // `customer_created_month` is omitted because the LTV cohort metric joins
 // MRRMovementCube internally for the segment filter and that cube doesn't
 // declare the dim — the request 500s. Use `cohort_month` instead.
 export const LTV_DIMENSIONS = [
+  'source',
   'currency',
   'customer_country',
   'cohort_month',
   'tenure_months',
 ]
 
-export const TRIALS_DIMENSIONS = ['customer_country', 'tenure_months']
+export const TRIALS_DIMENSIONS = ['source', 'customer_country', 'tenure_months']
 
 export const DIMENSIONS_BY_METRIC: Record<string, string[]> = {
   mrr: MRR_DIMENSIONS,
