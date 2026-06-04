@@ -32,17 +32,13 @@ async def run_worker() -> None:
 
     engine = make_engine(db_url)
 
-    # Ensure connector source exists before consuming events.
+    # Ensure a connector_source row exists for every configured connector
+    # (TIDEMILL_CONNECTORS, e.g. "stripe,chargebee") before consuming events,
+    # so the consumer never hits an FK violation when it persists an event.
     async with engine.begin() as conn:
-        from sqlalchemy import text
+        from tidemill.bootstrap import ensure_connector_sources
 
-        await conn.execute(
-            text(
-                "INSERT INTO connector_source (id, type, name, created_at)"
-                " VALUES ('stripe', 'stripe', 'Stripe', NOW())"
-                " ON CONFLICT (id) DO NOTHING"
-            )
-        )
+        await ensure_connector_sources(conn)
 
     factory = make_session_factory(engine)
 

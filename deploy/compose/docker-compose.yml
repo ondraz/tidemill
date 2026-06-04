@@ -47,6 +47,9 @@ services:
     environment:
       TIDEMILL_DATABASE_URL: postgresql+asyncpg://tidemill:${POSTGRES_PASSWORD}@postgres:5432/tidemill
       KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      # Connectors active in this deployment (comma-separated). Each gets a
+      # connector_source row bootstrapped at startup. e.g. "stripe,chargebee".
+      TIDEMILL_CONNECTORS: ${TIDEMILL_CONNECTORS:-stripe}
       STRIPE_API_KEY: ${STRIPE_API_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       CHARGEBEE_SITE: ${CHARGEBEE_SITE:-}
@@ -89,6 +92,7 @@ services:
     environment:
       TIDEMILL_DATABASE_URL: postgresql+asyncpg://tidemill:${POSTGRES_PASSWORD}@postgres:5432/tidemill
       KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      TIDEMILL_CONNECTORS: ${TIDEMILL_CONNECTORS:-stripe}
       TIDEMILL_OTEL_ENABLED: ${TIDEMILL_OTEL_ENABLED:-true}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
       OTEL_SERVICE_NAME: tidemill-worker

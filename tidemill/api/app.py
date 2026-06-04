@@ -35,21 +35,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
     kafka_url = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 
-    # Connector type determines which default source row to bootstrap.
-    # Multiple sources can co-exist in the same database; this just ensures
-    # the "primary" one for this deployment exists so webhook handlers and
-    # backfill jobs have a source_id to attach events to.
-    connector_type = os.environ.get("TIDEMILL_CONNECTOR", "stripe").lower()
-    _CONNECTOR_DEFAULTS: dict[str, dict[str, str]] = {
-        "stripe": {"id": "stripe", "type": "stripe", "name": "Stripe"},
-        "chargebee": {"id": "chargebee", "type": "chargebee", "name": "Chargebee"},
-        "lago": {"id": "lago", "type": "lago", "name": "Lago"},
-        "killbill": {"id": "killbill", "type": "killbill", "name": "Kill Bill"},
-    }
-
     engine = make_engine(db_url)
 
     async with engine.begin() as conn:
+        from tidemill.bootstrap import ensure_connector_sources
         from tidemill.migrate import backfill_after_create_all, migrate_schema
         from tidemill.models import metadata as sa_metadata
 
@@ -60,18 +49,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await conn.run_sync(sa_metadata.create_all)
         await backfill_after_create_all(conn)
 
-        default = _CONNECTOR_DEFAULTS.get(connector_type)
-        if default is not None:
-            from sqlalchemy import text
-
-            await conn.execute(
-                text(
-                    "INSERT INTO connector_source (id, type, name, created_at)"
-                    " VALUES (:id, :type, :name, NOW())"
-                    " ON CONFLICT (id) DO NOTHING"
-                ),
-                default,
-            )
+        # Ensure a connector_source row exists for every connector this
+        # deployment runs (TIDEMILL_CONNECTORS, e.g. "stripe,chargebee"), so
+        # webhook handlers and backfill jobs have a valid source_id FK target.
+        await ensure_connector_sources(conn)
 
     factory = make_session_factory(engine)
     app.state.session_factory = factory
