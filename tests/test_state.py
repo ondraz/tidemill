@@ -456,6 +456,76 @@ class TestSubscriptionLifecycle:
         assert row[1] == 5000
 
     @pytest.mark.asyncio
+    async def test_reactivate_clears_cancellation(self, db):
+        """Reactivating a canceled sub clears canceled_at + pending flag.
+
+        Mirrors the Chargebee churn → reactivate archetype: a sub that is
+        active again must not carry a stale ``canceled_at`` (which would
+        otherwise corrupt churn/retention).
+        """
+        await self._seed_refs(db)
+        await handle_state_event(
+            db,
+            _evt(
+                "subscription.created",
+                {
+                    "external_id": "sub_r",
+                    "customer_external_id": "cus_ext_1",
+                    "plan_external_id": "plan_1",
+                    "status": "active",
+                    "mrr_cents": 5000,
+                    "currency": "USD",
+                },
+                external_id="sub_r",
+            ),
+        )
+        await handle_state_event(
+            db,
+            _evt(
+                "subscription.canceled",
+                {"external_id": "sub_r", "canceled_at": "2026-02-01T00:00:00+00:00"},
+                external_id="sub_r",
+                occurred_at=datetime(2026, 2, 1, tzinfo=UTC),
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(
+                text(
+                    "SELECT status, canceled_at, pending_cancellation"
+                    " FROM subscription WHERE external_id = 'sub_r'"
+                )
+            )
+        ).fetchone()
+        assert row[0] == "canceled"
+        assert row[1] is not None
+        assert row[2]  # pending_cancellation set (bool True / SQLite 1)
+
+        await handle_state_event(
+            db,
+            _evt(
+                "subscription.reactivated",
+                {"external_id": "sub_r", "mrr_cents": 5000},
+                external_id="sub_r",
+                occurred_at=datetime(2026, 4, 1, tzinfo=UTC),
+            ),
+        )
+        await db.commit()
+
+        row = (
+            await db.execute(
+                text(
+                    "SELECT status, canceled_at, pending_cancellation"
+                    " FROM subscription WHERE external_id = 'sub_r'"
+                )
+            )
+        ).fetchone()
+        assert row[0] == "active"
+        assert row[1] is None
+        assert not row[2]  # pending_cancellation cleared (bool False / SQLite 0)
+
+    @pytest.mark.asyncio
     async def test_full_lifecycle(self, db):
         """Create → activate → change → churn → reactivate."""
         await self._seed_refs(db)

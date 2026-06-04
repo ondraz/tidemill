@@ -16,6 +16,11 @@
 #
 # Optional — Chargebee fan-out (triggers when both env vars are set):
 #   - CHARGEBEE_SITE / CHARGEBEE_API_KEY for a Chargebee Test Site
+#   - Time Travel enabled on that test site (Settings → Configure
+#     Chargebee → Time Machine → enable — a one-time, dashboard-only
+#     step; it can't be done over the API). A Time Machine handles at
+#     most 5 subscriptions/customers, so the Chargebee seed caps its
+#     cohort at 5 (Stripe still seeds the full set).
 #   - `tailscale` CLI on PATH with Funnel enabled for this device (see
 #     docs/development/testing.md — one-time admin-console step)
 #   - Webhook already configured in Chargebee → Settings → Webhooks
@@ -145,10 +150,11 @@ uv run python "$ROOT/deploy/seed/stripe_seed.py" \
 
 echo ""
 echo "=== Seeding Chargebee test data (Test Site) ==="
-# Optional: requires a Chargebee Test Site (one-time setup — see
-# docs/development/testing.md). When CHARGEBEE_SITE / CHARGEBEE_API_KEY
-# are unset, skip silently so contributors with only Stripe configured
-# aren't blocked.
+# Optional: requires a Chargebee Test Site with Time Travel enabled
+# (one-time dashboard step — see docs/development/testing.md). The
+# Chargebee seed caps its cohort at 5 (Time Machine limit). When
+# CHARGEBEE_SITE / CHARGEBEE_API_KEY are unset, skip silently so
+# contributors with only Stripe configured aren't blocked.
 if [[ -n "${CHARGEBEE_SITE:-}" && -n "${CHARGEBEE_API_KEY:-}" ]]; then
     # Ensure the chargebee connector_source row exists. The default
     # bootstrap in api/app.py only inserts the row matching the active

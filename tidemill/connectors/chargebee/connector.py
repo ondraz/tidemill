@@ -196,7 +196,7 @@ def _customer_payload(cust: dict[str, Any]) -> dict[str, Any]:
 # ── Subscription ─────────────────────────────────────────────────────────
 
 
-def _subscription_item_payload(it: dict[str, Any]) -> dict[str, Any]:
+def _subscription_item_payload(it: dict[str, Any], sub_id: str) -> dict[str, Any]:
     """Project one Chargebee ``subscription_item`` row.
 
     Chargebee's ``amount`` on a subscription_item is the unit_price *
@@ -205,13 +205,22 @@ def _subscription_item_payload(it: dict[str, Any]) -> dict[str, Any]:
     per-item ``mrr_cents=0`` for addons/charges (their contribution is
     folded into the subscription total). Plan items get the full amount
     so a per-plan breakdown sums correctly for single-plan subscriptions.
+
+    The canonical ``external_id`` is scoped to the subscription
+    (``{sub_id}:{item_price_id}``). Chargebee has no per-item id of its
+    own — the bare ``item_price_id`` is shared by every subscription on
+    that plan, which would otherwise collide on the
+    ``uq_subscription_item_source (source_id, external_id)`` constraint
+    and let one subscription's breakdown overwrite another's. The plan FK
+    still points at the bare ``item_price_id`` via ``plan_external_id``.
     """
     item_type = it.get("item_type", "plan")
     amount = it.get("amount") or 0
     item_mrr = amount if item_type == "plan" else 0
+    item_price_id = it.get("item_price_id") or ""
     return {
-        "external_id": it.get("item_price_id") or "",
-        "plan_external_id": it.get("item_price_id"),
+        "external_id": f"{sub_id}:{item_price_id}",
+        "plan_external_id": item_price_id or None,
         "quantity": it.get("quantity", 1) or 1,
         "mrr_cents": item_mrr,
         "metadata": it.get("metadata") or {},
@@ -247,7 +256,10 @@ def _subscription_payload(sub: dict[str, Any]) -> dict[str, Any]:
         "current_period_start": _ts(sub.get("current_term_start")),
         "current_period_end": _ts(sub.get("current_term_end")),
         "pending_cancellation": pending_cancellation,
-        "items": [_subscription_item_payload(it) for it in (sub.get("subscription_items") or [])],
+        "items": [
+            _subscription_item_payload(it, sub["id"])
+            for it in (sub.get("subscription_items") or [])
+        ],
     }
 
 
@@ -762,7 +774,7 @@ class ChargebeeConnector(WebhookConnector):
                     "new_quantity": (sub.get("subscription_items") or [{}])[0].get("quantity", 1),
                     "currency": (sub.get("currency_code") or "").lower() or None,
                     "items": [
-                        _subscription_item_payload(it)
+                        _subscription_item_payload(it, sub.get("id", ""))
                         for it in (sub.get("subscription_items") or [])
                     ],
                 },

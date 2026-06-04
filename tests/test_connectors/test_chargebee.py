@@ -176,6 +176,28 @@ class TestSubscription:
         assert created.payload["pending_cancellation"] is False
         assert len(created.payload["items"]) == 1
 
+    def test_item_external_id_scoped_to_subscription(self, connector: ChargebeeConnector):
+        """Item ``external_id`` must be unique per subscription.
+
+        Chargebee item_price ids are shared by every subscription on a
+        plan, so the canonical item ``external_id`` is scoped as
+        ``{sub_id}:{item_price_id}``. Without this, two subscriptions on
+        the same plan collide on ``uq_subscription_item_source`` and one
+        steals the other's breakdown row (zeroing its MRR). The plan FK
+        still points at the bare item_price_id.
+        """
+        events = connector.translate(
+            _wh("subscription_created", {"subscription": _sub(sub_id="cb_sub_42")})
+        )
+        item = events[0].payload["items"][0]
+        assert item["external_id"] == "cb_sub_42:professional-USD-monthly"
+        assert item["plan_external_id"] == "professional-USD-monthly"
+        # Two subs on the same plan must not produce the same item id.
+        other = connector.translate(
+            _wh("subscription_created", {"subscription": _sub(sub_id="cb_sub_99")})
+        )
+        assert other[0].payload["items"][0]["external_id"] != item["external_id"]
+
     def test_created_in_trial_emits_trial_started(self, connector: ChargebeeConnector):
         sub = _sub(status="in_trial", mrr=0)
         sub["trial_start"] = 1_700_000_000
@@ -251,7 +273,10 @@ class TestSubscription:
         p = events[0].payload
         assert p["prev_mrr_cents"] == 7900
         assert p["new_mrr_cents"] == 9900
-        assert p["items"][0]["external_id"] == "professional-USD-monthly"
+        # Item id is scoped to the subscription; the plan FK keeps the
+        # bare item_price_id.
+        assert p["items"][0]["external_id"] == "cb_sub_1:professional-USD-monthly"
+        assert p["items"][0]["plan_external_id"] == "professional-USD-monthly"
 
 
 # ── Invoice / payment / credit_note / coupon translation ────────────────

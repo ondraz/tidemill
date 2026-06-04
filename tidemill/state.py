@@ -481,12 +481,18 @@ async def _handle_subscription(session: AsyncSession, event: Event) -> None:
                     items=p["items"] or [],
                 )
         case "subscription.activated" | "subscription.reactivated" | "subscription.resumed":
+            # A subscription that is active again is, by definition, no
+            # longer canceled or pending cancellation — clear both so a
+            # reactivation doesn't leave a stale canceled_at that would
+            # corrupt churn/retention (e.g. Chargebee churn → reactivate).
             await session.execute(
                 text(
                     "UPDATE subscription SET"
                     "  status = 'active',"
                     "  mrr_cents = :mrr,"
                     "  ended_at = NULL,"
+                    "  canceled_at = NULL,"
+                    "  pending_cancellation = FALSE,"
                     "  updated_at = :now"
                     " WHERE source_id = :src AND external_id = :eid"
                 ),

@@ -313,7 +313,21 @@ Chargebee mirrors the Stripe flow but with a few structural differences:
    (e.g. ``acme-test``).
 2. **Full-access TEST API key** — Settings → API Keys → "Add API Key" →
    "Full Access" → Test mode. Starts with ``test_``.
-3. **Tailscale Funnel** — exposes ``localhost:8000`` on a stable HTTPS
+3. **Enable Time Travel** — Settings → Configure Chargebee → Time
+   Machine → **enable**. This is a one-time, dashboard-only step
+   (available on test sites only) and **cannot be done over the API** —
+   until it's on, the seed exits with *"Time Travel is not enabled on
+   this Chargebee site."* Two consequences to know up front:
+   - **Enabling wipes the site** (existing customers/subscriptions are
+     erased). The seed starts each run with ``start_afresh`` anyway, so
+     it's designed to run against a throwaway test site.
+   - **A Time Machine handles at most 5 subscriptions/customers** —
+     exceeding it makes every time-travel call fail. The seed therefore
+     caps the Chargebee cohort at 5 regardless of ``--customers`` (Stripe
+     still seeds its full 19-customer cohort). The first five archetypes
+     are front-loaded to cover active, churn, upgrade, trial conversion,
+     and churn → reactivate.
+4. **Tailscale Funnel** — exposes ``localhost:8000`` on a stable HTTPS
    URL so Chargebee's webhook delivery can reach the locally-running
    API. Chargebee requires HTTPS for webhook endpoints; Funnel
    auto-provisions a Let's Encrypt cert tied to your tailnet hostname.
@@ -325,8 +339,8 @@ Chargebee mirrors the Stripe flow but with a few structural differences:
    - The hostname Funnel exposes is the device's tailnet name —
      ``tailscale status`` lists it. The full webhook URL is
      ``https://<host>.<tailnet>.ts.net/api/webhooks/chargebee``.
-4. **Configure the webhook in Chargebee** — Settings → Webhooks → "Add
-   Webhook". Paste the Funnel URL from step 3. Enable HTTP Basic Auth
+5. **Configure the webhook in Chargebee** — Settings → Webhooks → "Add
+   Webhook". Paste the Funnel URL from step 4. Enable HTTP Basic Auth
    and set the same user/pass you put in ``CHARGEBEE_WEBHOOK_USERNAME``
    / ``CHARGEBEE_WEBHOOK_PASSWORD``. Subscribe to at least the
    ``customer.*``, ``subscription.*``, ``invoice.*``, ``payment.*``,
@@ -336,7 +350,7 @@ Chargebee mirrors the Stripe flow but with a few structural differences:
 > enable the feature), smee.io (``smee --url https://smee.io/<channel>
 > --target http://localhost:8000/api/webhooks/chargebee``) or ngrok
 > (``ngrok http 8000``) work the same way — just substitute the
-> resulting HTTPS URL into step 4.
+> resulting HTTPS URL into step 5.
 
 ### Environment
 
@@ -350,7 +364,7 @@ CHARGEBEE_WEBHOOK_PASSWORD=change-me-locally
 ### Running the seed
 
 ```bash
-# Full seed (19 customers, 18 months) against the configured Test Site
+# Full seed (caps at 5 customers — see limit above — over 18 months)
 python deploy/seed/chargebee_seed.py
 
 # Smaller / shorter runs
@@ -363,16 +377,36 @@ python deploy/seed/chargebee_seed.py --cleanup
 
 The script:
 
-1. Creates an Item Family ("tidemill"), three Items (Starter,
+1. Resets the site clock to the window start with ``start_afresh``
+   (rewinds the forward-only Time Machine and clears prior data so the
+   seed is re-runnable).
+2. Creates an Item Family ("tidemill"), three Items (Starter,
    Professional, Enterprise), and their currency/period Item Prices.
-2. Creates customers per the archetype list, each on a subscription.
-3. Travels the Time Machine forward one month at a time, applying
+3. Creates up to five customers from the front-loaded archetype list,
+   each on a subscription.
+4. Travels the Time Machine forward one month at a time, applying
    scheduled lifecycle changes (churn, upgrade, downgrade, trial
    conversion, churn → reactivate) at the right months.
 
-While the script runs, the smee/ngrok tunnel forwards Chargebee
-webhooks into Tidemill where the canonical state and metric handlers
-materialize MRR, churn, retention, and cohort tables.
+While the script runs, the Tailscale Funnel (or smee/ngrok) tunnel
+forwards Chargebee webhooks into Tidemill where the canonical state and
+metric handlers materialize MRR, churn, retention, and cohort tables.
+
+Two behaviours worth knowing:
+
+- **Offline collection.** Seed subscriptions are created with
+  ``auto_collection=off`` so no payment gateway or card is needed —
+  invoices are raised as ``payment_due``. Subscription state (and hence
+  MRR/churn/retention) is fully exercised; only the card-charge step is
+  skipped.
+- **Intermittent time-travel timeout.** Chargebee occasionally aborts a
+  hop with *"the execution of jobs for the time travel took too long"*
+  and poisons the session (it can't be resumed in place). It almost
+  always hits a late, steady-state hop after every lifecycle change has
+  landed, so the seed prints a ``WARN``, treats the data as complete,
+  and exits 0. If it fires *before* the cohort is fully shaped the seed
+  errors out instead — just re-run it (``start_afresh`` replays from
+  scratch and usually clears it).
 
 ### Cleanup
 

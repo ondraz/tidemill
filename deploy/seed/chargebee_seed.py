@@ -23,7 +23,13 @@ Prerequisites:
     1. A Chargebee Test Site (sign up at chargebee.com — pick "Test Site").
     2. The site's API key (Settings → API Keys → "Full Access Test Key").
     3. ``pip install chargebee`` (already in pyproject deps).
-    4. Webhook reachable from Chargebee at
+    4. Time Travel enabled on the test site — a one-time dashboard step
+       (Settings → Configure Chargebee → Time Machine → enable) that
+       can't be done over the API. Enabling wipes the site's
+       customers/subscriptions, and a Time Machine handles at most five
+       subscriptions/customers, so this seed caps the cohort at five
+       regardless of ``--customers``.
+    5. Webhook reachable from Chargebee at
        ``/api/webhooks/chargebee``. The default local setup uses
        Tailscale Funnel: ``make chargebee-funnel-up`` exposes
        ``localhost:8000`` on a stable HTTPS URL
@@ -49,6 +55,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import json
 import os
 import random
 import sys
@@ -73,23 +80,33 @@ CANCEL_REASONS = [
 ]
 
 # (name_prefix, plan, billing, action, change_month, reactivate_month)
+#
+# A Chargebee Test Site Time Machine handles at most TIME_MACHINE_MAX
+# subscriptions/customers (see below), so the seed only instantiates the
+# first TIME_MACHINE_MAX entries. They are ordered front-loaded for
+# coverage: one steady active account plus one each of churn, upgrade,
+# trial conversion, and churn→reactivate, so a 5-customer cohort still
+# exercises every lifecycle transition the metrics care about. The
+# remaining archetypes are kept for parity with stripe_seed.py and are
+# only reached if Chargebee ever lifts the limit.
 ARCHETYPES = [
-    ("Active Starter", "Starter", "monthly", "active", None, None),
-    ("Active Starter", "Starter", "monthly", "active", None, None),
     ("Active Monthly Pro", "Professional", "monthly", "active", None, None),
+    ("Churned Pro", "Professional", "monthly", "churn", 3, None),
+    ("Upgraded Starter→Pro", "Starter", "monthly", "upgrade", 1, None),
+    ("Trial→Active Starter", "trial", "monthly", "trial_convert", 1, None),
+    ("Churn→Reactivate Starter", "Starter", "monthly", "churn_reactivate", 1, 3),
+    # ── beyond the Time Machine limit; parity with stripe_seed.py ──
+    ("Active Starter", "Starter", "monthly", "active", None, None),
+    ("Active Starter", "Starter", "monthly", "active", None, None),
     ("Active Monthly Pro", "Professional", "monthly", "active", None, None),
     ("Active Annual Pro", "Professional", "yearly", "active", None, None),
     ("Active Annual Enterprise", "Enterprise", "yearly", "active", None, None),
     ("Churned Starter", "Starter", "monthly", "churn", 1, None),
-    ("Upgraded Starter→Pro", "Starter", "monthly", "upgrade", 1, None),
     ("Downgraded Pro→Starter", "Professional", "monthly", "downgrade", 2, None),
-    ("Churned Pro", "Professional", "monthly", "churn", 3, None),
     ("Upgraded Starter→Pro late", "Starter", "monthly", "upgrade", 4, None),
     ("Late Churned Starter", "Starter", "monthly", "churn", 5, None),
     ("Late Downgraded Pro→Starter", "Professional", "monthly", "downgrade", 4, None),
-    ("Churn→Reactivate Starter", "Starter", "monthly", "churn_reactivate", 1, 3),
     ("Churn→Reactivate Pro", "Professional", "monthly", "churn_reactivate", 2, 4),
-    ("Trial→Active Starter", "trial", "monthly", "trial_convert", 1, None),
     ("Trial→Expired", "trial", "monthly", "trial_expire", None, None),
     ("Active Starter EUR", "Starter", "monthly", "active", None, None),
     ("Active Pro GBP", "Professional", "monthly", "active", None, None),
@@ -177,6 +194,22 @@ _PLAN_VARIANTS: list[tuple[str, int, list[tuple[str, str]]]] = [
 ]
 
 
+def _already_exists(exc: chargebee.APIError) -> bool:
+    """True when a create failed only because the entity already exists.
+
+    Chargebee's duplicate-id signal varies by entity and SDK version:
+    some creates return ``api_error_code='duplicate_entry'``, but the
+    item catalog (ItemFamily / Item / ItemPrice) in SDK 3.x instead
+    returns a generic ``invalid_request`` with a "Code <id> already
+    exists" message. ``start_afresh`` clears customers and subscriptions
+    but *not* the product catalog, so reruns always re-hit these — match
+    either signal so the catalog build stays idempotent.
+    """
+    if getattr(exc, "api_error_code", None) == "duplicate_entry":
+        return True
+    return "already exists" in str(exc).lower()
+
+
 def _ensure_family() -> None:
     """Item families nest items in Chargebee. Idempotent."""
     try:
@@ -187,19 +220,19 @@ def _ensure_family() -> None:
             }
         )
     except chargebee.APIError as exc:  # pragma: no cover
-        if exc.api_error_code != "duplicate_entry":
+        if not _already_exists(exc):
             raise
 
 
 def create_catalog() -> None:
     """Create the three items + their currency/billing-period item prices.
 
-    Each create call is idempotent on `id` — Chargebee returns an
-    ``api_error_code='duplicate_entry'`` on re-create, which we swallow
-    so reruns of the seed don't fail. Variants in currencies not
-    enabled on the site are skipped (see ``_create_item_price``); if a
-    plan ends up with zero variants we abort with a message pointing
-    at the Chargebee admin.
+    Each create call is idempotent on `id` — re-creates are swallowed
+    via ``_already_exists`` (start_afresh leaves the catalog intact, so
+    reruns always re-hit these). Variants in currencies not enabled on
+    the site are skipped (see ``_create_item_price``); if a plan ends up
+    with zero variants we abort with a message pointing at the Chargebee
+    admin.
     """
     for name, monthly_cents, currency_billings in _PLAN_VARIANTS:
         item_id = ITEM_IDS[name]
@@ -248,7 +281,7 @@ def _create_item(item_id: str, name: str) -> None:
         )
         print(f"  Item:        {item_id}")
     except chargebee.APIError as exc:  # pragma: no cover — depends on live API
-        if exc.api_error_code != "duplicate_entry":
+        if not _already_exists(exc):
             raise
 
 
@@ -283,7 +316,7 @@ def _create_item_price(
         print(f"  ItemPrice:   {ip_id}  ({price_cents / 100:.0f} {currency}/{period_unit})")
         return True
     except chargebee.APIError as exc:  # pragma: no cover
-        if exc.api_error_code == "duplicate_entry":
+        if _already_exists(exc):
             return True
         if _is_currency_not_enabled(exc):
             print(f"  ItemPrice:   {ip_id}  (skipped — {currency} not enabled on this site)")
@@ -315,11 +348,17 @@ def create_customer(index: int, name: str, country: str) -> None:
                 "first_name": name,
                 "email": f"seed-cb-{index}@test.example.com",
                 "billing_address": {"first_name": name, "country": country},
+                # Offline collection — seed customers have no card on
+                # file. Subscriptions still go active and invoices are
+                # raised (as payment_due), which is all the subscription
+                # analytics need; it just skips the card-charge step that
+                # otherwise fails with "no valid card on file".
+                "auto_collection": "off",
                 "meta_data": {**METADATA_SEED_TAG, "archetype": name, "country": country},
             }
         )
     except chargebee.APIError as exc:  # pragma: no cover
-        if exc.api_error_code != "duplicate_entry":
+        if not _already_exists(exc):
             raise
 
 
@@ -345,6 +384,8 @@ def create_subscription(
     payload: dict[str, object] = {
         "id": sub_id,
         "subscription_items": [{"item_price_id": ip_id, "quantity": 1}],
+        # Offline collection (see create_customer) — no card required.
+        "auto_collection": "off",
         "meta_data": METADATA_SEED_TAG,
     }
     if trial_end is not None:
@@ -352,7 +393,7 @@ def create_subscription(
     try:
         cb.Subscription.create_with_items(_customer_id(index), payload)
     except chargebee.APIError as exc:  # pragma: no cover
-        if exc.api_error_code != "duplicate_entry":
+        if not _already_exists(exc):
             raise
     return sub_id
 
@@ -363,34 +404,125 @@ def create_subscription(
 
 TIME_MACHINE_NAME = "delorean"
 
+# A Chargebee Test Site Time Machine handles at most five subscriptions
+# and customers at a time; exceeding it makes every travel return
+# ``time_travel_status='failed'``. See
+# docs/development/testing.md#chargebee-testing-test-site--time-machine
+# and https://www.chargebee.com/docs/2.0/site-configuration/articles-and-faq/limitations-of-time-machine.html
+TIME_MACHINE_MAX = 5
 
-def time_machine_status() -> str:
-    """Return the current ``time_travel_status`` of the site's clock."""
-    result = cb.TimeMachine.retrieve(TIME_MACHINE_NAME)
-    return str(result.time_machine.time_travel_status)
+
+def _require_time_travel_enabled(exc: chargebee.APIError) -> None:
+    """Convert the opaque 'not enabled' API error into an actionable one.
+
+    Time Travel is a site-level feature that must be switched on once in
+    the Chargebee dashboard — it cannot be enabled over the API. Until
+    then both ``start_afresh`` and ``travel_forward`` reject with
+    ``configuration_incompatible`` / "Time travel is not enabled for this
+    site." Re-raise everything else unchanged.
+    """
+    if getattr(exc, "api_error_code", None) == "configuration_incompatible":
+        print(
+            "\nError: Time Travel is not enabled on this Chargebee site.\n"
+            "Enable it once in the dashboard (test sites only):\n"
+            "  Settings → Configure Chargebee → Time Machine → enable\n"
+            "Note: enabling wipes the site's customers/subscriptions, and a\n"
+            "Time Machine handles at most "
+            f"{TIME_MACHINE_MAX} subscriptions/customers.\n"
+            "Then rerun the seed. Full setup:\n"
+            "  docs/development/testing.md"
+            "#chargebee-testing-test-site--time-machine",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    raise exc
+
+
+# Chargebee runs each hop's billing jobs asynchronously and aborts the
+# hop if that batch runs long — error_code ``time_travel_execution_too_long``
+# under ``resource_limit_exhausted``. It's intermittent (a full 18-hop run
+# often succeeds), but once it fires the session is poisoned: re-issuing
+# the hop fails with "a previous time travel failed … start afresh", so it
+# can't be resumed in place. We surface it as ``TimeTravelBacklog`` and let
+# the caller decide based on how far the window has already been replayed.
+_BACKLOG_TRAVEL_ERROR = "time_travel_execution_too_long"
+
+
+class TimeTravelBacklog(RuntimeError):
+    """Chargebee aborted a hop because its job batch ran too long.
+
+    Terminal for the run (the Time Machine session is poisoned
+    afterward); the caller decides whether enough of the window has been
+    replayed to keep the seeded data.
+    """
+
+
+def _poll_time_travel() -> tuple[str, dict]:
+    """Poll until the clock settles; return ``(status, error)``.
+
+    Time travel is async on Chargebee's side. On ``failed`` the parsed
+    ``error_json`` is returned (empty dict otherwise) so the caller can
+    decide whether the failure is retryable.
+    """
+    deadline = time.time() + 300
+    while time.time() < deadline:
+        tm = cb.TimeMachine.retrieve(TIME_MACHINE_NAME).time_machine
+        status = str(tm.time_travel_status)
+        if status == "succeeded":
+            return status, {}
+        if status == "failed":
+            try:
+                return status, json.loads(getattr(tm, "error_json", None) or "{}")
+            except (TypeError, ValueError):
+                return status, {}
+        time.sleep(2)
+    raise TimeoutError("Time travel didn't finish within 5 min")
+
+
+def start_afresh(genesis_ts: int) -> None:
+    """Reset the site clock to *genesis_ts* and block until it lands.
+
+    Time Machines only travel forward, so each seed run must rewind to
+    the window start before replaying the months. ``start_afresh`` also
+    wipes all transactional data (customers, subscriptions, invoices) —
+    which is what makes the seed safely re-runnable — so it must run
+    before the catalog is (re)created.
+    """
+    try:
+        cb.TimeMachine.start_afresh(TIME_MACHINE_NAME, {"genesis_time": genesis_ts})
+    except chargebee.APIError as exc:  # pragma: no cover — depends on live API
+        _require_time_travel_enabled(exc)
+    status, err = _poll_time_travel()
+    if status != "succeeded":
+        raise RuntimeError(f"start_afresh failed: {err.get('message') or err or 'unknown'}")
 
 
 def travel_forward(target_ts: int) -> None:
     """Advance the site clock to *target_ts* and block until it lands.
 
-    Time travel is async on Chargebee's side — we poll
-    ``time_travel_status`` until it leaves ``in_progress``. A
-    ``failed`` outcome raises so the seed surfaces the bad state
-    instead of writing data against a wedged clock.
+    Raises ``TimeTravelBacklog`` on Chargebee's job-execution timeout
+    (recoverable only by the caller, since the session is poisoned), and
+    a plain ``RuntimeError`` on any other failure — most commonly because
+    a Time Machine handles at most ``TIME_MACHINE_MAX``
+    subscriptions/customers.
     """
-    cb.TimeMachine.travel_forward(
-        TIME_MACHINE_NAME,
-        {"destination_time": target_ts},
+    try:
+        cb.TimeMachine.travel_forward(
+            TIME_MACHINE_NAME,
+            {"destination_time": target_ts},
+        )
+    except chargebee.APIError as exc:  # pragma: no cover — depends on live API
+        _require_time_travel_enabled(exc)
+    status, err = _poll_time_travel()
+    if status == "succeeded":
+        return
+    if err.get("error_code") == _BACKLOG_TRAVEL_ERROR:
+        raise TimeTravelBacklog(err.get("message") or "time-travel job execution too long")
+    raise RuntimeError(
+        f"Time travel failed: {err.get('message') or err or 'unknown'}. "
+        f"A Time Machine handles at most {TIME_MACHINE_MAX} "
+        "subscriptions/customers — check the Chargebee dashboard."
     )
-    deadline = time.time() + 300
-    while time.time() < deadline:
-        status = time_machine_status()
-        if status == "succeeded":
-            return
-        if status == "failed":
-            raise RuntimeError("Time travel failed — check Chargebee dashboard")
-        time.sleep(2)
-    raise TimeoutError(f"Time travel to {target_ts} didn't finish within 5 min")
 
 
 # ---------------------------------------------------------------------------
@@ -489,6 +621,14 @@ def cleanup() -> None:
 
 
 def seed(num_customers: int, num_months: int) -> None:
+    if num_customers > TIME_MACHINE_MAX:
+        print(
+            f"NOTE: a Chargebee Time Machine handles at most {TIME_MACHINE_MAX} "
+            f"subscriptions/customers — capping {num_customers} → "
+            f"{TIME_MACHINE_MAX}. (Stripe still seeds its full cohort.)"
+        )
+        num_customers = TIME_MACHINE_MAX
+
     start = datetime.now(UTC).replace(day=1) - timedelta(days=num_months * 31)
     start = start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
@@ -500,18 +640,21 @@ def seed(num_customers: int, num_months: int) -> None:
     print(f"  Start date: {start.date()}")
     print(f"{bar}\n")
 
+    # Rewind the site clock to the window start. Time Machines only move
+    # forward, so this is also what makes re-runs work — start_afresh
+    # wipes prior data and resets the clock. Must precede the catalog
+    # build since start_afresh empties the site.
+    print(f"=== Resetting Time Machine to {start.date()} (start afresh) ===")
+    start_afresh(int(start.timestamp()))
+
     print("=== Catalog ===")
     _ensure_family()
     create_catalog()
 
-    archetypes = (ARCHETYPES * ((num_customers // len(ARCHETYPES)) + 1))[:num_customers]
+    archetypes = ARCHETYPES[:num_customers]
     entries: list[dict[str, object]] = []
 
     print(f"\n=== Creating {num_customers} customers + subs (clock at {start.date()}) ===")
-    # Time Machine only travels forward; the seed assumes a fresh test
-    # site (clock at "now"). Travel to the start of the seed window so
-    # subscription created_at fall inside it.
-    travel_forward(int(start.timestamp()))
 
     for i, (name, plan, billing, action, change_month, reactivate_month) in enumerate(archetypes):
         country = COUNTRIES[i % len(COUNTRIES)]
@@ -559,6 +702,16 @@ def seed(num_customers: int, num_months: int) -> None:
             }
         )
         print(f"  [{action:18s}] {name} #{i} → {plan}/{billing}/{currency}")
+
+    # Largest month at which any scheduled change/reactivation lands.
+    # Once the clock is past it the cohort is in its final shape, so a
+    # later Chargebee time-travel timeout (intermittent, see
+    # ``TimeTravelBacklog``) is cosmetic — only steady-state renewals
+    # remain — and we can stop gracefully instead of failing the run.
+    last_change_month = max(
+        [int(m) for e in entries for m in (e.get("change_month"), e.get("reactivate_month")) if m]
+        + [0]
+    )
 
     # Advance month by month.
     print(f"\n=== Advancing {num_months} months ===")
@@ -617,10 +770,32 @@ def seed(num_customers: int, num_months: int) -> None:
         current = (current + timedelta(days=32)).replace(day=1)
         target = int(current.timestamp())
         print(f"  → {current.date()}")
-        travel_forward(target)
+        try:
+            travel_forward(target)
+        except TimeTravelBacklog as exc:
+            if month >= last_change_month:
+                print(
+                    f"\nWARN: Chargebee aborted the hop to {current.date()} "
+                    f"(time-travel job limit: {exc}).\n"
+                    "All lifecycle changes were already applied earlier in the "
+                    "window, so the seeded data is complete — stopping the "
+                    "calendar advance here. Re-run the seed if you need the "
+                    "clock at the present day (it's intermittent and usually "
+                    "clears on a fresh run).",
+                    file=sys.stderr,
+                )
+                break
+            # Failed before the cohort was fully shaped — the data would be
+            # incomplete, so surface it.
+            raise RuntimeError(
+                f"Time travel hit Chargebee's job limit at {current.date()} "
+                f"(month {month}), before all scheduled changes "
+                f"(through month {last_change_month}) were applied. "
+                "Re-run the seed (start_afresh replays from scratch)."
+            ) from exc
         # Small breather between travels — Chargebee occasionally
         # queues webhook deliveries and pushing through too fast can
-        # cause the smee tunnel to fall behind.
+        # cause the Funnel tunnel to fall behind.
         time.sleep(1)
 
     print(f"\n{bar}\nSeed complete.\nCleanup:  python chargebee_seed.py --cleanup\n{bar}")
