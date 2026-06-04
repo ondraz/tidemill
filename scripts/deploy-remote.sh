@@ -20,4 +20,16 @@ git clean -fd
 git rev-parse HEAD
 
 docker compose -f deploy/compose/docker-compose.yml build
+
+# The built SPA bundle ships inside the api image at /srv/frontend, but Caddy
+# serves it from the `frontend_assets` named volume. Docker only copies image
+# contents into a named volume when that volume is *first created* — on a
+# redeploy the existing volume shadows the freshly built bundle, so the
+# dashboard would keep serving stale assets (e.g. a new "Group by" dimension
+# never appears). Tear the stack down and drop only the frontend volume so the
+# next `up` repopulates it from the new image. `down` preserves named data
+# volumes (postgres_data, redpanda_data, caddy_data) — only `-v` removes those.
+docker compose -f deploy/compose/docker-compose.yml down
+docker volume ls -q --filter name=frontend_assets | xargs -r docker volume rm
+
 docker compose -f deploy/compose/docker-compose.yml up -d --force-recreate
