@@ -313,19 +313,30 @@ Chargebee mirrors the Stripe flow but with a few structural differences:
    (e.g. ``acme-test``).
 2. **Full-access TEST API key** — Settings → API Keys → "Add API Key" →
    "Full Access" → Test mode. Starts with ``test_``.
-3. **Public webhook tunnel.** Two options that work locally:
-   - **smee.io** (free, no signup): `npm install -g smee-client`, then
-     run `smee --url https://smee.io/<your-channel> --target
-     http://localhost:8000/api/webhooks/chargebee` in a separate
-     terminal. Grab the channel URL from smee.io.
-   - **ngrok**: `ngrok http 8000` (free tier requires an account).
+3. **Tailscale Funnel** — exposes ``localhost:8000`` on a stable HTTPS
+   URL so Chargebee's webhook delivery can reach the locally-running
+   API. Chargebee requires HTTPS for webhook endpoints; Funnel
+   auto-provisions a Let's Encrypt cert tied to your tailnet hostname.
+   - First-time: enable Funnel for this device in the [Tailscale admin
+     console](https://login.tailscale.com/admin/acls/) (one-time tag
+     edit; see [Funnel docs](https://tailscale.com/kb/1223/funnel)).
+   - Start: ``make chargebee-funnel-up`` (alias for ``tailscale funnel
+     --bg 8000``).
+   - The hostname Funnel exposes is the device's tailnet name —
+     ``tailscale status`` lists it. The full webhook URL is
+     ``https://<host>.<tailnet>.ts.net/api/webhooks/chargebee``.
 4. **Configure the webhook in Chargebee** — Settings → Webhooks → "Add
-   Webhook". URL is the smee/ngrok public URL plus
-   ``/api/webhooks/chargebee``. Enable HTTP Basic Auth and set the same
-   user/pass you put in ``CHARGEBEE_WEBHOOK_USERNAME`` /
-   ``CHARGEBEE_WEBHOOK_PASSWORD``. Subscribe to at least the
+   Webhook". Paste the Funnel URL from step 3. Enable HTTP Basic Auth
+   and set the same user/pass you put in ``CHARGEBEE_WEBHOOK_USERNAME``
+   / ``CHARGEBEE_WEBHOOK_PASSWORD``. Subscribe to at least the
    ``customer.*``, ``subscription.*``, ``invoice.*``, ``payment.*``,
    ``coupon.*``, and ``credit_note.*`` event groups.
+
+> **Alternatives.** If you can't use Funnel (no Tailscale, can't
+> enable the feature), smee.io (``smee --url https://smee.io/<channel>
+> --target http://localhost:8000/api/webhooks/chargebee``) or ngrok
+> (``ngrok http 8000``) work the same way — just substitute the
+> resulting HTTPS URL into step 4.
 
 ### Environment
 

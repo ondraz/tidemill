@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# End-to-end Stripe integration test using local Docker Compose stack.
+# End-to-end seed using the local Docker Compose stack.
+#
+# Stripe is always seeded; QuickBooks (expenses) and Chargebee (alternate
+# revenue source) are opt-in via their env vars and skipped silently when
+# unset, so a Stripe-only contributor isn't forced through their setup.
 #
 # Prerequisites:
 #   - Docker running
@@ -9,6 +13,14 @@
 #   - STRIPE_CLI_WEBHOOK_SECRET in deploy/compose/.env matches the whsec
 #     printed by `stripe listen` (the CLI device secret). Production's
 #     STRIPE_WEBHOOK_SECRET is intentionally NOT used here.
+#
+# Optional — Chargebee fan-out (triggers when both env vars are set):
+#   - CHARGEBEE_SITE / CHARGEBEE_API_KEY for a Chargebee Test Site
+#   - `tailscale` CLI on PATH with Funnel enabled for this device (see
+#     docs/development/testing.md — one-time admin-console step)
+#   - Webhook already configured in Chargebee → Settings → Webhooks
+#     against https://<host>.<tailnet>.ts.net/api/webhooks/chargebee
+#     with Basic Auth = CHARGEBEE_WEBHOOK_USERNAME/_PASSWORD
 #
 # Usage:
 #   ./deploy/seed/seed.sh
@@ -132,6 +144,44 @@ uv run python "$ROOT/deploy/seed/stripe_seed.py" \
     --customers "$SEED_CUSTOMERS" --months "$SEED_MONTHS"
 
 echo ""
+echo "=== Seeding Chargebee test data (Test Site) ==="
+# Optional: requires a Chargebee Test Site (one-time setup — see
+# docs/development/testing.md). When CHARGEBEE_SITE / CHARGEBEE_API_KEY
+# are unset, skip silently so contributors with only Stripe configured
+# aren't blocked.
+if [[ -n "${CHARGEBEE_SITE:-}" && -n "${CHARGEBEE_API_KEY:-}" ]]; then
+    # Ensure the chargebee connector_source row exists. The default
+    # bootstrap in api/app.py only inserts the row matching the active
+    # TIDEMILL_CONNECTOR; multi-source seeds need each row added explicitly
+    # before webhooks can attach events to a source_id.
+    $COMPOSE exec -T postgres psql -U tidemill -d tidemill -v ON_ERROR_STOP=1 -c \
+        "INSERT INTO connector_source (id, type, name, created_at)
+         VALUES ('chargebee', 'chargebee', 'Chargebee', NOW())
+         ON CONFLICT (id) DO NOTHING;" >/dev/null \
+        || echo "WARN: couldn't ensure chargebee connector_source row"
+
+    # Start Tailscale Funnel so Chargebee's webhook deliveries can reach
+    # this machine. Funnel preserves the URL across runs, so the
+    # one-time webhook URL configured in Chargebee → Settings → Webhooks
+    # keeps working without re-registration. We don't tear it down at
+    # script exit — `make chargebee-funnel-down` when you're done.
+    if command -v tailscale >/dev/null 2>&1; then
+        tailscale funnel --bg 8000 \
+            || echo "WARN: tailscale funnel failed (Funnel not enabled on this device? see docs/development/testing.md)"
+        echo "Tailscale Funnel mappings:"
+        tailscale funnel status || true
+    else
+        echo "WARN: tailscale CLI not on PATH — webhook delivery will not work locally"
+    fi
+
+    uv run python "$ROOT/deploy/seed/chargebee_seed.py" \
+        --customers "$SEED_CUSTOMERS" --months "$SEED_MONTHS" \
+        || echo "WARN: chargebee_seed.py failed (continuing — Stripe data still present)"
+else
+    echo "(skipped — set CHARGEBEE_SITE and CHARGEBEE_API_KEY to enable)"
+fi
+
+echo ""
 echo "=== Seeding QuickBooks expense data (sandbox) ==="
 # Optional: requires sandbox OAuth credentials (one-time setup — see
 # docs/development/testing.md). When unset, skip the QBO seed so
@@ -246,6 +296,21 @@ if [[ "$mrr_positive" == "1" ]]; then
 else
     echo "FAIL: MRR is zero or null ($mrr)"
     errors=$((errors + 1))
+fi
+
+# Chargebee data only checked when the Chargebee seed actually ran
+# (matches the gating condition in the seed step above — both env vars
+# required). We check customer rows tagged with the chargebee source_id
+# rather than MRR since the Stripe seed already covered MRR globally.
+if [[ -n "${CHARGEBEE_SITE:-}" && -n "${CHARGEBEE_API_KEY:-}" ]]; then
+    cb_customers=$($COMPOSE exec -T postgres psql -U tidemill -d tidemill -tA -c \
+        "SELECT COUNT(*) FROM customer WHERE source_id = 'chargebee';" 2>/dev/null | tr -d '[:space:]' || echo "0")
+    if [[ "$cb_customers" != "0" ]]; then
+        echo "PASS: Chargebee customers ingested ($cb_customers rows)"
+    else
+        echo "FAIL: No Chargebee customers — check Funnel + webhook config (Settings → Webhooks)"
+        errors=$((errors + 1))
+    fi
 fi
 
 # Expense data only checked when the QBO seed actually ran (matches the

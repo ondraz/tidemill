@@ -23,9 +23,14 @@ Prerequisites:
     1. A Chargebee Test Site (sign up at chargebee.com — pick "Test Site").
     2. The site's API key (Settings → API Keys → "Full Access Test Key").
     3. ``pip install chargebee`` (already in pyproject deps).
-    4. Webhook receiver (smee.io or ngrok) forwarding the site's webhooks
-       to ``localhost:8000/api/webhooks/chargebee``. Webhook URL is
-       registered in Chargebee under Settings → Webhooks.
+    4. Webhook reachable from Chargebee at
+       ``/api/webhooks/chargebee``. The default local setup uses
+       Tailscale Funnel: ``make chargebee-funnel-up`` exposes
+       ``localhost:8000`` on a stable HTTPS URL
+       (``https://<host>.<tailnet>.ts.net``). Configure the Chargebee
+       webhook to that URL once; see
+       ``docs/development/testing.md#chargebee-testing-test-site--time-machine``
+       for the full flow.
 
 Environment:
     CHARGEBEE_SITE          — site name without ``.chargebee.com``
@@ -114,15 +119,49 @@ def _ip_id(plan: str, billing: str, currency: str) -> str:
     return f"{ITEM_IDS[plan]}-{currency}-{billing}"
 
 
+def _resolve_variant(
+    plan: str, preferred_billing: str, preferred_currency: str
+) -> tuple[str, str]:
+    """Return the closest available ``(billing, currency)`` for *plan*.
+
+    Falls back to same-billing-different-currency, then to any variant
+    for the plan. Raises if no variant exists at all (catalog build
+    would have aborted earlier).
+    """
+    available = {(b, c) for (p, b, c) in ITEM_PRICE_IDS if p == plan}
+    if not available:
+        raise RuntimeError(f"No item_price configured for plan {plan!r}")
+    if (preferred_billing, preferred_currency) in available:
+        return preferred_billing, preferred_currency
+    same_billing = sorted(c for (b, c) in available if b == preferred_billing)
+    if same_billing:
+        return preferred_billing, same_billing[0]
+    return sorted(available)[0]
+
+
 # Plans listed here are the canonical (plan, currency, billing) triples we
-# create item_prices for. Used both to populate ``ITEM_PRICE_IDS`` and to
-# guide currency selection per archetype.
+# attempt to create item_prices for. Chargebee Test Sites pick a single
+# base currency at signup; additional currencies must be enabled in
+# Settings → Configure Chargebee → Currencies. Variants whose currency
+# isn't enabled on the site are skipped silently — see
+# ``_create_item_price`` — so the seed adapts to whatever the operator
+# has configured.
 _PLAN_VARIANTS: list[tuple[str, int, list[tuple[str, str]]]] = [
-    ("Starter", 2000, [("USD", "monthly")]),  # $20/mo
+    (
+        "Starter",
+        2000,
+        [("USD", "monthly"), ("EUR", "monthly"), ("GBP", "monthly")],
+    ),
     (
         "Professional",
         7900,
-        [("USD", "monthly"), ("USD", "yearly"), ("GBP", "monthly")],
+        [
+            ("USD", "monthly"),
+            ("USD", "yearly"),
+            ("EUR", "monthly"),
+            ("EUR", "yearly"),
+            ("GBP", "monthly"),
+        ],
     ),
     (
         "Enterprise",
@@ -131,6 +170,8 @@ _PLAN_VARIANTS: list[tuple[str, int, list[tuple[str, str]]]] = [
             ("USD", "monthly"),
             ("USD", "yearly"),
             ("EUR", "monthly"),
+            ("EUR", "yearly"),
+            ("GBP", "monthly"),
         ],
     ),
 ]
@@ -155,25 +196,43 @@ def create_catalog() -> None:
 
     Each create call is idempotent on `id` — Chargebee returns an
     ``api_error_code='duplicate_entry'`` on re-create, which we swallow
-    so reruns of the seed don't fail.
+    so reruns of the seed don't fail. Variants in currencies not
+    enabled on the site are skipped (see ``_create_item_price``); if a
+    plan ends up with zero variants we abort with a message pointing
+    at the Chargebee admin.
     """
     for name, monthly_cents, currency_billings in _PLAN_VARIANTS:
         item_id = ITEM_IDS[name]
         _create_item(item_id, name)
         for currency, billing in currency_billings:
             ip_id = _ip_id(name, billing, currency)
-            ITEM_PRICE_IDS[(name, billing, currency)] = ip_id
             # Yearly price is 10× monthly (mirrors the Stripe seed's
             # discount-for-annual convention; tweak if you want a
             # different multiplier).
             cents = monthly_cents * (10 if billing == "yearly" else 1)
-            _create_item_price(
+            if _create_item_price(
                 ip_id=ip_id,
                 item_id=item_id,
                 price_cents=cents,
                 currency=currency,
                 period_unit="year" if billing == "yearly" else "month",
-            )
+            ):
+                ITEM_PRICE_IDS[(name, billing, currency)] = ip_id
+
+    plans_with_prices = {p for (p, _b, _c) in ITEM_PRICE_IDS}
+    missing = sorted(set(ITEM_IDS) - plans_with_prices)
+    if missing:
+        print(
+            "\nError: no currencies enabled on this Chargebee site for plans:"
+            f" {', '.join(missing)}.\n"
+            "Enable USD/EUR/GBP under\n"
+            "  Settings → Configure Chargebee → Currencies\n"
+            "in the Chargebee admin, then rerun the seed.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    enabled = sorted({c for (_p, _b, c) in ITEM_PRICE_IDS})
+    print(f"\n  Enabled currencies on this site: {', '.join(enabled)}")
 
 
 def _create_item(item_id: str, name: str) -> None:
@@ -200,7 +259,13 @@ def _create_item_price(
     price_cents: int,
     currency: str,
     period_unit: str,
-) -> None:
+) -> bool:
+    """Create the item_price; return True on success or duplicate.
+
+    Return False when the currency isn't enabled on this site (the
+    Chargebee API rejects with ``param='currency_code'`` /
+    ``not in allowed values``). The caller skips this variant.
+    """
     try:
         cb.ItemPrice.create(
             {
@@ -216,9 +281,21 @@ def _create_item_price(
             }
         )
         print(f"  ItemPrice:   {ip_id}  ({price_cents / 100:.0f} {currency}/{period_unit})")
+        return True
     except chargebee.APIError as exc:  # pragma: no cover
-        if exc.api_error_code != "duplicate_entry":
-            raise
+        if exc.api_error_code == "duplicate_entry":
+            return True
+        if _is_currency_not_enabled(exc):
+            print(f"  ItemPrice:   {ip_id}  (skipped — {currency} not enabled on this site)")
+            return False
+        raise
+
+
+def _is_currency_not_enabled(exc: chargebee.APIError) -> bool:
+    param = getattr(exc, "param", None) or ""
+    if param == "currency_code":
+        return True
+    return "currency_code" in str(exc).lower() and "not in allowed" in str(exc).lower()
 
 
 # ---------------------------------------------------------------------------
@@ -438,19 +515,22 @@ def seed(num_customers: int, num_months: int) -> None:
 
     for i, (name, plan, billing, action, change_month, reactivate_month) in enumerate(archetypes):
         country = COUNTRIES[i % len(COUNTRIES)]
-        # Currency rotation only on plans with non-USD variants; everything
-        # else stays USD so the upgrade/downgrade transitions don't have to
-        # juggle cross-currency switches.
+        # Currency rotation only on plans with multiple enabled
+        # currency variants; everything else stays on the plan's
+        # default so upgrade/downgrade transitions don't juggle
+        # cross-currency switches.
         eligible_currency = (
             (plan == "Professional" and billing == "monthly")
             or (plan == "Enterprise" and billing == "monthly")
         ) and action == "active"
-        currency = CURRENCIES[i % len(CURRENCIES)] if eligible_currency else "USD"
-        # Fall back to USD when the plan has no item_price in the
-        # rotated currency (e.g. Starter is USD-only).
-        available_currencies = {c for (p, b, c) in ITEM_PRICE_IDS if p == plan and b == billing}
-        if currency not in available_currencies:
-            currency = "USD"
+        preferred = CURRENCIES[i % len(CURRENCIES)] if eligible_currency else "USD"
+        # Resolve to whatever variants the site actually has enabled.
+        # For ``trial`` archetype we'll re-resolve against the Starter
+        # plan inside ``create_subscription``.
+        if plan == "trial":
+            billing, currency = _resolve_variant("Starter", "monthly", preferred)
+        else:
+            billing, currency = _resolve_variant(plan, billing, preferred)
 
         create_customer(i, name, country)
 
@@ -505,11 +585,19 @@ def seed(num_customers: int, num_months: int) -> None:
             if action == "churn":
                 cancel_sub(sub_id, immediate=False, reason=reason)
             elif action == "upgrade":
-                change_sub_plan(sub_id, plan="Professional", billing="monthly", currency="USD")
+                target_currency = str(entry.get("currency", "USD"))
+                tb, tc = _resolve_variant("Professional", "monthly", target_currency)
+                change_sub_plan(sub_id, plan="Professional", billing=tb, currency=tc)
                 entry["plan"] = "Professional"
+                entry["billing"] = tb
+                entry["currency"] = tc
             elif action == "downgrade":
-                change_sub_plan(sub_id, plan="Starter", billing="monthly", currency="USD")
+                target_currency = str(entry.get("currency", "USD"))
+                tb, tc = _resolve_variant("Starter", "monthly", target_currency)
+                change_sub_plan(sub_id, plan="Starter", billing=tb, currency=tc)
                 entry["plan"] = "Starter"
+                entry["billing"] = tb
+                entry["currency"] = tc
             elif action == "trial_convert":
                 # Conversion fires automatically when the clock crosses
                 # trial_end; nothing to do here. Marker for clarity.

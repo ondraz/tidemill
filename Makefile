@@ -101,6 +101,29 @@ dev: ## Start full dev environment + API + worker + frontend (stops services on 
 	@trap 'pkill -f "uvicorn tidemill.api.app" 2>/dev/null; pkill -f "tidemill.worker" 2>/dev/null; pkill -f "ship-to-loki.py" 2>/dev/null; rm -f /tmp/tidemill-api-dev.pid /tmp/tidemill-worker-dev.pid; $(MAKE) -C "$(CURDIR)" dev-down' EXIT; cd frontend && npm run dev
 
 
+# ── Chargebee webhook tunnel (Tailscale Funnel) ────────────────────────
+# Funnel exposes the dev API publicly over HTTPS so Chargebee can deliver
+# webhooks. Tailnet hostname = the device name in `tailscale status`; full
+# webhook URL → https://<host>.<tailnet>.ts.net/api/webhooks/chargebee.
+#
+# First-time: enable Funnel for this device in the Tailscale admin console
+# (https://login.tailscale.com/admin/acls/ — see Funnel docs at
+# https://tailscale.com/kb/1223/funnel). One-time tag/ACL edit.
+
+chargebee-funnel-up: ## Expose localhost:8000 publicly via Tailscale Funnel (for Chargebee webhooks)
+	@tailscale funnel --bg 8000
+	@echo ""
+	@echo "Active Funnel mappings:"
+	@tailscale funnel status
+	@echo ""
+	@echo "Configure Chargebee webhook → https://<the-host-above>/api/webhooks/chargebee"
+	@echo "with Basic Auth = CHARGEBEE_WEBHOOK_USERNAME / CHARGEBEE_WEBHOOK_PASSWORD."
+
+chargebee-funnel-down: ## Tear down the Funnel exposure
+	@tailscale funnel reset
+	@echo "Tailscale Funnel reset (all exposures removed)."
+
+
 docs: ## Start MkDocs dev server on :8001
 	@echo "Starting MkDocs server..."
 	uv run mkdocs serve -a 127.0.0.1:8001 -f docs/mkdocs.yml
