@@ -40,6 +40,7 @@ class MRRSnapshotCube(Cube):
     __alias__ = "s"
 
     class Joins:
+        connector_source = source_join("s")    # JOIN connector_source AS csrc
         subscription = Join("subscription", alias="sub",
             on="sub.source_id = s.source_id AND sub.external_id = s.subscription_id")
         plan = Join("plan", alias="p",
@@ -55,7 +56,8 @@ class MRRSnapshotCube(Cube):
         count = CountDistinct("s.subscription_id")
 
     class Dimensions:
-        source_id = Dim("s.source_id")
+        source_id = Dim("s.source_id")          # per-connection FK
+        source = SOURCE_DIM                     # csrc.type — billing platform
         currency = Dim("s.currency")
         plan_id = Dim("sub.plan_id", join="subscription")
         plan_name = Dim("p.name", join="plan")
@@ -88,11 +90,25 @@ Key properties:
     are correct in advance. Same-database connectors (Lago, Kill Bill)
     that query the billing engine's own plan tables are not affected.
 
+!!! note "Grouping by billing source"
+    Every subscription/revenue cube (MRR snapshot + movement, churn state +
+    event, retention, LTV, trials, usage revenue) declares a shared `source`
+    dimension via the `source_join(base_alias)` helper and the `SOURCE_DIM`
+    constant in `tidemill/metrics/mrr/cubes.py`. It joins `connector_source`
+    (aliased `csrc`, to avoid colliding with churn's `cs` base alias) and
+    exposes `csrc.type` — the canonical platform name (`stripe`, `chargebee`,
+    …). This is distinct from the existing `source_id` dimension, which is the
+    per-connection FK: group by `source` to compare Stripe vs. Chargebee, group
+    by `source_id` to separate two connections of the same platform. Because the
+    helper produces identical join/dimension declarations across cubes, adding
+    a new revenue cube only needs `connector_source = source_join("<alias>")`
+    in `Joins` and `source = SOURCE_DIM` in `Dimensions`.
+
 ```python
 MRRSnapshotCube.available_dimensions()
 # ['collection_method', 'currency',
 #  'customer_country', 'pending_cancellation', 'plan_id', 'plan_interval',
-#  'plan_name', 'pricing_model', 'product_name', 'source_id', 'usage_type']
+#  'plan_name', 'pricing_model', 'product_name', 'source', 'source_id', 'usage_type']
 
 MRRSnapshotCube.available_measures()
 # ['mrr', 'mrr_original', 'count']

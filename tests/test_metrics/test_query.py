@@ -12,12 +12,15 @@ import pytest
 from sqlalchemy.dialects import postgresql
 
 from tidemill.metrics import QuerySpec
-from tidemill.metrics.churn import ChurnEventCube
+from tidemill.metrics.churn import ChurnCustomerStateCube, ChurnEventCube
+from tidemill.metrics.ltv import LtvInvoiceCube
 from tidemill.metrics.mrr import MRRMovementCube, MRRSnapshotCube
 from tidemill.metrics.query import (
     QueryFragment,
 )
 from tidemill.metrics.retention import RetentionCohortCube
+from tidemill.metrics.trials import TrialCube
+from tidemill.metrics.usage_revenue import UsageRevenueCube
 
 
 def _sql(stmt) -> str:
@@ -481,6 +484,79 @@ class TestRetentionCompilation:
         assert "JOIN customer" in sql
         assert "c.country" in sql
         assert "rc.cohort_month" in sql
+
+
+# ── Source dimension (group/filter by billing platform) ─────────────────
+
+
+ALL_SUBSCRIPTION_CUBES = [
+    MRRSnapshotCube,
+    MRRMovementCube,
+    ChurnEventCube,
+    ChurnCustomerStateCube,
+    RetentionCohortCube,
+    LtvInvoiceCube,
+    TrialCube,
+    UsageRevenueCube,
+]
+
+
+class TestSourceDimension:
+    """Every subscription/revenue cube can group + filter by ``source``.
+
+    ``source`` resolves the connector platform (``stripe``/``chargebee``)
+    via a join to ``connector_source`` aliased ``csrc`` — distinct from the
+    per-connection ``source_id`` FK already on each table.
+    """
+
+    @pytest.mark.parametrize("cube", ALL_SUBSCRIPTION_CUBES)
+    def test_source_dimension_declared(self, cube):
+        dims = cube.available_dimensions()
+        assert "source" in dims
+        # The per-connection FK stays available too.
+        assert "source_id" in dims
+
+    @pytest.mark.parametrize("cube", ALL_SUBSCRIPTION_CUBES)
+    def test_source_dimension_joins_connector_source(self, cube):
+        q = cube.dimension("source")
+        stmt, _ = q.compile(cube)
+        sql = _normalize(_sql(stmt))
+
+        assert "JOIN connector_source" in sql
+        assert "csrc.type" in sql
+        assert "GROUP BY" in sql
+        # The join keys connector_source.id to the cube's source_id.
+        assert "csrc.id =" in sql
+
+    @pytest.mark.parametrize("cube", ALL_SUBSCRIPTION_CUBES)
+    def test_source_filter_adds_predicate(self, cube):
+        q = cube.filter("source", "=", "stripe")
+        stmt, params = q.compile(cube)
+        sql = _normalize(_sql(stmt))
+
+        assert "JOIN connector_source" in sql
+        assert "csrc.type" in sql
+        assert params["source"] == "stripe"
+
+    def test_source_dimension_via_spec(self):
+        """``dimensions=["source"]`` flows through apply_spec like any dimension."""
+        spec = QuerySpec(dimensions=["source"])
+        m = MRRMovementCube
+        q = m.measures.amount + m.apply_spec(spec)
+        stmt, _ = q.compile(m)
+        sql = _normalize(_sql(stmt))
+
+        assert "csrc.type" in sql
+        assert "JOIN connector_source" in sql
+        assert "GROUP BY" in sql
+
+    def test_source_alias_does_not_collide_with_churn_state(self):
+        """ChurnEventCube already aliases customer_state ``cs`` — source uses ``csrc``."""
+        q = ChurnEventCube.measures.count + ChurnEventCube.dimension("source")
+        stmt, _ = q.compile(ChurnEventCube)
+        sql = _normalize(_sql(stmt))
+
+        assert "connector_source AS csrc" in sql
 
 
 # ── QuerySpec integration ────────────────────────────────────────────────

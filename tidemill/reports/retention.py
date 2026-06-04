@@ -8,7 +8,13 @@ import pandas as pd
 import plotly.graph_objects as go
 from pandas.io.formats.style import Styler
 
-from tidemill.reports._style import COLORS, apply_period_xaxis, format_period, format_periods
+from tidemill.reports._style import (
+    COLORS,
+    apply_period_xaxis,
+    format_period,
+    format_periods,
+    plot_grouped_lines,
+)
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -63,34 +69,50 @@ def cohort(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
     return cast(pd.DataFrame, pivot)
 
 
-def nrr_grr(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
+def _nrr_grr_rows(
+    tm: TidemillClient,
+    months: pd.DatetimeIndex,
+    source: str | None = None,
+) -> list[dict[str, Any]]:
+    """Build per-month NRR/GRR rows, optionally scoped to *source*."""
+    rows: list[dict[str, Any]] = []
+    for m in months:
+        s = m.strftime("%Y-%m-%d")
+        e = (m + pd.offsets.MonthEnd(0)).strftime("%Y-%m-%d")
+        nrr_val = tm.retention(s, e, query_type="nrr", source=source)
+        grr_val = tm.retention(s, e, query_type="grr", source=source)
+        row: dict[str, Any] = {"month": m, "nrr": nrr_val, "grr": grr_val}
+        if source is not None:
+            row["source"] = source
+        rows.append(row)
+    return rows
+
+
+def nrr_grr(tm: TidemillClient, start: str, end: str, by_source: bool = False) -> pd.DataFrame:
     """Fetch monthly NRR and GRR from Tidemill.
 
     Args:
         tm: Tidemill API client.
         start: ISO date string for period start.
         end: ISO date string for period end.
+        by_source: When True, compute NRR/GRR separately per billing source
+            (the frame gains a ``source`` column); :func:`plot_nrr_grr` then
+            draws one NRR line per source.
 
     Returns:
-        DataFrame with ``month``, ``nrr``, ``grr`` (as decimals).
+        DataFrame with ``month``, ``nrr``, ``grr`` (as decimals), plus
+        ``source`` when *by_source*.
     """
     # Query each month closed-closed ``[first-of-month, last-of-month]`` per
     # Tidemill's date-range convention (see docs/definitions.md).
     months = pd.date_range(start, end, freq="MS")
-    rows: list[dict[str, Any]] = []
-    for m in months:
-        s = m.strftime("%Y-%m-%d")
-        e = (m + pd.offsets.MonthEnd(0)).strftime("%Y-%m-%d")
-        nrr_val = tm.retention(s, e, query_type="nrr")
-        grr_val = tm.retention(s, e, query_type="grr")
-        rows.append(
-            {
-                "month": m,
-                "nrr": nrr_val,
-                "grr": grr_val,
-            }
-        )
-    df = pd.DataFrame(rows)
+    if by_source:
+        rows: list[dict[str, Any]] = []
+        for src in tm.source_types():
+            rows.extend(_nrr_grr_rows(tm, months, source=src))
+        df = pd.DataFrame(rows)
+    else:
+        df = pd.DataFrame(_nrr_grr_rows(tm, months))
     df.attrs["interval"] = "month"
     return df
 
@@ -175,10 +197,30 @@ def plot_cohort(df: pd.DataFrame) -> go.Figure:
 def plot_nrr_grr(df: pd.DataFrame) -> go.Figure:
     """Monthly NRR and GRR line chart.
 
+    When *df* carries a ``source`` column (from ``nrr_grr(..., by_source=True)``)
+    one NRR line is drawn per billing source.
+
     Args:
         df: DataFrame from :func:`nrr_grr`.
     """
     interval = df.attrs.get("interval", "month")
+    if "source" in df.columns:
+        pct = df.copy()
+        pct["nrr_pct"] = pct["nrr"].apply(lambda v: v * 100 if v is not None else None)
+        fig = plot_grouped_lines(
+            pct,
+            x_col="month",
+            y_col="nrr_pct",
+            title="Net Revenue Retention by Source",
+            yaxis_title="NRR (%)",
+            interval=interval,
+            yaxis_tickprefix="",
+            yaxis_tickformat="",
+            yaxis_ticksuffix="%",
+            value_fmt="{:.0f}%",
+        )
+        fig.add_hline(y=100, line_dash="dot", line_color=COLORS["grey"], annotation_text="100%")
+        return fig
     x = df.month
     fig = go.Figure()
     fig.add_trace(

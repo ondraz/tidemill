@@ -15,10 +15,34 @@ from tidemill.metrics.query import (
     CountDistinct,
     Cube,
     Dim,
+    DimDef,
     Join,
+    JoinDef,
     Sum,
     TimeDim,
 )
+
+# ── Shared source dimension ─────────────────────────────────────────────
+# Every subscription/revenue cube can group or filter by its originating
+# billing platform ("Stripe", "Chargebee", …). The canonical platform name
+# lives in ``connector_source.type``; ``source_id`` on each metric/base table
+# is the per-connection FK. We join ``connector_source`` (aliased ``csrc`` to
+# avoid colliding with churn's ``cs`` base alias) and expose ``csrc.type`` as
+# the ``source`` dimension. The DimDef is frozen and the alias is uniform, so
+# the same instance is safely shared across every cube.
+
+
+def source_join(base_alias: str) -> JoinDef:
+    """Join ``connector_source`` so a cube can group/filter by platform.
+
+    *base_alias* is the cube's source-table alias (``s``, ``m``, ``ce`` …);
+    the join matches ``connector_source.id`` against ``<base>.source_id``.
+    """
+    return Join("connector_source", alias="csrc", on=f"csrc.id = {base_alias}.source_id")
+
+
+SOURCE_DIM: DimDef = Dim("csrc.type", join="connector_source", label="source")
+
 
 # ── Shared computed-dimension SQL ───────────────────────────────────────
 # These expressions assume the customer alias is `c` (every cube with a
@@ -67,6 +91,7 @@ class MRRSnapshotCube(Cube):
     __alias__ = "s"
 
     class Joins:
+        connector_source = source_join("s")
         subscription = Join(
             "subscription",
             alias="sub",
@@ -106,6 +131,7 @@ class MRRSnapshotCube(Cube):
     class Dimensions:
         # Source
         source_id = Dim("s.source_id")
+        source = SOURCE_DIM
         currency = Dim("s.currency")
         # Plan (via subscription → plan)
         plan_id = Dim("sub.plan_id", join="subscription")
@@ -142,6 +168,7 @@ class MRRMovementCube(Cube):
     __alias__ = "m"
 
     class Joins:
+        connector_source = source_join("m")
         subscription = Join(
             "subscription",
             alias="sub",
@@ -173,6 +200,7 @@ class MRRMovementCube(Cube):
     class Dimensions:
         # Source
         source_id = Dim("m.source_id")
+        source = SOURCE_DIM
         customer_id = Dim("m.customer_id")
         currency = Dim("m.currency")
         movement_type = Dim("m.movement_type")

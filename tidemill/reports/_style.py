@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 # ── Tidemill colour palette ─────────────────────────────────────────
 # Warm orange-based palette for financial / SaaS analytics dashboards.
@@ -51,6 +54,150 @@ COLORWAY: list[str] = [
     "#84CC16",  # lime
     "#78716C",  # stone
 ]
+
+# ── Subscription source palette ─────────────────────────────────────
+# Per-platform brand colours used whenever a report is grouped by source
+# (``connector_source.type``). Unknown sources fall back to ``COLORWAY``.
+
+SOURCE_COLORS: dict[str, str] = {
+    "stripe": "#635BFF",  # Stripe indigo
+    "chargebee": "#FF6C37",  # Chargebee orange
+    "recurly": "#9B7BF2",  # Recurly purple
+    "lago": "#00C8A0",  # Lago teal
+    "killbill": "#E8543F",  # Kill Bill red-orange
+}
+
+
+def source_label(source: Any) -> str:
+    """Human-readable label for a connector type (``stripe`` → ``Stripe``)."""
+    if source is None or (isinstance(source, float) and pd.isna(source)):
+        return "Unknown"
+    text = str(source).strip()
+    if not text:
+        return "Unknown"
+    # Preserve known brand capitalisation, otherwise title-case the slug.
+    special = {"killbill": "Kill Bill", "quickbooks": "QuickBooks"}
+    return special.get(text.lower(), text.replace("_", " ").title())
+
+
+def source_color(source: Any, index: int = 0) -> str:
+    """Stable colour for a source; falls back to the colour cycle by *index*."""
+    key = str(source).strip().lower() if source is not None else ""
+    if key in SOURCE_COLORS:
+        return SOURCE_COLORS[key]
+    return COLORWAY[index % len(COLORWAY)]
+
+
+def iter_sources(
+    df: pd.DataFrame,
+    source_col: str = "source",
+) -> Iterator[tuple[Any, pd.DataFrame]]:
+    """Yield ``(source, sub_frame)`` pairs in a stable, presentation order.
+
+    Known sources (see :data:`SOURCE_COLORS`) come first in palette order so
+    colours stay consistent across charts; any remaining sources follow
+    alphabetically. Rows with a missing source are grouped under ``None``.
+    """
+    if source_col not in df.columns:
+        yield None, df
+        return
+    present = list(df[source_col].dropna().unique())
+    known = [s for s in SOURCE_COLORS if s in {str(p).lower() for p in present}]
+    ordering = {s: i for i, s in enumerate(known)}
+
+    def sort_key(value: Any) -> tuple[int, str]:
+        return ordering.get(str(value).lower(), len(known)), str(value).lower()
+
+    for src in sorted(present, key=sort_key):
+        yield src, df[df[source_col] == src]
+
+
+def plot_grouped_lines(
+    df: pd.DataFrame,
+    *,
+    x_col: str,
+    y_col: str,
+    title: str,
+    yaxis_title: str,
+    interval: str = "month",
+    source_col: str = "source",
+    yaxis_tickprefix: str = "$",
+    yaxis_tickformat: str = ",",
+    yaxis_ticksuffix: str = "",
+    value_fmt: str | None = "${:,.0f}",
+) -> go.Figure:
+    """One line trace per source from a long-format (period × source) frame."""
+    fig = go.Figure()
+    for i, (src, sub) in enumerate(iter_sources(df, source_col)):
+        text = [value_fmt.format(v) for v in sub[y_col]] if value_fmt else None
+        fig.add_trace(
+            go.Scatter(
+                x=sub[x_col],
+                y=sub[y_col],
+                name=source_label(src),
+                mode="lines+markers",
+                line={"color": source_color(src, i), "width": 2.5},
+                marker={"size": 7},
+                text=text,
+                hovertemplate="%{x}<br>%{text}<extra>" + source_label(src) + "</extra>"
+                if text
+                else None,
+            )
+        )
+    fig.update_layout(
+        title=title,
+        yaxis_title=yaxis_title,
+        yaxis_tickprefix=yaxis_tickprefix,
+        yaxis_tickformat=yaxis_tickformat,
+        yaxis_ticksuffix=yaxis_ticksuffix,
+        yaxis_rangemode="tozero",
+        legend={"orientation": "h", "y": -0.15},
+    )
+    apply_period_xaxis(fig, df[x_col], interval)
+    return fig
+
+
+def plot_grouped_bars(
+    df: pd.DataFrame,
+    *,
+    x_col: str,
+    y_col: str,
+    title: str,
+    yaxis_title: str,
+    interval: str = "month",
+    source_col: str = "source",
+    barmode: str = "group",
+    period_axis: bool = True,
+    yaxis_tickprefix: str = "$",
+    yaxis_tickformat: str = ",",
+) -> go.Figure:
+    """One bar trace per source from a long-format frame.
+
+    *period_axis* applies the canonical temporal x-axis; set it ``False`` for
+    categorical x (e.g. movement type).
+    """
+    fig = go.Figure()
+    for i, (src, sub) in enumerate(iter_sources(df, source_col)):
+        fig.add_trace(
+            go.Bar(
+                x=sub[x_col],
+                y=sub[y_col],
+                name=source_label(src),
+                marker_color=source_color(src, i),
+            )
+        )
+    fig.update_layout(
+        barmode=barmode,
+        title=title,
+        yaxis_title=yaxis_title,
+        yaxis_tickprefix=yaxis_tickprefix,
+        yaxis_tickformat=yaxis_tickformat,
+        legend={"orientation": "h", "y": -0.15},
+    )
+    if period_axis:
+        apply_period_xaxis(fig, df[x_col], interval)
+    return fig
+
 
 # ── Plotly template ─────────────────────────────────────────────────
 

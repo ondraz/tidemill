@@ -51,34 +51,63 @@ class TidemillClient:
         r.raise_for_status()
         return r.json()
 
+    @staticmethod
+    def _source_filter(source: str | None) -> dict[str, str]:
+        """Build the query param that scopes a metric to one billing source.
+
+        ``source`` is a connector type (``stripe``, ``chargebee`` …). The
+        metric layer parses ``filter=source=<type>`` into a WHERE clause on
+        ``connector_source.type`` — see :meth:`tidemill.metrics.query.Cube`.
+        """
+        return {"filter": f"source={source}"} if source else {}
+
+    def source_types(self) -> list[str]:
+        """Distinct connector types currently connected (``["chargebee", "stripe"]``)."""
+        return sorted({s["type"] for s in self.sources() if s.get("type")})
+
     # ── MRR ──────────────────────────────────────────────────────────
 
-    def mrr(self, at: str | None = None) -> int:
+    def mrr(self, at: str | None = None, source: str | None = None) -> int:
         """Current MRR in cents.  ``at`` is an ISO date string."""
         kw: dict[str, str] = {}
         if at:
             kw["at"] = at
-        return cast(int, self.get("/api/metrics/mrr", **kw))
+        return cast(int, self.get("/api/metrics/mrr", **kw, **self._source_filter(source)))
 
-    def arr(self, at: str | None = None) -> int:
+    def arr(self, at: str | None = None, source: str | None = None) -> int:
         """Current ARR in cents (MRR x 12)."""
         kw: dict[str, str] = {}
         if at:
             kw["at"] = at
-        return cast(int, self.get("/api/metrics/arr", **kw))
+        return cast(int, self.get("/api/metrics/arr", **kw, **self._source_filter(source)))
 
-    def mrr_breakdown(self, start: str, end: str) -> list[dict[str, Any]]:
+    def mrr_breakdown(
+        self, start: str, end: str, source: str | None = None
+    ) -> list[dict[str, Any]]:
         """MRR movements (new / expansion / contraction / churn) for a period."""
         return cast(
             list[dict[str, Any]],
-            self.get("/api/metrics/mrr/breakdown", start=start, end=end),
+            self.get(
+                "/api/metrics/mrr/breakdown",
+                start=start,
+                end=end,
+                **self._source_filter(source),
+            ),
         )
 
-    def mrr_waterfall(self, start: str, end: str, interval: str = "month") -> list[dict[str, Any]]:
+    def mrr_waterfall(
+        self, start: str, end: str, interval: str = "month", source: str | None = None
+    ) -> list[dict[str, Any]]:
         """MRR waterfall with starting/ending MRR and movements per period."""
         return cast(
             list[dict[str, Any]],
-            self.get("/api/metrics/mrr/waterfall", start=start, end=end, interval=interval),
+            self.get(
+                "/api/metrics/mrr/waterfall",
+                start=start,
+                end=end,
+                interval=interval,
+                **self._source_filter(source),
+            ),
         )
 
     def mrr_components(self) -> dict[str, int]:
@@ -96,6 +125,7 @@ class TidemillClient:
         start: str,
         end: str,
         interval: str = "month",
+        source: str | None = None,
     ) -> list[dict[str, Any]]:
         """Usage revenue per period (cents)."""
         return cast(
@@ -105,6 +135,7 @@ class TidemillClient:
                 start=start,
                 end=end,
                 interval=interval,
+                **self._source_filter(source),
             ),
         )
 
@@ -122,10 +153,18 @@ class TidemillClient:
         start: str,
         end: str,
         type: str = "logo",  # noqa: A002
+        source: str | None = None,
     ) -> float | None:
         """Churn rate for the period.  ``type`` is ``"logo"`` or ``"revenue"``."""
         return cast(
-            "float | None", self.get("/api/metrics/churn", start=start, end=end, type=type)
+            "float | None",
+            self.get(
+                "/api/metrics/churn",
+                start=start,
+                end=end,
+                type=type,
+                **self._source_filter(source),
+            ),
         )
 
     def churn_customers(self, start: str, end: str) -> list[dict[str, Any]]:
@@ -144,9 +183,11 @@ class TidemillClient:
 
     # ── Retention ────────────────────────────────────────────────────
 
-    def retention(self, start: str, end: str, **kw: Any) -> Any:
+    def retention(self, start: str, end: str, source: str | None = None, **kw: Any) -> Any:
         """Cohort retention data.  Pass ``query_type="nrr"`` or ``"grr"``."""
-        return self.get("/api/metrics/retention", start=start, end=end, **kw)
+        return self.get(
+            "/api/metrics/retention", start=start, end=end, **self._source_filter(source), **kw
+        )
 
     def cohort_matrix(self, start: str, end: str) -> list[dict[str, Any]]:
         """Cohort retention matrix — one row per (cohort_month, active_month)."""
@@ -166,12 +207,14 @@ class TidemillClient:
         """Simple LTV = ARPU / monthly churn rate, in cents."""
         return cast(int | None, self.get("/api/metrics/ltv", start=start, end=end))
 
-    def arpu(self, at: str | None = None) -> int | None:
+    def arpu(self, at: str | None = None, source: str | None = None) -> int | None:
         """Average Revenue Per User in cents."""
         kw: dict[str, str] = {}
         if at:
             kw["at"] = at
-        return cast(int | None, self.get("/api/metrics/ltv/arpu", **kw))
+        return cast(
+            int | None, self.get("/api/metrics/ltv/arpu", **kw, **self._source_filter(source))
+        )
 
     def cohort_ltv(self, start: str, end: str) -> list[dict[str, Any]]:
         """Per-cohort LTV breakdown."""
@@ -189,11 +232,19 @@ class TidemillClient:
         """Trial funnel: started / converted / expired / conversion_rate."""
         return cast(dict[str, Any], self.get("/api/metrics/trials/funnel", start=start, end=end))
 
-    def trial_series(self, start: str, end: str, interval: str = "month") -> list[dict[str, Any]]:
+    def trial_series(
+        self, start: str, end: str, interval: str = "month", source: str | None = None
+    ) -> list[dict[str, Any]]:
         """Time-series of trial metrics per ``interval``."""
         return cast(
             list[dict[str, Any]],
-            self.get("/api/metrics/trials/series", start=start, end=end, interval=interval),
+            self.get(
+                "/api/metrics/trials/series",
+                start=start,
+                end=end,
+                interval=interval,
+                **self._source_filter(source),
+            ),
         )
 
     # ── Sources ──────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from pandas.io.formats.style import Styler
 
-from tidemill.reports._style import COLORS, apply_period_xaxis
+from tidemill.reports._style import COLORS, apply_period_xaxis, plot_grouped_bars
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -39,6 +39,7 @@ def series(
     start: str,
     end: str,
     interval: str = "month",
+    by_source: bool = False,
 ) -> pd.DataFrame:
     """Usage revenue per period.
 
@@ -48,10 +49,33 @@ def series(
         end: ISO date string for period end.
         interval: Bucket size — ``day``, ``week``, ``month``, ``quarter``,
             or ``year``.
+        by_source: When True, split revenue per billing source (the frame
+            gains a ``source`` column); :func:`plot_series` then renders
+            grouped bars.
 
     Returns:
-        DataFrame with ``period`` (datetime) and ``revenue`` (dollars).
+        DataFrame with ``period`` (datetime) and ``revenue`` (dollars), plus
+        ``source`` when *by_source*.
     """
+    if by_source:
+        frames: list[pd.DataFrame] = []
+        for src in tm.source_types():
+            raw = tm.usage_revenue_series(start, end, interval=interval, source=src)
+            if not raw:
+                continue
+            part = pd.DataFrame(raw)
+            part["revenue"] = part["revenue"] / 100
+            part["period"] = pd.to_datetime(part["period"])
+            part["source"] = src
+            frames.append(part[["period", "revenue", "source"]])
+        df = (
+            pd.concat(frames, ignore_index=True)
+            if frames
+            else pd.DataFrame(columns=["period", "revenue", "source"])
+        )
+        df.attrs["interval"] = interval
+        return df.sort_values("period").reset_index(drop=True)
+
     raw = tm.usage_revenue_series(start, end, interval=interval)
     df = pd.DataFrame(raw)
     if df.empty:
@@ -84,10 +108,22 @@ def by_customer(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
 def plot_series(df: pd.DataFrame) -> go.Figure:
     """Bar chart of usage revenue per period.
 
+    When *df* carries a ``source`` column (from ``series(..., by_source=True)``)
+    the periods are drawn as grouped bars, one colour per billing source.
+
     Args:
         df: DataFrame from :func:`series`.
     """
     interval = df.attrs.get("interval", "month")
+    if "source" in df.columns:
+        return plot_grouped_bars(
+            df,
+            x_col="period",
+            y_col="revenue",
+            title="Usage Revenue by Source",
+            yaxis_title="Revenue ($)",
+            interval=interval,
+        )
     fig = go.Figure(
         go.Bar(
             x=df.period,

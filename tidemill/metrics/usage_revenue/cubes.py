@@ -9,7 +9,12 @@ re-ingested.
 
 from __future__ import annotations
 
-from tidemill.metrics.mrr.cubes import _COHORT_MONTH_SQL, _TENURE_MONTHS_SQL
+from tidemill.metrics.mrr.cubes import (
+    _COHORT_MONTH_SQL,
+    _TENURE_MONTHS_SQL,
+    SOURCE_DIM,
+    source_join,
+)
 from tidemill.metrics.query import (
     CountDistinct,
     Cube,
@@ -27,6 +32,7 @@ class UsageRevenueCube(Cube):
     __alias__ = "u"
 
     class Joins:
+        connector_source = source_join("u")
         subscription = Join(
             "subscription",
             alias="sub",
@@ -58,6 +64,7 @@ class UsageRevenueCube(Cube):
 
     class Dimensions:
         source_id = Dim("u.source_id")
+        source = SOURCE_DIM
         customer_id = Dim("u.customer_id")
         subscription_id = Dim("u.subscription_id")
         currency = Dim("u.currency")

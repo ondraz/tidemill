@@ -6,7 +6,12 @@
 
 from __future__ import annotations
 
-from tidemill.metrics.mrr.cubes import _COHORT_MONTH_SQL, _TENURE_MONTHS_SQL
+from tidemill.metrics.mrr.cubes import (
+    _COHORT_MONTH_SQL,
+    _TENURE_MONTHS_SQL,
+    SOURCE_DIM,
+    source_join,
+)
 from tidemill.metrics.query import (
     Count,
     CountDistinct,
@@ -25,6 +30,7 @@ class ChurnCustomerStateCube(Cube):
     __alias__ = "cs"
 
     class Joins:
+        connector_source = source_join("cs")
         customer = Join(
             "customer",
             alias="c",
@@ -36,6 +42,7 @@ class ChurnCustomerStateCube(Cube):
 
     class Dimensions:
         source_id = Dim("cs.source_id")
+        source = SOURCE_DIM
         customer_id = Dim("cs.customer_id")
         customer_name = Dim("c.name", join="customer", label="customer_name")
         customer_country = Dim("c.country", join="customer", label="customer_country")
@@ -55,6 +62,7 @@ class ChurnEventCube(Cube):
     __alias__ = "ce"
 
     class Joins:
+        connector_source = source_join("ce")
         customer = Join(
             "customer",
             alias="c",
@@ -72,6 +80,7 @@ class ChurnEventCube(Cube):
 
     class Dimensions:
         source_id = Dim("ce.source_id")
+        source = SOURCE_DIM
         customer_id = Dim("ce.customer_id")
         churn_type = Dim("ce.churn_type")
         cancel_reason = Dim("ce.cancel_reason")

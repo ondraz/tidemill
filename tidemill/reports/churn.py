@@ -8,7 +8,13 @@ import pandas as pd
 import plotly.graph_objects as go
 from pandas.io.formats.style import Styler
 
-from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
+from tidemill.reports._style import (
+    COLORS,
+    apply_period_xaxis,
+    format_periods,
+    plot_grouped_bars,
+    plot_grouped_lines,
+)
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -121,41 +127,64 @@ def revenue_events(
     return pd.DataFrame(rows)
 
 
-def timeline(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
+def _monthly_churn_rows(
+    tm: TidemillClient,
+    months: pd.DatetimeIndex,
+    source: str | None = None,
+) -> list[dict[str, Any]]:
+    """Build per-month logo/revenue churn rows, optionally scoped to *source*."""
+    rows: list[dict[str, Any]] = []
+    for m in months:
+        s = m.strftime("%Y-%m-%d")
+        e = (m + pd.offsets.MonthEnd(0)).strftime("%Y-%m-%d")
+        logo = tm.churn(s, e, type="logo", source=source)
+        revenue = tm.churn(s, e, type="revenue", source=source)
+        row: dict[str, Any] = {
+            "month": m,
+            "logo_churn": float(logo) if logo is not None else None,
+            "revenue_churn": float(revenue) if revenue is not None else None,
+        }
+        if source is not None:
+            row["source"] = source
+        rows.append(row)
+    return rows
+
+
+def timeline(tm: TidemillClient, start: str, end: str, by_source: bool = False) -> pd.DataFrame:
     """Fetch monthly logo and revenue churn rates.
 
     Args:
         tm: Tidemill API client.
         start: ISO date for first month of churn measurement.
         end: ISO date for last month boundary.
+        by_source: When True, compute the rates separately per billing source
+            (the frame gains a ``source`` column); :func:`plot_timeline` then
+            draws one logo-churn line per source.
 
     Returns:
         DataFrame with ``month``, ``logo_churn``, ``revenue_churn``
-        (as decimals, e.g. 0.05 = 5%).
+        (as decimals, e.g. 0.05 = 5%), plus ``source`` when *by_source*.
     """
     # Query each month closed-closed ``[first-of-month, last-of-month]`` per
     # Tidemill's date-range convention (see docs/definitions.md).
     months = pd.date_range(start, end, freq="MS")
-    rows: list[dict[str, Any]] = []
-    for m in months:
-        s = m.strftime("%Y-%m-%d")
-        e = (m + pd.offsets.MonthEnd(0)).strftime("%Y-%m-%d")
-        logo = tm.churn(s, e, type="logo")
-        revenue = tm.churn(s, e, type="revenue")
-        rows.append(
-            {
-                "month": m,
-                "logo_churn": float(logo) if logo is not None else None,
-                "revenue_churn": float(revenue) if revenue is not None else None,
-            }
-        )
-    df = pd.DataFrame(rows)
+    if by_source:
+        rows: list[dict[str, Any]] = []
+        for src in tm.source_types():
+            rows.extend(_monthly_churn_rows(tm, months, source=src))
+        df = pd.DataFrame(rows)
+    else:
+        df = pd.DataFrame(_monthly_churn_rows(tm, months))
     df.attrs["interval"] = "month"
     return df
 
 
 def monthly_lost_mrr(
-    tm: TidemillClient, start: str, end: str, interval: str = "month"
+    tm: TidemillClient,
+    start: str,
+    end: str,
+    interval: str = "month",
+    by_source: bool = False,
 ) -> pd.DataFrame:
     """Fetch churned MRR per period from the MRR waterfall.
 
@@ -165,10 +194,33 @@ def monthly_lost_mrr(
         end: ISO date string for period end.
         interval: Bucket size — ``day``, ``week``, ``month``, ``quarter``,
             or ``year``.
+        by_source: When True, split churned MRR per billing source (the frame
+            gains a ``source`` column); :func:`plot_monthly_lost_mrr` then
+            renders grouped bars.
 
     Returns:
-        DataFrame with ``period`` and ``churn_dollars``.
+        DataFrame with ``period`` and ``churn_dollars`` (and ``source`` when
+        *by_source*).
     """
+    if by_source:
+        frames: list[pd.DataFrame] = []
+        for src in tm.source_types():
+            raw = tm.mrr_waterfall(start, end, interval=interval, source=src)
+            if not raw:
+                continue
+            part = pd.DataFrame(raw)
+            part["churn_dollars"] = part["churn"].apply(lambda c: abs(c) / 100)
+            part["period"] = pd.to_datetime(part["period"])
+            part["source"] = src
+            frames.append(part[["period", "churn_dollars", "source"]])
+        df = (
+            pd.concat(frames, ignore_index=True)
+            if frames
+            else pd.DataFrame(columns=["period", "churn_dollars", "source"])
+        )
+        df.attrs["interval"] = interval
+        return df
+
     raw = tm.mrr_waterfall(start, end, interval=interval)
     df = pd.DataFrame(raw)
     df["churn_dollars"] = df["churn"].apply(lambda c: abs(c) / 100)
@@ -349,10 +401,30 @@ def style_c_churned(detail: pd.DataFrame) -> Styler:
 def plot_timeline(df: pd.DataFrame) -> go.Figure:
     """Monthly logo + revenue churn rate lines.
 
+    When *df* carries a ``source`` column (from ``timeline(..., by_source=True)``)
+    one logo-churn line is drawn per billing source.
+
     Args:
         df: DataFrame from :func:`timeline`.
     """
     interval = df.attrs.get("interval", "month")
+    if "source" in df.columns:
+        pct = df.copy()
+        pct["logo_churn_pct"] = pct["logo_churn"].apply(
+            lambda v: v * 100 if v is not None else None
+        )
+        return plot_grouped_lines(
+            pct,
+            x_col="month",
+            y_col="logo_churn_pct",
+            title="Logo Churn Rate by Source",
+            yaxis_title="Churn Rate (%)",
+            interval=interval,
+            yaxis_tickprefix="",
+            yaxis_tickformat="",
+            yaxis_ticksuffix="%",
+            value_fmt="{:.1f}%",
+        )
     x = df.month
     fig = go.Figure()
     fig.add_trace(
@@ -392,10 +464,23 @@ def plot_timeline(df: pd.DataFrame) -> go.Figure:
 def plot_monthly_lost_mrr(df: pd.DataFrame) -> go.Figure:
     """Bar chart of churned MRR per period.
 
+    When *df* carries a ``source`` column (from
+    ``monthly_lost_mrr(..., by_source=True)``) the periods are drawn as
+    grouped bars, one colour per billing source.
+
     Args:
         df: DataFrame from :func:`monthly_lost_mrr`.
     """
     interval = df.attrs.get("interval", "month")
+    if "source" in df.columns:
+        return plot_grouped_bars(
+            df,
+            x_col="period",
+            y_col="churn_dollars",
+            title="Churned MRR by Source",
+            yaxis_title="Lost MRR ($)",
+            interval=interval,
+        )
     fig = go.Figure(
         go.Bar(
             x=df.period,

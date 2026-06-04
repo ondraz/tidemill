@@ -68,7 +68,10 @@ class QuerySpec:
     #   "plan_id"          — one row per plan
     #   "plan_interval"    — one row per billing interval (monthly/yearly/...)
     #   "customer_country" — one row per country
-    #   "source_id"        — one row per billing source
+    #   "source_id"        — one row per billing source (per-connection FK)
+    #   "source"           — one row per billing platform (connector_source.type:
+    #                        "stripe", "chargebee", ...) — available on every
+    #                        subscription/revenue cube
     #   "currency"         — one row per currency (uses *_cents, not base-currency aggregate)
     #   "cohort_month"     — retention-specific: one row per cohort
     #   Computed dims from MRR cubes: "mrr_band", "arr_band", "tenure_months",
@@ -905,7 +908,8 @@ Each metric's cube declares which dimensions are available. Common dimensions ac
 
 | Dimension | Column | Join required | Example |
 |-----------|--------|---------------|---------|
-| `source_id` | fact table `source_id` | none | Multi-source deployments |
+| `source_id` | fact table `source_id` | none | One row per connection (per-source FK) |
+| `source` | `csrc.type` | `connector_source` (alias `csrc`) | One row per billing platform (Stripe vs. Chargebee) |
 | `currency` | fact table `currency` | none | Per-currency amounts (uses `*_cents`) |
 | `plan_id` | `sub.plan_id` | subscription | MRR per plan |
 | `plan_interval` | `p.interval` | subscription → plan | Monthly vs. annual |

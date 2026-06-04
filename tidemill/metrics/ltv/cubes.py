@@ -5,7 +5,12 @@
 
 from __future__ import annotations
 
-from tidemill.metrics.mrr.cubes import _COHORT_MONTH_SQL, _TENURE_MONTHS_SQL
+from tidemill.metrics.mrr.cubes import (
+    _COHORT_MONTH_SQL,
+    _TENURE_MONTHS_SQL,
+    SOURCE_DIM,
+    source_join,
+)
 from tidemill.metrics.query import (
     Count,
     CountDistinct,
@@ -24,6 +29,7 @@ class LtvInvoiceCube(Cube):
     __alias__ = "li"
 
     class Joins:
+        connector_source = source_join("li")
         customer = Join(
             "customer",
             alias="c",
@@ -43,6 +49,7 @@ class LtvInvoiceCube(Cube):
 
     class Dimensions:
         source_id = Dim("li.source_id")
+        source = SOURCE_DIM
         customer_id = Dim("li.customer_id")
         currency = Dim("li.currency")
         customer_country = Dim("c.country", join="customer", label="customer_country")

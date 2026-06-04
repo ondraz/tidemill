@@ -8,7 +8,12 @@ import pandas as pd
 import plotly.graph_objects as go
 from pandas.io.formats.style import Styler
 
-from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
+from tidemill.reports._style import (
+    COLORS,
+    apply_period_xaxis,
+    format_periods,
+    plot_grouped_lines,
+)
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -42,37 +47,57 @@ def overview(tm: TidemillClient, start: str, end: str) -> dict[str, Any]:
     return {"arpu": arpu, "ltv": ltv_val, "implied_churn": implied_churn}
 
 
-def arpu_timeline(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
+def _arpu_rows(
+    tm: TidemillClient,
+    months: pd.DatetimeIndex,
+    source: str | None = None,
+) -> list[dict[str, Any]]:
+    """Build per-month ARPU/MRR/customer rows, optionally scoped to *source*."""
+    rows: list[dict[str, Any]] = []
+    for m in months:
+        at = (m + pd.offsets.MonthEnd(0)).strftime("%Y-%m-%d")
+        arpu_cents = tm.arpu(at=at, source=source)
+        mrr_cents = tm.mrr(at=at, source=source)
+        customers = int(round(mrr_cents / arpu_cents)) if arpu_cents and mrr_cents else None
+        row: dict[str, Any] = {
+            "month": m,
+            "active_customers": customers,
+            "mrr_dollars": mrr_cents / 100 if mrr_cents is not None else None,
+            "arpu_dollars": arpu_cents / 100 if arpu_cents is not None else None,
+        }
+        if source is not None:
+            row["source"] = source
+        rows.append(row)
+    return rows
+
+
+def arpu_timeline(
+    tm: TidemillClient, start: str, end: str, by_source: bool = False
+) -> pd.DataFrame:
     """Fetch monthly ARPU, MRR, and active customer counts.
 
     Args:
         tm: Tidemill API client.
         start: ISO date string for period start.
         end: ISO date string for period end.
+        by_source: When True, compute ARPU separately per billing source (the
+            frame gains a ``source`` column); :func:`plot_arpu_timeline` then
+            draws one ARPU line per source.
 
     Returns:
         DataFrame with ``month``, ``active_customers``, ``mrr_dollars``,
-        and ``arpu_dollars``.
+        and ``arpu_dollars`` (plus ``source`` when *by_source*).
     """
     # Snapshot at the last day of each month (closed-closed convention —
     # ``at`` is treated as an inclusive end-of-day boundary by the API).
     months = pd.date_range(start, end, freq="MS")
-    rows: list[dict[str, Any]] = []
-    for m in months:
-        at = (m + pd.offsets.MonthEnd(0)).strftime("%Y-%m-%d")
-        arpu_cents = tm.arpu(at=at)
-        mrr_cents = tm.mrr(at=at)
-        customers = int(round(mrr_cents / arpu_cents)) if arpu_cents and mrr_cents else None
-        rows.append(
-            {
-                "month": m,
-                "active_customers": customers,
-                "mrr_dollars": mrr_cents / 100 if mrr_cents is not None else None,
-                "arpu_dollars": arpu_cents / 100 if arpu_cents is not None else None,
-            }
-        )
-
-    df = pd.DataFrame(rows)
+    if by_source:
+        rows: list[dict[str, Any]] = []
+        for src in tm.source_types():
+            rows.extend(_arpu_rows(tm, months, source=src))
+        df = pd.DataFrame(rows)
+    else:
+        df = pd.DataFrame(_arpu_rows(tm, months))
     df.attrs["interval"] = "month"
     return df
 
@@ -183,6 +208,10 @@ def style_cohort(df: pd.DataFrame) -> Styler:
 def plot_arpu_timeline(df: pd.DataFrame) -> go.Figure:
     """Monthly ARPU trend line.
 
+    When *df* carries a ``source`` column (from
+    ``arpu_timeline(..., by_source=True)``) one ARPU line is drawn per
+    billing source.
+
     Args:
         df: DataFrame from :func:`arpu_timeline`.
     """
@@ -191,6 +220,16 @@ def plot_arpu_timeline(df: pd.DataFrame) -> go.Figure:
         return go.Figure().update_layout(title="No ARPU data")
 
     interval = df.attrs.get("interval", "month")
+    if "source" in df.columns:
+        return plot_grouped_lines(
+            valid,
+            x_col="month",
+            y_col="arpu_dollars",
+            title="Monthly ARPU by Source",
+            yaxis_title="ARPU ($)",
+            interval=interval,
+            value_fmt="${:,.0f}",
+        )
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(

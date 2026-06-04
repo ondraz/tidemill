@@ -8,7 +8,12 @@ import pandas as pd
 import plotly.graph_objects as go
 from pandas.io.formats.style import Styler
 
-from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
+from tidemill.reports._style import (
+    COLORS,
+    apply_period_xaxis,
+    format_periods,
+    plot_grouped_lines,
+)
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -37,6 +42,7 @@ def timeline(
     start: str,
     end: str,
     interval: str = "month",
+    by_source: bool = False,
 ) -> pd.DataFrame:
     """Fetch per-period trial metrics at the requested granularity.
 
@@ -45,11 +51,31 @@ def timeline(
         start: ISO date string for period start.
         end: ISO date string for period end.
         interval: ``day``, ``week``, ``month``, ``quarter``, or ``year``.
+        by_source: When True, compute the per-period metrics separately for
+            each billing source (the frame gains a ``source`` column);
+            :func:`plot_timeline` then draws one conversion-rate line per
+            source.
 
     Returns:
         DataFrame with ``period``, ``started``, ``converted``,
-        ``expired``, ``conversion_rate``.  Empty if no data.
+        ``expired``, ``conversion_rate`` (and ``source`` when *by_source*).
+        Empty if no data.
     """
+    if by_source:
+        frames: list[pd.DataFrame] = []
+        for src in tm.source_types():
+            series = tm.trial_series(start, end, interval=interval, source=src)
+            if not series:
+                continue
+            part = pd.DataFrame(series)
+            part["source"] = src
+            frames.append(part)
+        if not frames:
+            return pd.DataFrame()
+        df = pd.concat(frames, ignore_index=True)
+        df.attrs["interval"] = interval
+        return df
+
     series = tm.trial_series(start, end, interval=interval)
     if not series:
         return pd.DataFrame()
@@ -175,6 +201,28 @@ def plot_timeline(df: pd.DataFrame) -> go.Figure:
         return go.Figure().update_layout(title="No trial data")
 
     interval = df.attrs.get("interval", "month")
+
+    if "source" in df.columns:
+        # Per-source view: compare conversion rate across billing sources.
+        pct = df.copy()
+        pct["period"] = pd.to_datetime(pct["period"])
+        pct["conversion_pct"] = pct["conversion_rate"].apply(
+            lambda v: v * 100 if v is not None else None
+        )
+        fig = plot_grouped_lines(
+            pct,
+            x_col="period",
+            y_col="conversion_pct",
+            title="Trial Conversion Rate by Source",
+            yaxis_title="Conversion Rate (%)",
+            interval=interval,
+            yaxis_tickprefix="",
+            yaxis_tickformat="",
+            yaxis_ticksuffix="%",
+            value_fmt="{:.0f}%",
+        )
+        return fig
+
     x = pd.to_datetime(df.period)
     pending = (df.started - df.converted - df.expired).clip(lower=0)
 

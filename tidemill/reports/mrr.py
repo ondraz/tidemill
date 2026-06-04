@@ -8,7 +8,13 @@ import pandas as pd
 import plotly.graph_objects as go
 from pandas.io.formats.style import Styler
 
-from tidemill.reports._style import COLORS, apply_period_xaxis, format_periods
+from tidemill.reports._style import (
+    COLORS,
+    apply_period_xaxis,
+    format_periods,
+    plot_grouped_bars,
+    plot_grouped_lines,
+)
 
 if TYPE_CHECKING:
     from tidemill.reports.client import TidemillClient
@@ -90,19 +96,37 @@ def style_usage_breakdown(data: dict[str, Any]) -> pd.io.formats.style.Styler:
     return styler.hide(axis="index")
 
 
-def breakdown(tm: TidemillClient, start: str, end: str) -> pd.DataFrame:
+def breakdown(tm: TidemillClient, start: str, end: str, by_source: bool = False) -> pd.DataFrame:
     """Fetch MRR movement breakdown.
 
     Args:
         tm: Tidemill API client.
         start: ISO date string for period start.
         end: ISO date string for period end.
+        by_source: When True, split each movement type by billing source
+            (Stripe, Chargebee, …) — the returned frame gains a ``source``
+            column and :func:`plot_breakdown` renders grouped bars.
 
     Returns:
-        DataFrame with ``movement_type``, ``amount_base``, ``amount``.
+        DataFrame with ``movement_type``, ``amount_base``, ``amount`` (and
+        ``source`` when *by_source*).
     """
-    data = tm.mrr_breakdown(start, end)
-    df = pd.DataFrame(data)
+    if by_source:
+        frames: list[pd.DataFrame] = []
+        for src in tm.source_types():
+            data = tm.mrr_breakdown(start, end, source=src)
+            if not data:
+                continue
+            part = pd.DataFrame(data)
+            part["source"] = src
+            frames.append(part)
+        df = (
+            pd.concat(frames, ignore_index=True)
+            if frames
+            else pd.DataFrame(columns=["movement_type", "amount_base", "source"])
+        )
+    else:
+        df = pd.DataFrame(tm.mrr_breakdown(start, end))
     df["amount"] = df["amount_base"] / 100
     return df
 
@@ -320,7 +344,13 @@ def style_quick_ratio(data: dict[str, Any]) -> Styler:
     return styler.hide(axis="index")
 
 
-def trend(tm: TidemillClient, start: str, end: str, interval: str = "month") -> pd.DataFrame:
+def trend(
+    tm: TidemillClient,
+    start: str,
+    end: str,
+    interval: str = "month",
+    by_source: bool = False,
+) -> pd.DataFrame:
     """Fetch ending MRR per period.
 
     Args:
@@ -329,10 +359,33 @@ def trend(tm: TidemillClient, start: str, end: str, interval: str = "month") -> 
         end: ISO date string for period end.
         interval: Bucket size — ``day``, ``week``, ``month``, ``quarter``,
             or ``year``.
+        by_source: When True, return one ending-MRR series per billing source
+            (the frame gains a ``source`` column); :func:`plot_trend` then
+            draws one line per source.
 
     Returns:
-        DataFrame with ``period`` and ``ending_mrr`` (dollars).
+        DataFrame with ``period`` and ``ending_mrr`` (dollars), plus
+        ``source`` when *by_source*.
     """
+    if by_source:
+        frames: list[pd.DataFrame] = []
+        for src in tm.source_types():
+            raw = tm.mrr_waterfall(start, end, interval=interval, source=src)
+            if not raw:
+                continue
+            part = pd.DataFrame(raw)
+            part["ending_mrr"] = part["ending_mrr"] / 100
+            part["period"] = pd.to_datetime(part["period"])
+            part["source"] = src
+            frames.append(part[["period", "ending_mrr", "source"]])
+        df = (
+            pd.concat(frames, ignore_index=True)
+            if frames
+            else pd.DataFrame(columns=["period", "ending_mrr", "source"])
+        )
+        df.attrs["interval"] = interval
+        return df
+
     raw = tm.mrr_waterfall(start, end, interval=interval)
     df = pd.DataFrame(raw)
     df["ending_mrr"] = df["ending_mrr"] / 100
@@ -384,9 +437,21 @@ def style_waterfall(df: pd.DataFrame) -> Styler:
 def plot_breakdown(df: pd.DataFrame) -> go.Figure:
     """Bar chart of MRR movements.
 
+    When *df* carries a ``source`` column (from ``breakdown(..., by_source=True)``)
+    the movements are drawn as grouped bars, one colour per billing source.
+
     Args:
         df: DataFrame from :func:`breakdown`.
     """
+    if "source" in df.columns:
+        return plot_grouped_bars(
+            df,
+            x_col="movement_type",
+            y_col="amount",
+            title="MRR Movements by Source",
+            yaxis_title="Amount ($)",
+            period_axis=False,
+        )
     fig = go.Figure(
         go.Bar(
             x=df.movement_type,
@@ -453,10 +518,22 @@ def plot_waterfall(df: pd.DataFrame) -> go.Figure:
 def plot_trend(df: pd.DataFrame) -> go.Figure:
     """MRR trend line over time.
 
+    When *df* carries a ``source`` column (from ``trend(..., by_source=True)``)
+    one line is drawn per billing source instead of a single filled area.
+
     Args:
         df: DataFrame from :func:`trend`.
     """
     interval = df.attrs.get("interval", "month")
+    if "source" in df.columns:
+        return plot_grouped_lines(
+            df,
+            x_col="period",
+            y_col="ending_mrr",
+            title="MRR Over Time by Source",
+            yaxis_title="MRR ($)",
+            interval=interval,
+        )
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(

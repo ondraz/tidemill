@@ -164,9 +164,17 @@ tm = TidemillClient()   # reads TIDEMILL_API env var
 reports.mrr.waterfall(tm, "2025-09-01", "2026-04-30")
 reports.churn.customer_detail(tm, "2025-10-01", "2026-03-31")
 reports.retention.nrr_grr(tm, "2025-09-01", "2026-03-31")
+
+# Group any time-series / breakdown chart by billing source (Stripe vs.
+# Chargebee) — pass by_source=True; the plot_* function then draws one
+# trace per source. Covers MRR trend/breakdown, usage-revenue series,
+# churn timeline/lost-MRR, LTV ARPU timeline, trials timeline, and
+# retention NRR/GRR.
+df = reports.mrr.trend(tm, "2025-09-01", "2026-04-30", by_source=True)
+reports.mrr.plot_trend(df)
 ```
 
-The notebooks in `docs/notebooks/` use this library — each code cell is a single report call.
+The notebooks in `docs/notebooks/` use this library — each code cell is a single report call. Source grouping is powered by the `source` dimension (connector type) on every subscription cube — see [metrics.md](docs/architecture/metrics.md) / [cubes.md](docs/architecture/cubes.md).
 
 ## Development Commands
 
