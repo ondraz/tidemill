@@ -1,0 +1,123 @@
+site_name: Tidemill
+site_url: https://ondraz.github.io/tidemill/
+repo_url: https://github.com/ondraz/tidemill
+repo_name: ondraz/tidemill
+
+docs_dir: .
+site_dir: ../site
+
+theme:
+  name: material
+  logo: assets/icon-color.svg
+  favicon: assets/favicon.svg
+  palette:
+    - scheme: default
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep orange
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocs-jupyter
+  - toggle-sidebar:
+      toggle_button: all
+
+# Raw sources are the wiki's immutable input layer. They stay in git so the
+# LLM can re-read them, but they are never published — see wiki/how-it-works.md.
+exclude_docs: |
+  wiki/sources/
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - toc:
+      permalink: true
+
+extra_css:
+  - stylesheets/plotly.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Definitions: definitions.md
+  - Design System: design-system/design-system.html
+  - Wiki:
+      - How It Works: wiki/how-it-works.md
+      - Catalog: wiki/index.md
+      - Log: wiki/log.md
+      - Entities:
+          - Tidemill: wiki/entities/tidemill.md
+          - ChartMogul: wiki/entities/chartmogul.md
+          - Baremetrics: wiki/entities/baremetrics.md
+          - ProfitWell: wiki/entities/profitwell.md
+          - SaaSGrid: wiki/entities/saasgrid.md
+          - Stripe Billing: wiki/entities/stripe-billing.md
+          - Chargebee: wiki/entities/chargebee.md
+          - Lago: wiki/entities/lago.md
+          - Kill Bill: wiki/entities/kill-bill.md
+          - QuickBooks Online: wiki/entities/quickbooks-online.md
+      - Concepts:
+          - MRR: wiki/concepts/mrr.md
+          - Churn: wiki/concepts/churn.md
+          - Net Revenue Retention: wiki/concepts/net-revenue-retention.md
+          - Cohort Retention: wiki/concepts/cohort-retention.md
+          - LTV: wiki/concepts/ltv.md
+          - Usage-Based Pricing: wiki/concepts/usage-based-pricing.md
+          - Trial Conversion: wiki/concepts/trial-conversion.md
+          - Metric Transparency: wiki/concepts/metric-transparency.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Events: architecture/events.md
+      - Database: architecture/database.md
+      - Connectors: architecture/connectors.md
+      - Cubes & Query Algebra: architecture/cubes.md
+      - Query Algebra Examples: architecture/example-queries.ipynb
+      - Metrics: architecture/metrics.md
+      - Segmentation: architecture/segments.md
+      - API: architecture/api.md
+      - Reports: architecture/reports.md
+  - Development:
+      - Development: development/development.md
+      - Testing: development/testing.md  
+      - Deployment: development/deployment.md
+  - Research:
+      - Market Overview: research/market-overview.md
+      - Business Models: research/business-models.md
+      - Pricing & Billing: research/pricing-and-billing.md
+      - Billing Engines: research/billing-engines.md
+      - Analytics Tools: research/analytics-tools.md
+      - Competitive Matrix: research/competitive-matrix.md
+      - Product Positioning: research/product-positioning.md
+  - Notebooks:
+      - MRR: notebooks/01_mrr.ipynb
+      - Churn: notebooks/02_churn.ipynb
+      - Retention: notebooks/03_retention.ipynb
+      - LTV: notebooks/04_ltv.ipynb
+      - Trials: notebooks/05_trials.ipynb
