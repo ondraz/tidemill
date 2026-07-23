@@ -37,6 +37,11 @@ plugins:
   - toggle-sidebar:
       toggle_button: all
 
+# Raw sources are the wiki's immutable input layer. They stay in git so the
+# LLM can re-read them, but they are never published — see wiki/how-it-works.md.
+exclude_docs: |
+  wiki/sources/
+
 markdown_extensions:
   - tables
   - admonition
@@ -63,6 +68,30 @@ nav:
   - Home: index.md
   - Definitions: definitions.md
   - Design System: design-system/design-system.html
+  - Wiki:
+      - How It Works: wiki/how-it-works.md
+      - Catalog: wiki/index.md
+      - Log: wiki/log.md
+      - Entities:
+          - Tidemill: wiki/entities/tidemill.md
+          - ChartMogul: wiki/entities/chartmogul.md
+          - Baremetrics: wiki/entities/baremetrics.md
+          - ProfitWell: wiki/entities/profitwell.md
+          - SaaSGrid: wiki/entities/saasgrid.md
+          - Stripe Billing: wiki/entities/stripe-billing.md
+          - Chargebee: wiki/entities/chargebee.md
+          - Lago: wiki/entities/lago.md
+          - Kill Bill: wiki/entities/kill-bill.md
+          - QuickBooks Online: wiki/entities/quickbooks-online.md
+      - Concepts:
+          - MRR: wiki/concepts/mrr.md
+          - Churn: wiki/concepts/churn.md
+          - Net Revenue Retention: wiki/concepts/net-revenue-retention.md
+          - Cohort Retention: wiki/concepts/cohort-retention.md
+          - LTV: wiki/concepts/ltv.md
+          - Usage-Based Pricing: wiki/concepts/usage-based-pricing.md
+          - Trial Conversion: wiki/concepts/trial-conversion.md
+          - Metric Transparency: wiki/concepts/metric-transparency.md
   - Architecture:
       - Overview: architecture/overview.md
       - Events: architecture/events.md

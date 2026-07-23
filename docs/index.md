@@ -4,6 +4,19 @@
 
 <p align="center">Open-source subscription analytics — compute and visualize MRR, ARR, LTV, retention, churn, and more from your billing data.</p>
 
+## Wiki
+
+A compounding knowledge base — entity and concept pages maintained by an LLM agent as new
+sources arrive, rather than documents re-read on every question.
+
+- [How It Works](wiki/how-it-works.md) — the three-layer pattern: raw sources, wiki, schema
+- [Catalog](wiki/index.md) — every page with a one-line summary
+- [Log](wiki/log.md) — chronological record of ingests, queries, and lint passes
+
+Start with the catalog. Highlights: [Metric Transparency](wiki/concepts/metric-transparency.md)
+(the project's core thesis), [MRR](wiki/concepts/mrr.md), and the competitor pages for
+[ChartMogul](wiki/entities/chartmogul.md) and [Baremetrics](wiki/entities/baremetrics.md).
+
 ## Architecture
 
 Implementation plan for the analytics engine.

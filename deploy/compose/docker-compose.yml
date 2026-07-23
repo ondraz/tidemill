@@ -103,6 +103,13 @@ services:
         condition: service_healthy
       redpanda:
         condition: service_healthy
+      # The API owns schema creation (create_all in its lifespan); its
+      # healthcheck only passes once that has run. Waiting for it here avoids
+      # the cold-start race where the worker bootstraps connector_source
+      # before the table exists. The worker also retries this in code, so a
+      # later API restart can't permanently wedge ingestion.
+      api:
+        condition: service_healthy
 
   caddy:
     image: caddy:2

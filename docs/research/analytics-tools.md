@@ -2,6 +2,11 @@
 
 > Comparing ChartMogul, Baremetrics, ProfitWell (Paddle), and SaaSGrid — the established players an open-source analytics package would compete against.
 > Last updated: March 2026
+>
+> **Wiki:** per-competitor detail and its relevance to Tidemill lives on the entity pages —
+> [ChartMogul](../wiki/entities/chartmogul.md), [Baremetrics](../wiki/entities/baremetrics.md),
+> [ProfitWell](../wiki/entities/profitwell.md), [SaaSGrid](../wiki/entities/saasgrid.md).
+> The category thesis is [Metric Transparency](../wiki/concepts/metric-transparency.md).
 
 ---
 

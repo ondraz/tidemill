@@ -46,6 +46,8 @@ The deployment depends on which [connector type](../architecture/connectors.md) 
 
 For Stripe (and any webhook-based connector), the full stack is required: PostgreSQL + Kafka/Redpanda + API + Worker + Caddy (frontend). See Option A (single server) or Option B (Kubernetes) below.
 
+**Startup ordering.** The API process owns schema creation (`create_all` runs in its lifespan and only then does `/healthz` pass). The worker waits for the API to be healthy (Compose `depends_on: api: service_healthy`) before bootstrapping its `connector_source` rows, and also retries that bootstrap in code if the table is briefly missing. This avoids the cold-start race — e.g. right after `make prod-reset` — where the worker would otherwise crash with `relation "connector_source" does not exist`.
+
 ---
 
 ### Lago Companion Mode (Same-Database)

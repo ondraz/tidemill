@@ -2,6 +2,13 @@
 
 > Comparing Stripe Billing, Lago, and Kill Bill as the upstream data sources an open-source analytics package would integrate with.
 > Last updated: March 2026
+>
+> **Wiki:** per-engine detail and integration status lives on the entity pages —
+> [Stripe Billing](../wiki/entities/stripe-billing.md), [Lago](../wiki/entities/lago.md),
+> [Kill Bill](../wiki/entities/kill-bill.md), plus [Chargebee](../wiki/entities/chargebee.md)
+> (implemented since this document was written). See also
+> [Usage-Based Pricing](../wiki/concepts/usage-based-pricing.md) for how metering
+> architecture constrains what analytics can compute.
 
 ---
 

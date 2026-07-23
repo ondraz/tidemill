@@ -167,3 +167,9 @@ The pitch to the open-source community is straightforward:
 - [Billing Engines](./billing-engines.md) — upstream billing engine analysis
 - [Analytics Tools](./analytics-tools.md) — downstream analytics competitor analysis
 - [Competitive Matrix](./competitive-matrix.md) — feature comparison and gap analysis
+
+### Wiki
+
+- [Metric Transparency](../wiki/concepts/metric-transparency.md) — the thesis this document argues, as a standalone page
+- [Tidemill](../wiki/entities/tidemill.md) — the project entity page
+- [Catalog](../wiki/index.md) — everything the wiki knows

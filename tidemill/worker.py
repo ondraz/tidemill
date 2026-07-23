@@ -14,11 +14,61 @@ from tidemill.database import make_engine, make_session_factory
 from tidemill.otel import init_otel
 
 if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+    from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
     from tidemill.events import Event
 
 logger = logging.getLogger(__name__)
+
+# SQLSTATE 42P01 — "undefined_table". Seen when the worker tries to bootstrap
+# connector_source before the API process has created the schema on a cold DB.
+_UNDEFINED_TABLE_SQLSTATE = "42P01"
+
+
+def _is_missing_table(exc: Exception) -> bool:
+    """True when *exc* is a Postgres "undefined table" error (SQLSTATE 42P01)."""
+    sqlstate = getattr(getattr(exc, "orig", None), "sqlstate", None)
+    if sqlstate == _UNDEFINED_TABLE_SQLSTATE:
+        return True
+    # asyncpg's DBAPI adapter doesn't always surface .sqlstate on .orig, so
+    # fall back to the rendered message, which embeds "... does not exist".
+    return "does not exist" in str(exc).lower()
+
+
+async def _bootstrap_connector_sources(
+    engine: AsyncEngine,
+    *,
+    attempts: int = 30,
+    delay: float = 2.0,
+) -> None:
+    """Bootstrap connector_source rows, waiting out a not-yet-created schema.
+
+    On a fresh database the API process owns schema creation (``create_all``
+    in its lifespan); the worker can win the startup race and find
+    ``connector_source`` missing. Rather than crash-loop on that race, retry
+    until the table appears (up to ``attempts`` × ``delay`` seconds) before
+    giving up. Any other error (or a persistently missing table) is re-raised.
+    """
+    from sqlalchemy.exc import ProgrammingError
+
+    from tidemill.bootstrap import ensure_connector_sources
+
+    for attempt in range(1, attempts + 1):
+        try:
+            async with engine.begin() as conn:
+                await ensure_connector_sources(conn)
+            return
+        except ProgrammingError as exc:
+            if not _is_missing_table(exc) or attempt == attempts:
+                raise
+            logger.warning(
+                "connector_source not ready (attempt %d/%d) — waiting %.0fs for "
+                "the API to create the schema",
+                attempt,
+                attempts,
+                delay,
+            )
+            await asyncio.sleep(delay)
 
 
 async def run_worker() -> None:
@@ -35,10 +85,10 @@ async def run_worker() -> None:
     # Ensure a connector_source row exists for every configured connector
     # (TIDEMILL_CONNECTORS, e.g. "stripe,chargebee") before consuming events,
     # so the consumer never hits an FK violation when it persists an event.
-    async with engine.begin() as conn:
-        from tidemill.bootstrap import ensure_connector_sources
-
-        await ensure_connector_sources(conn)
+    # The API process owns schema creation (create_all in its lifespan); on a
+    # cold start the worker can win the race and find the table missing, so
+    # this waits for the schema instead of crashing.
+    await _bootstrap_connector_sources(engine)
 
     factory = make_session_factory(engine)
 

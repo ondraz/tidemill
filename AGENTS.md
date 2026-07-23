@@ -32,8 +32,15 @@ tidemill/
 │   │   ├── development.md              # Local development environment setup
 │   │   └── testing.md                  # Test data generation, seed scripts
 │   │   ├── deployment.md               # Docker Compose + Terraform IaC
-│   └── research/                       # Market & competitive analysis
-│       ├── *.md                        # Research documents
+│   ├── research/                       # Market & competitive analysis (wiki synthesis layer)
+│   │   ├── *.md                        # Research documents
+│   └── wiki/                           # LLM wiki — compounding knowledge base
+│       ├── how-it-works.md             # The three-layer pattern, explained
+│       ├── index.md                    # Catalog — every page, one line each
+│       ├── log.md                      # Append-only ingest/query/lint record
+│       ├── entities/                   # Companies, products, systems
+│       ├── concepts/                   # Recurring domain ideas
+│       └── sources/                    # Raw sources (immutable, excluded from site)
 ├── deploy/
 │   ├── compose/                        # Docker Compose (PostgreSQL + Redpanda + API + Worker)
 │   │   ├── docker-compose.yml
@@ -93,6 +100,32 @@ Start with `docs/architecture/overview.md` for the full system design. Key files
 - **Database:** `database.md` — Core schema (ER diagram), metric tables, deployment topologies
 - **API:** `api.md` — CLI commands, FastAPI endpoints, programmatic Python usage
 - **Research:** `docs/research/` — Market analysis, competitive matrix, product positioning
+- **Wiki:** `docs/wiki/` — Accumulated knowledge: entity and concept pages, catalog, log
+
+## Knowledge Wiki
+
+`docs/wiki/` is an [LLM wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) —
+a compounding knowledge base that an agent builds and maintains as sources arrive, rather
+than a pile of documents re-read on every question. It is rendered by MkDocs alongside the
+rest of the docs.
+
+**Use the `llm-wiki` skill** for anything touching it. The skill is the schema — page
+structure, naming, frontmatter, link conventions, and the workflows for the three
+operations. Invoke it when:
+
+- **Ingesting** a source — an article, pricing page, competitor doc, report, or transcript
+- **Answering** a question about competitors, the market, billing engines, or metric
+  definitions — read `docs/wiki/index.md` first, and file good answers back as pages
+- **Linting** — contradictions, stale claims, doc drift, orphans, missing cross-references
+
+Three layers: raw sources in `docs/wiki/sources/` are **immutable and never edited** (and
+excluded from the built site); the wiki pages are agent-owned; the schema lives in
+`.claude/skills/llm-wiki/SKILL.md`. `docs/research/` is the wiki's synthesis layer —
+narrative pages that link out to entity and concept pages instead of restating their facts.
+
+Two rules that matter most: **never copy a formula that `docs/definitions.md` owns** (link
+it — drift in metric definitions is exactly what this project exists to prevent), and
+**every structural change updates `docs/wiki/index.md` and appends to `docs/wiki/log.md`**.
 
 ## Package Structure
 
@@ -286,5 +319,5 @@ Copy `.env.example` to `.env` and configure:
 - **Period axis labels:** all time-series charts must use the canonical period format — daily `2025-09-15`, weekly `2025-W34`, monthly `Sep 2025`, quarterly `2025-Q3`, yearly `2025`. Use `tidemill.reports._style.format_period` in Python and `formatPeriod` (`frontend/src/lib/formatters.ts`) on the frontend. Never emit raw `"2025-09"` or timestamp strings to an axis.
 - **Metric transparency:** every metric must document its formula, SQL, assumptions, edge cases.
 - **Query Algebra:** all segmented metric SQL is built through `Cube` definitions and composable `QueryFragment` objects (SQLAlchemy `Select`-based, no string concatenation). See `docs/architecture/cubes.md`.
-- **Documentation:** when making code changes, always update the corresponding documentation in `docs/`. This includes architecture docs (`docs/architecture/`), development guides (`docs/development/`), and `AGENTS.md` itself when the project structure, conventions, or workflows change.
+- **Documentation:** when making code changes, always update the corresponding documentation in `docs/`. This includes architecture docs (`docs/architecture/`), development guides (`docs/development/`), and `AGENTS.md` itself when the project structure, conventions, or workflows change. If the change alters something the wiki asserts — a connector's status, a metric's availability, a canonical definition — update `docs/wiki/` too via the `llm-wiki` skill.
 - **Verification:** after every code change, run `make check` and fix all issues it reports before declaring the task complete.
