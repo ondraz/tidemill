@@ -148,18 +148,18 @@ class QBOClient:
         return r.json()
 
     def query(self, qbo_sql: str) -> dict[str, Any]:
-        return self._request("GET", "query", params={"query": qbo_sql, "minorversion": "65"})
+        return self._request("GET", "query", params={"query": qbo_sql, "minorversion": "75"})
 
     def create(self, entity: str, body: dict[str, Any]) -> dict[str, Any]:
         return self._request(
-            "POST", entity.lower(), params={"minorversion": "65"}, json=body
+            "POST", entity.lower(), params={"minorversion": "75"}, json=body
         )
 
     def void(self, entity: str, body: dict[str, Any]) -> dict[str, Any]:
         return self._request(
             "POST",
             entity.lower(),
-            params={"operation": "void", "minorversion": "65"},
+            params={"operation": "void", "minorversion": "75"},
             json=body,
         )
 
@@ -167,7 +167,7 @@ class QBOClient:
         return self._request(
             "POST",
             entity.lower(),
-            params={"operation": "delete", "minorversion": "65"},
+            params={"operation": "delete", "minorversion": "75"},
             json=body,
         )
 

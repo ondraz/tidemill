@@ -83,3 +83,9 @@ fastest and the most wiki claims depend on them:
 | 3 | Market sizing reports (Juniper, Fortune Business Insights, Dimension) | `market-overview.md` |
 
 Full citation lists live in the `## Sources` section of each research document.
+
+**Captured so far** *(October 2026)*: the stripe-python and chargebee-python SDK
+changelogs, which mirror each vendor's API surface. Intuit's QBO minor-version notice is
+`referenced` only. Vendor sites (`docs.stripe.com`, `chargebee.com`, `blogs.intuit.com`,
+competitor pricing pages) were blocked by the capture environment's network policy, so
+the pricing rows above are still outstanding.
