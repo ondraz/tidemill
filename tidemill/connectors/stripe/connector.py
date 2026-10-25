@@ -103,9 +103,10 @@ def _cancel_details(sub: dict[str, Any]) -> tuple[str | None, str | None]:
 # ``status_details.paused.subscription.type`` values (API ``2026-09-30.endive``)
 # for a pause that hit a subscription before it ever collected a payment.
 # Leaving such a pause is the subscription's first activation, not a resume.
-_NEVER_PAID_PAUSE_REASONS = frozenset(
-    {"trial_end_without_payment_method", "first_payment_failure"}
-)
+# ``first_payment_failure`` / ``final_payment_failure`` are the first and last
+# failed attempts on a *renewal* invoice (a failed first invoice leaves the
+# subscription ``incomplete``, not ``paused``), so both count as paid-before.
+_NEVER_PAID_PAUSE_REASONS = frozenset({"trial_end_without_payment_method"})
 
 
 def _pause_reason(obj: dict[str, Any]) -> str | None:

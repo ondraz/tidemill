@@ -519,6 +519,26 @@ class TestSubscriptionTranslation:
         assert types.count("subscription.resumed") == 1
         assert "subscription.activated" not in types
 
+    def test_updated_resumed_after_renewal_payment_failure(self, connector: StripeConnector):
+        """``first_payment_failure`` is a failed *renewal* attempt — a resume."""
+        wh = _sub_wh(
+            "customer.subscription.updated",
+            status="active",
+            prev_attrs={
+                "status": "paused",
+                "status_details": {
+                    "paused": {
+                        "type": "subscription",
+                        "subscription": {"type": "first_payment_failure"},
+                        "transitioned_at": 1700500000,
+                    }
+                },
+            },
+        )
+        types = [e.type for e in connector.translate(wh)]
+        assert types.count("subscription.resumed") == 1
+        assert "subscription.activated" not in types
+
     def test_updated_unpaused_after_trial_is_activation(self, connector: StripeConnector):
         """A trial that paused for a missing payment method never earned MRR."""
         wh = _sub_wh(

@@ -207,10 +207,11 @@ def _translate_subscription_updated(self, webhook: dict) -> list[Event]:
 
 `paid_before_pause` reads `status_details.paused.subscription.type`, which API
 version `2026-09-30.endive` added alongside on-demand `POST /v1/subscriptions/{id}/pause`.
-A pause caused by `trial_end_without_payment_method` or `first_payment_failure`
-means the subscription never collected, so leaving it is a first
-`subscription.activated`. Any other reason (`pause_requested`,
-`final_payment_failure`, `system`) emits `subscription.resumed`, which the MRR
+A pause caused by `trial_end_without_payment_method` means the subscription
+never collected, so leaving it is a first `subscription.activated`. Any other
+reason (`pause_requested`, `first_payment_failure` and `final_payment_failure`,
+which are the first and last failed attempts on a renewal invoice, or `system`)
+emits `subscription.resumed`, which the MRR
 metric books as a reactivation, matching
 [definitions](../definitions.md#mrr-movements). Payloads without `status_details`
 come from pre-Endive API versions, where `paused` arose only from trials, and
