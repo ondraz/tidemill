@@ -185,6 +185,9 @@ def _translate_subscription_updated(self, webhook: dict) -> list[Event]:
             events.append(self._make_event("subscription.activated", ...))
         elif old_status == "trialing" and new_status in ("canceled", "unpaid"):
             events.append(self._make_event("subscription.trial_expired", ...))
+        elif old_status == "paused" and new_status == "active" and paid_before_pause:
+            # Endive on-demand pause/resume → reactivation, not new business
+            events.append(self._make_event("subscription.resumed", ...))
         elif new_status == "active" and old_status != "active":
             events.append(self._make_event("subscription.activated", ...))
         elif new_status == "canceled":
@@ -201,6 +204,37 @@ def _translate_subscription_updated(self, webhook: dict) -> list[Event]:
 
     return events
 ```
+
+`paid_before_pause` reads `status_details.paused.subscription.type`, which API
+version `2026-09-30.endive` added alongside on-demand `POST /v1/subscriptions/{id}/pause`.
+A pause caused by `trial_end_without_payment_method` or `first_payment_failure`
+means the subscription never collected, so leaving it is a first
+`subscription.activated`. Any other reason (`pause_requested`,
+`final_payment_failure`, `system`) emits `subscription.resumed`, which the MRR
+metric books as a reactivation, matching
+[definitions](../definitions.md#mrr-movements). Payloads without `status_details`
+come from pre-Endive API versions, where `paused` arose only from trials, and
+keep the activation behaviour. The reason is also forwarded on
+`subscription.paused` as `pause_reason`.
+
+### API versions
+
+Stripe pins each payload to an API version: the webhook endpoint's configured
+version for webhooks, and the SDK's pinned version for backfill (`stripe>=16`
+pins `2026-09-30.endive`). The translator therefore reads both shapes for every
+field that has moved:
+
+| Field | Legacy location | Current location (version that moved it) |
+|---|---|---|
+| Subscription period | `subscription.current_period_*` | `items.data[].current_period_*` (`2025-03-31.basil`) |
+| Invoice line price | `line.price` | `line.pricing.price_details.price` (basil) |
+| Invoice line subscription | `line.subscription` | `line.parent.subscription_item_details.subscription` (basil) |
+| Pause reason | — | `subscription.status_details.paused` (`2026-09-30.endive`) |
+
+Endive also adds item-level trials (`items.data[].current_trial`) and
+`invoice.status_details.uncollectible.reason`. The translator does not read them
+yet. Trial analytics still keys on the subscription-level `trial_start` /
+`trial_end`.
 
 ### MRR Computation
 
@@ -503,6 +537,8 @@ POST /api/webhooks/quickbooks?source_id=...    → Intuit-signed webhooks
 ```
 
 Token refresh is automatic in `QuickBooksClient`; the latest access/refresh tokens are written back to `connector_source.config` after every refresh.
+
+Every Accounting API request sends `minorversion=75`. Intuit retired minor versions 1–74 on 2025-08-01: lower values are ignored and answered as 75, so the pin makes the request match the response.
 
 ### Backfill
 

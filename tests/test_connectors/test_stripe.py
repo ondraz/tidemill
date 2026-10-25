@@ -481,6 +481,75 @@ class TestSubscriptionTranslation:
         events = connector.translate(wh)
         assert any(e.type == "subscription.resumed" for e in events)
 
+    def test_updated_paused_carries_reason(self, connector: StripeConnector):
+        wh = _sub_wh(
+            "customer.subscription.updated",
+            status="paused",
+            prev_attrs={"status": "active"},
+        )
+        wh["data"]["object"]["status_details"] = {
+            "paused": {
+                "type": "subscription",
+                "subscription": {"type": "pause_requested"},
+                "transitioned_at": 1700500000,
+            }
+        }
+        events = connector.translate(wh)
+        paused = [e for e in events if e.type == "subscription.paused"]
+        assert len(paused) == 1
+        assert paused[0].payload["pause_reason"] == "pause_requested"
+
+    def test_updated_resumed_from_on_demand_pause(self, connector: StripeConnector):
+        """Endive pause → resume is a reactivation, not a new activation."""
+        wh = _sub_wh(
+            "customer.subscription.updated",
+            status="active",
+            prev_attrs={
+                "status": "paused",
+                "status_details": {
+                    "paused": {
+                        "type": "subscription",
+                        "subscription": {"type": "pause_requested"},
+                        "transitioned_at": 1700500000,
+                    }
+                },
+            },
+        )
+        types = [e.type for e in connector.translate(wh)]
+        assert types.count("subscription.resumed") == 1
+        assert "subscription.activated" not in types
+
+    def test_updated_unpaused_after_trial_is_activation(self, connector: StripeConnector):
+        """A trial that paused for a missing payment method never earned MRR."""
+        wh = _sub_wh(
+            "customer.subscription.updated",
+            status="active",
+            prev_attrs={
+                "status": "paused",
+                "status_details": {
+                    "paused": {
+                        "type": "subscription",
+                        "subscription": {"type": "trial_end_without_payment_method"},
+                        "transitioned_at": 1700500000,
+                    }
+                },
+            },
+        )
+        types = [e.type for e in connector.translate(wh)]
+        assert "subscription.activated" in types
+        assert "subscription.resumed" not in types
+
+    def test_updated_unpaused_without_status_details(self, connector: StripeConnector):
+        """Pre-Endive payloads keep the old activation behaviour."""
+        wh = _sub_wh(
+            "customer.subscription.updated",
+            status="active",
+            prev_attrs={"status": "paused"},
+        )
+        types = [e.type for e in connector.translate(wh)]
+        assert "subscription.activated" in types
+        assert "subscription.resumed" not in types
+
     def test_updated_cancel_at_period_end(self, connector: StripeConnector):
         wh = _sub_wh(
             "customer.subscription.updated",

@@ -3,7 +3,7 @@ title: QuickBooks Online
 description: Accounting platform and Tidemill's first expense-side integration — the source that makes cost analysis possible alongside revenue.
 type: entity
 tags: [accounting, data-source, expense, implemented]
-updated: 2026-07-23
+updated: 2026-10-25
 ---
 
 # QuickBooks Online
@@ -27,6 +27,7 @@ accounts, bills, purchases (expenses) and bill payments.
 | Licence | Proprietary SaaS |
 | Auth | OAuth 2.0 (Intuit Developer), sandbox and production environments |
 | Webhooks | ID-only payloads, HMAC-SHA256 signed with a verifier token |
+| API version *(as of October 2026)* | Accounting API minor version 75; 1–74 retired 2025-08-01 |
 | Tidemill integration | `ExpenseConnector`, registered as `quickbooks` |
 | Status | **Implemented** (P1) |
 
@@ -54,6 +55,12 @@ side.
 Expense analytics is also the prerequisite for CAC, which remains
 [P1 and unimplemented](../../architecture/overview.md).
 
+Tidemill pinned `minorversion=65` until October 2026. Since Intuit's retirement of
+minor versions 1–74 on 2025-08-01, that value was silently ignored and every response
+already came back as 75. The client and seed now send 75 explicitly
+([source](../sources/2026-10-25-intuit-qbo-minor-versions.md)). Intuit ships future field
+removals as new minor versions, so the pin is the guard against silent breakage.
+
 ## Related
 
 - [Chargebee](chargebee.md) — canonical-vocabulary discipline on the revenue side
@@ -65,3 +72,4 @@ Expense analytics is also the prerequisite for CAC, which remains
 - [Expenses architecture](../../architecture/expenses.md) — data model and canonical enums
 - [Connectors](../../architecture/connectors.md) — `ExpenseConnector` pattern
 - [Testing](../../development/testing.md) — sandbox OAuth and expense seeding
+- [Intuit: minor versions 1–74 retired](../sources/2026-10-25-intuit-qbo-minor-versions.md) *(referenced, not captured)*

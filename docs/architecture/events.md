@@ -74,7 +74,7 @@ The most important events for metric computation.
 | `subscription.trial_started` | Free trial begins | `{external_id, trial_start, trial_end}` |
 | `subscription.trial_converted` | Trial → paid | `{external_id, mrr_cents}` |
 | `subscription.trial_expired` | Trial ended without conversion | `{external_id}` |
-| `subscription.paused` | Subscription paused | `{external_id, mrr_cents}` |
+| `subscription.paused` | Subscription paused | `{external_id, mrr_cents, pause_reason?}` — `pause_reason` is Stripe's `status_details.paused.subscription.type` when present |
 | `subscription.resumed` | Subscription resumed from pause | `{external_id, mrr_cents}` |
 
 **MRR classification:** The difference between `prev_mrr_cents` and `new_mrr_cents` in `subscription.changed` determines whether it's expansion (new > prev) or contraction (new < prev). The MRR metric uses this to compute net new MRR breakdown.

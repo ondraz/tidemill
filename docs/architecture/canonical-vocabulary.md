@@ -139,10 +139,10 @@ canonical values plus `other`.
 
 | Canonical        | Stripe `payment_method_types[]`                                   | Chargebee `payment_method`                | Recurly `account.billing_info.type` |
 |------------------|-------------------------------------------------------------------|-------------------------------------------|-------------------------------------|
-| `card`           | `card`, `card_present`, `klarna`, `affirm`, `afterpay_clearpay`   | `card`                                    | `credit_card`                       |
-| `bank_transfer`  | `us_bank_account`, `customer_balance`                             | `bank_transfer`                           | `bank_account`                      |
+| `card`           | `card`, `card_present`, `klarna`, `affirm`, `afterpay_clearpay`, `scalapay`, `sunbit` | `card`                                    | `credit_card`                       |
+| `bank_transfer`  | `us_bank_account`, `customer_balance`, `blik`                     | `bank_transfer`                           | `bank_account`                      |
 | `direct_debit`   | `sepa_debit`, `bacs_debit`, `becs_debit`, `acss_debit`, `ach_debit` | `direct_debit`                          | `bank_account_info` (with debit)    |
-| `wallet`         | `link`, `wechat_pay`, `alipay`, `cashapp`                         | `apple_pay`, `google_pay`                 | `apple_pay`, `amazon_pay`           |
+| `wallet`         | `link`, `wechat_pay`, `alipay`, `cashapp`, `twint`, `satispay`, `mb_way`, `bizum` | `apple_pay`, `google_pay`                 | `apple_pay`, `amazon_pay`           |
 | `paypal`         | `paypal`                                                          | `paypal_express_checkout`                 | `paypal`                            |
 | `other`          | anything else                                                     | anything else                             | anything else                       |
 

@@ -83,7 +83,7 @@ Future metrics planned on top of this same data:
 
 ## Adding another expense source
 
-See [connectors.md](connectors.md#expense-connector-for-accounting-platforms). The work is:
+See [connectors.md](connectors.md#quickbooks-online-connector-p1-expense-source). The work is:
 
 1. Subclass `ExpenseConnector` in `tidemill/connectors/<platform>/`.
 2. Implement `translate()` (or `fetch_and_translate()`) for vendor / account / bill / expense / bill payment.

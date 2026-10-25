@@ -33,6 +33,13 @@ _STRIPE_PAYMENT_METHOD_MAP: dict[str, str] = {
     "wechat_pay": "wallet",
     "alipay": "wallet",
     "cashapp": "wallet",
+    "twint": "wallet",
+    "satispay": "wallet",
+    "mb_way": "wallet",
+    "bizum": "wallet",
+    "blik": "bank_transfer",
+    "scalapay": "card",
+    "sunbit": "card",
 }
 
 
@@ -91,6 +98,29 @@ def _cancel_details(sub: dict[str, Any]) -> tuple[str | None, str | None]:
     """
     details = sub.get("cancellation_details") or {}
     return details.get("reason"), details.get("feedback")
+
+
+# ``status_details.paused.subscription.type`` values (API ``2026-09-30.endive``)
+# for a pause that hit a subscription before it ever collected a payment.
+# Leaving such a pause is the subscription's first activation, not a resume.
+_NEVER_PAID_PAUSE_REASONS = frozenset(
+    {"trial_end_without_payment_method", "first_payment_failure"}
+)
+
+
+def _pause_reason(obj: dict[str, Any]) -> str | None:
+    """Extract ``status_details.paused.subscription.type`` from a subscription.
+
+    Endive added ``status_details`` to explain why a subscription sits in
+    ``paused`` (``pause_requested``, ``final_payment_failure``,
+    ``trial_end_without_payment_method``, ...). Older API versions omit it,
+    so callers must handle ``None``.
+    """
+    details = obj.get("status_details") or {}
+    paused = details.get("paused") if isinstance(details, dict) else None
+    sub = paused.get("subscription") if isinstance(paused, dict) else None
+    reason = sub.get("type") if isinstance(sub, dict) else None
+    return str(reason) if reason else None
 
 
 def _line_price_id(li: dict[str, Any]) -> str | None:
@@ -292,7 +322,7 @@ class StripeConnector(WebhookConnector):
         if not secret:
             return True
         try:
-            stripe.Webhook.construct_event(payload, signature, secret)  # type: ignore[no-untyped-call]
+            stripe.Webhook.construct_event(payload, signature, secret)
             return True
         except stripe.SignatureVerificationError:
             return False
@@ -712,6 +742,31 @@ class StripeConnector(WebhookConnector):
                         payload={"external_id": sub["id"]},
                     )
                 )
+            elif (
+                old_status == "paused"
+                and new_status == "active"
+                and (pause_reason := _pause_reason(prev) or _pause_reason(sub)) is not None
+                and pause_reason not in _NEVER_PAID_PAUSE_REASONS
+            ):
+                # Endive's on-demand pause/resume: the subscription earned
+                # MRR before the pause, so coming back is a reactivation
+                # rather than new business. Without ``status_details``
+                # (pre-Endive payloads, where ``paused`` only arose from a
+                # trial ending without a payment method) we fall through
+                # to ``subscription.activated``.
+                events.append(
+                    self._make_event(
+                        "subscription.resumed",
+                        customer_id=cust_id,
+                        external_id=sub["id"],
+                        occurred_at=occurred,
+                        payload={
+                            "external_id": sub["id"],
+                            "mrr_cents": mrr,
+                            "currency": sub.get("currency"),
+                        },
+                    )
+                )
             elif new_status == "active" and old_status != "active":
                 events.append(
                     self._make_event(
@@ -757,6 +812,7 @@ class StripeConnector(WebhookConnector):
                             "external_id": sub["id"],
                             "mrr_cents": mrr,
                             "currency": sub.get("currency"),
+                            "pause_reason": _pause_reason(sub),
                         },
                     )
                 )
@@ -776,7 +832,11 @@ class StripeConnector(WebhookConnector):
                 )
 
         # Resume from pause
-        if "pause_collection" in prev and sub.get("pause_collection") is None:
+        if (
+            "pause_collection" in prev
+            and sub.get("pause_collection") is None
+            and not any(e.type == "subscription.resumed" for e in events)
+        ):
             events.append(
                 self._make_event(
                     "subscription.resumed",
