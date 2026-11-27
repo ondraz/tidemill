@@ -192,6 +192,10 @@ def _translate_subscription_updated(self, webhook: dict) -> list[Event]:
             events.append(self._make_event("subscription.activated", ...))
         elif new_status == "canceled":
             events.append(self._make_event("subscription.canceled", ...))
+        elif old_status == "trialing" and new_status == "paused":
+            # trial ended without a payment method: expired trial, zero-MRR pause
+            events.append(self._make_event("subscription.trial_expired", ...))
+            events.append(self._make_event("subscription.paused", prev_mrr_cents=0, ...))
         elif new_status == "paused":
             events.append(self._make_event("subscription.paused", ...))
 
@@ -215,7 +219,14 @@ emits `subscription.resumed`, which the MRR
 metric books as a reactivation, matching
 [definitions](../definitions.md#mrr-movements). Payloads without `status_details`
 come from pre-Endive API versions, where `paused` arose only from trials, and
-keep the activation behaviour. The reason is also forwarded on
+keep the activation behaviour.
+
+Entering that pause is not churn either. `trialing` → `paused` emits
+`subscription.trial_expired` followed by `subscription.paused` with
+`prev_mrr_cents = 0`. The MRR metric zeroes the subscription's snapshot but
+appends no movement for a pause that loses nothing.
+
+The reason is also forwarded on
 `subscription.paused` as `pause_reason`.
 
 ### API versions

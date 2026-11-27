@@ -802,6 +802,37 @@ class StripeConnector(WebhookConnector):
                         },
                     )
                 )
+            elif old_status == "trialing" and new_status == "paused":
+                # ``trial_settings.end_behavior.missing_payment_method=pause``:
+                # the trial ended without converting and the subscription
+                # never earned MRR, so there is nothing to churn. Record the
+                # trial outcome and move state to ``paused`` with zero MRR.
+                # A later resume with a payment method is the first
+                # ``subscription.activated`` (see ``_NEVER_PAID_PAUSE_REASONS``).
+                events.append(
+                    self._make_event(
+                        "subscription.trial_expired",
+                        customer_id=cust_id,
+                        external_id=sub["id"],
+                        occurred_at=occurred,
+                        payload={"external_id": sub["id"]},
+                    )
+                )
+                events.append(
+                    self._make_event(
+                        "subscription.paused",
+                        customer_id=cust_id,
+                        external_id=sub["id"],
+                        occurred_at=occurred,
+                        payload={
+                            "external_id": sub["id"],
+                            "mrr_cents": 0,
+                            "prev_mrr_cents": 0,
+                            "currency": sub.get("currency"),
+                            "pause_reason": _pause_reason(sub),
+                        },
+                    )
+                )
             elif new_status == "paused":
                 events.append(
                     self._make_event(

@@ -114,3 +114,20 @@ decide on the `definitions.md` status-heading correction.
 7. **Lint fix:** `architecture/expenses.md` linked a non-existent `connectors.md` anchor.
    Repointed to the QuickBooks section.
 
+## [2026-11-27] lint | Fix: trial ending in `paused` booked as MRR churn
+
+**Updated:** [Stripe Billing](entities/stripe-billing.md)
+**Also changed (code + specs):** `tidemill/connectors/stripe/connector.py`,
+`tidemill/metrics/mrr/metric.py`, `definitions.md` (edge-case note under churn
+events), `architecture/connectors.md`, `architecture/events.md`
+
+**Findings:** Resolves the `trialing` → `paused` bug in finding 5 of the
+2026-10-25 ingest. A Stripe trial that ended without a payment method emitted
+`subscription.paused` carrying the trial's MRR, and the MRR metric recorded a churn
+movement for a subscription that never paid. The connector now emits
+`subscription.trial_expired` plus a zero-MRR `subscription.paused`. The MRR metric
+skips the movement when a pause loses nothing. Still open from that finding:
+backfill emits no pause event for subscriptions already `paused`, and a trial that
+expires into `paused` and later activates records `expired_at` but not
+`converted_at`.
+

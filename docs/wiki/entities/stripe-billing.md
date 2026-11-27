@@ -3,7 +3,7 @@ title: Stripe Billing
 description: The dominant managed SaaS billing platform and Tidemill's primary revenue integration — the reference implementation for ingestion mode.
 type: entity
 tags: [billing-engine, data-source, closed-source, implemented]
-updated: 2026-10-25
+updated: 2026-11-27
 ---
 
 # Stripe Billing
@@ -94,7 +94,9 @@ Endive's on-demand pause changed how the connector reads `paused` → `active`. 
 Endive, `paused` arose only when a trial ended without a payment method, so leaving it was
 a first activation. Now the connector reads `status_details.paused` and emits
 `subscription.resumed` for a pause that followed paid service. The MRR metric books that as
-a reactivation, as [definitions](../../definitions.md#mrr-movements) requires. See
+a reactivation, as [definitions](../../definitions.md#mrr-movements) requires. Entering a pause straight
+from a trial is not churn either: it is recorded as an expired trial with no MRR
+movement *(fixed November 2026)*. See
 [Churn](../concepts/churn.md) for why pauses count as churn at all.
 
 Stripe Test Clocks drive the seed data used for local development and metric verification

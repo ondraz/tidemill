@@ -481,6 +481,27 @@ class TestSubscriptionTranslation:
         events = connector.translate(wh)
         assert any(e.type == "subscription.resumed" for e in events)
 
+    def test_updated_trial_paused_is_expiry_not_churn(self, connector: StripeConnector):
+        """Trial ending without a payment method → trial expired, zero-MRR pause."""
+        wh = _sub_wh(
+            "customer.subscription.updated",
+            status="paused",
+            prev_attrs={"status": "trialing"},
+        )
+        wh["data"]["object"]["status_details"] = {
+            "paused": {
+                "type": "subscription",
+                "subscription": {"type": "trial_end_without_payment_method"},
+                "transitioned_at": 1700500000,
+            }
+        }
+        events = connector.translate(wh)
+        assert [e.type for e in events] == ["subscription.trial_expired", "subscription.paused"]
+        paused = events[1].payload
+        assert paused["mrr_cents"] == 0
+        assert paused["prev_mrr_cents"] == 0
+        assert paused["pause_reason"] == "trial_end_without_payment_method"
+
     def test_updated_paused_carries_reason(self, connector: StripeConnector):
         wh = _sub_wh(
             "customer.subscription.updated",
