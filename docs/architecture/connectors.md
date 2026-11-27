@@ -192,6 +192,10 @@ def _translate_subscription_updated(self, webhook: dict) -> list[Event]:
             events.append(self._make_event("subscription.activated", ...))
         elif new_status == "canceled":
             events.append(self._make_event("subscription.canceled", ...))
+        elif old_status == "trialing" and new_status == "paused":
+            # trial ended without a payment method: expired trial, zero-MRR pause
+            events.append(self._make_event("subscription.trial_expired", ...))
+            events.append(self._make_event("subscription.paused", prev_mrr_cents=0, ...))
         elif new_status == "paused":
             events.append(self._make_event("subscription.paused", ...))
 
@@ -215,7 +219,14 @@ emits `subscription.resumed`, which the MRR
 metric books as a reactivation, matching
 [definitions](../definitions.md#mrr-movements). Payloads without `status_details`
 come from pre-Endive API versions, where `paused` arose only from trials, and
-keep the activation behaviour. The reason is also forwarded on
+keep the activation behaviour.
+
+Entering that pause is not churn either. `trialing` → `paused` emits
+`subscription.trial_expired` followed by `subscription.paused` with
+`prev_mrr_cents = 0`. The MRR metric zeroes the subscription's snapshot but
+appends no movement for a pause that loses nothing.
+
+The reason is also forwarded on
 `subscription.paused` as `pause_reason`.
 
 ### API versions
@@ -320,6 +331,10 @@ async def backfill(self, since: datetime | None = None) -> AsyncIterator[Event]:
             occurred_at=datetime.fromtimestamp(sub["created"], tz=UTC))
         if sub["status"] == "active":
             yield self._make_event("subscription.activated", ...)
+        elif sub["status"] == "paused":
+            # trial-end pause → zero-MRR subscription.paused only;
+            # any other pause → subscription.activated, then subscription.paused
+            yield from self._backfill_pause_events(sub, ...)
         elif sub["status"] == "canceled":
             yield self._make_event("subscription.churned", ...)
 
@@ -345,6 +360,28 @@ async def _paginate(self, list_fn, **params) -> AsyncIterator[dict]:
             break
         params["starting_after"] = page["data"][-1]["id"]
 ```
+
+**Subscriptions already paused.** Backfill sees only today's snapshot, so a
+`paused` subscription's history is reconstructed the same way the webhook path
+would have recorded it:
+
+- **Paused at trial end** (`trial_end_without_payment_method`, or no
+  `status_details` on a subscription that had a trial). The trial expires at
+  `trial_end` and the subscription gets a zero-MRR `subscription.paused`, so
+  no MRR is ever booked.
+- **Any other pause.** The subscription replays as `subscription.activated`
+  (at `trial_end` if it began with a trial, otherwise at creation), then
+  `subscription.paused` at `status_details.paused.transitioned_at`: new MRR
+  followed by the churn the pause caused. A trial on such a subscription is
+  recorded as converted.
+
+Without `transitioned_at` (pre-Endive API versions), a trial pause is dated at
+`trial_end` and any other pause at the activation time.
+
+These `subscription.paused` events are emitted **after the invoices**, so the
+`invoice.paid` replay has already rebuilt the trailing usage component when the
+pause zeroes it. Emitted earlier, the historical invoices would restore usage MRR
+to a subscription that is already paused.
 
 **Triggering backfill:**
 

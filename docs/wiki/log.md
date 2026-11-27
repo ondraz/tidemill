@@ -114,3 +114,53 @@ decide on the `definitions.md` status-heading correction.
 7. **Lint fix:** `architecture/expenses.md` linked a non-existent `connectors.md` anchor.
    Repointed to the QuickBooks section.
 
+## [2026-11-27] lint | Fix: trial ending in `paused` booked as MRR churn
+
+**Updated:** [Stripe Billing](entities/stripe-billing.md)
+**Also changed (code + specs):** `tidemill/connectors/stripe/connector.py`,
+`tidemill/metrics/mrr/metric.py`, `definitions.md` (edge-case note under churn
+events), `architecture/connectors.md`, `architecture/events.md`
+
+**Findings:** Resolves the `trialing` → `paused` bug in finding 5 of the
+2026-10-25 ingest. A Stripe trial that ended without a payment method emitted
+`subscription.paused` carrying the trial's MRR, and the MRR metric recorded a churn
+movement for a subscription that never paid. The connector now emits
+`subscription.trial_expired` plus a zero-MRR `subscription.paused`. The MRR metric
+skips the movement when a pause loses nothing. Still open from that finding:
+backfill emits no pause event for subscriptions already `paused`, and a trial that
+expires into `paused` and later activates records `expired_at` but not
+`converted_at`.
+
+## [2026-11-27] lint | Fix: backfill ignored subscriptions already `paused`
+
+**Updated:** [Stripe Billing](entities/stripe-billing.md)
+**Also changed (code + specs):** `tidemill/connectors/stripe/connector.py`,
+`architecture/connectors.md`
+
+**Findings:** Resolves the backfill gap in finding 5 of the 2026-10-25 ingest.
+Backfill emitted only `subscription.created` for a subscription Stripe reports as
+`paused`. Its MRR therefore stayed in both the state row and the MRR snapshot, and
+its trial never got an outcome. Backfill now reconstructs the pause the way the
+webhook path records it. A trial-end pause becomes an expired trial plus a zero-MRR
+pause. Any other pause is replayed as an activation followed by a pause, so the
+period it churned in is visible. Still open: a trial that expires into `paused` and
+later activates records `expired_at` but not `converted_at`.
+
+Review follow-up: the pause is emitted after the invoice replay so it churns the
+rebuilt usage component, and a paid pause on a subscription that began with a trial
+is activated at `trial_end`. **Not acted on:** backfilled `canceled` subscriptions
+have the same ordering problem: `subscription.churned` precedes their invoices, so
+replayed usage can restore usage MRR on a churned subscription. The active-path
+backfill also still activates trial subscriptions at creation. Both predate this
+change. Logo churn (the churn metric) ignores `subscription.paused` on the live path
+and in backfill. `definitions.md` treats a pause as churn only for MRR, so whether
+a pause is logo churn needs a human call.
+
+Second review follow-up: the MRR metric now skips a pause's movement only when the
+loss is zero in *both* original and base currency. The two are averaged separately,
+so base cents can survive rounding. **Not acted on:** backfill classifies
+`subscription.activated` as `new` or `reactivation` from whichever movements are
+already stored. Stripe lists subscriptions newest first, so a returning customer's
+later subscription is classified before their earlier one has churned. This
+predates the deferred pauses; fixing it needs chronological replay or a
+reclassification pass after backfill.
