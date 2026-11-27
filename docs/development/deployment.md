@@ -148,7 +148,7 @@ A single Hetzner CX22 (2 vCPU, 4 GB RAM, ~€4/mo) running Docker Compose. Good 
 
 | Resource | Purpose |
 |----------|---------|
-| `hcloud_server` | Ubuntu 26.04 with Docker (via cloud-init) |
+| `hcloud_server` | Ubuntu 26.04 with Docker (via cloud-init). `image` is in `ignore_changes`: changing the default never replaces an existing server — upgrade it in place with `do-release-upgrade` |
 | `hcloud_ssh_key` | Your SSH key for server access |
 | `hcloud_firewall` | Allows only HTTP, HTTPS, ICMP and Tailscale (UDP 41641) inbound — SSH is Tailscale-only |
 | `hcloud_zone_rrset` | A + AAAA DNS records pointing to the server |

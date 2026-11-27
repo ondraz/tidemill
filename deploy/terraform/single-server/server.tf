@@ -33,4 +33,11 @@ resource "hcloud_server" "tidemill" {
   labels = {
     app = "tidemill"
   }
+
+  # Changing `image` forces hcloud to replace the server, which would destroy
+  # the local PostgreSQL and Redpanda volumes. Existing servers are upgraded in
+  # place (do-release-upgrade); a new default image only applies to new servers.
+  lifecycle {
+    ignore_changes = [image]
+  }
 }
