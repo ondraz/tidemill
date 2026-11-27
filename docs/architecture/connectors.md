@@ -369,13 +369,19 @@ would have recorded it:
   `status_details` on a subscription that had a trial). The trial expires at
   `trial_end` and the subscription gets a zero-MRR `subscription.paused`, so
   no MRR is ever booked.
-- **Any other pause.** The subscription replays as `subscription.activated` at
-  creation, then `subscription.paused` at
-  `status_details.paused.transitioned_at`: new MRR followed by the churn the
-  pause caused. A trial on such a subscription is recorded as converted.
+- **Any other pause.** The subscription replays as `subscription.activated`
+  (at `trial_end` if it began with a trial, otherwise at creation), then
+  `subscription.paused` at `status_details.paused.transitioned_at`: new MRR
+  followed by the churn the pause caused. A trial on such a subscription is
+  recorded as converted.
 
 Without `transitioned_at` (pre-Endive API versions), a trial pause is dated at
 `trial_end` and any other pause at the activation time.
+
+These `subscription.paused` events are emitted **after the invoices**, so the
+`invoice.paid` replay has already rebuilt the trailing usage component when the
+pause zeroes it. Emitted earlier, the historical invoices would restore usage MRR
+to a subscription that is already paused.
 
 **Triggering backfill:**
 

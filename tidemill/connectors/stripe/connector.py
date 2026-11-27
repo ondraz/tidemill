@@ -1326,6 +1326,11 @@ class StripeConnector(WebhookConnector):
                 )
 
         # 2. Subscriptions
+        # ``subscription.paused`` for subscriptions already paused is held
+        # back until after the invoices: replaying their ``invoice.paid``
+        # first rebuilds the trailing usage component, so the pause churns
+        # it too instead of the invoices restoring usage MRR afterwards.
+        deferred_pauses: list[Event] = []
         for clock_id in clock_ids:
             params = {"limit": 100, "status": "all"}
             if created_filter:
@@ -1381,9 +1386,12 @@ class StripeConnector(WebhookConnector):
                     )
                 elif sub.status == "paused":
                     for pause_event in self._backfill_pause_events(
-                        sub_dict, customer_id, mrr, activated_at=occurred
+                        sub_dict, customer_id, mrr, created_at=occurred
                     ):
-                        yield pause_event
+                        if pause_event.type == "subscription.paused":
+                            deferred_pauses.append(pause_event)
+                        else:
+                            yield pause_event
                 elif sub.status in ("canceled", "incomplete_expired", "unpaid"):
                     yield self._make_event(
                         "subscription.churned",
@@ -1456,6 +1464,9 @@ class StripeConnector(WebhookConnector):
                     },
                 )
 
+        for pause_event in deferred_pauses:
+            yield pause_event
+
         # 4. Payment Intents
         params = {"limit": 100}
         if created_filter:
@@ -1487,7 +1498,7 @@ class StripeConnector(WebhookConnector):
         customer_id: str,
         mrr: int,
         *,
-        activated_at: datetime,
+        created_at: datetime,
     ) -> Iterator[Event]:
         """Reconstruct the pause of a subscription that is ``paused`` today.
 
@@ -1495,13 +1506,19 @@ class StripeConnector(WebhookConnector):
         method never earned MRR, so it gets a zero-MRR ``subscription.paused``
         and no activation. Any other pause followed paid service, so it is
         replayed as ``subscription.activated`` then ``subscription.paused``,
-        which books new MRR and then the churn the pause caused.
+        which books new MRR and then the churn the pause caused. Activation
+        is dated at ``trial_end`` when the subscription began with a trial
+        (it converted then), otherwise at creation.
 
         The pause is dated by ``status_details.paused.transitioned_at``
         (Endive and later). Without it, a trial pause falls back to
         ``trial_end`` and any other pause to the activation time.
         """
         sub_id = str(sub.get("id", ""))
+        trial_end = sub.get("trial_end")
+        activated_at = created_at
+        if trial_end is not None:
+            activated_at = max(created_at, datetime.fromtimestamp(trial_end, tz=UTC))
         currency = sub.get("currency")
         trial_pause = _is_trial_pause(sub)
         paused_ts = _paused_at(sub) or (sub.get("trial_end") if trial_pause else None)

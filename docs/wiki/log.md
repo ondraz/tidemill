@@ -146,3 +146,12 @@ pause. Any other pause is replayed as an activation followed by a pause, so the
 period it churned in is visible. Still open: a trial that expires into `paused` and
 later activates records `expired_at` but not `converted_at`.
 
+Review follow-up: the pause is emitted after the invoice replay so it churns the
+rebuilt usage component, and a paid pause on a subscription that began with a trial
+is activated at `trial_end`. **Not acted on:** backfilled `canceled` subscriptions
+have the same ordering problem: `subscription.churned` precedes their invoices, so
+replayed usage can restore usage MRR on a churned subscription. The active-path
+backfill also still activates trial subscriptions at creation. Both predate this
+change. Logo churn (the churn metric) ignores `subscription.paused` on the live path
+and in backfill. `definitions.md` treats a pause as churn only for MRR, so whether
+a pause is logo churn needs a human call.

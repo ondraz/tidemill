@@ -887,7 +887,7 @@ class TestBackfillPauseEvents:
         activated = datetime(2023, 11, 14, tzinfo=UTC)
         events = list(
             connector._backfill_pause_events(
-                self._sub("pause_requested"), "cus_1", 5000, activated_at=activated
+                self._sub("pause_requested"), "cus_1", 5000, created_at=activated
             )
         )
         assert [e.type for e in events] == ["subscription.activated", "subscription.paused"]
@@ -897,13 +897,26 @@ class TestBackfillPauseEvents:
         assert events[1].payload["prev_mrr_cents"] == 5000
         assert events[1].payload["pause_reason"] == "pause_requested"
 
+    def test_paid_pause_after_trial_activates_at_trial_end(self, connector: StripeConnector):
+        """A subscription that began with a trial converted (and activated) at trial_end."""
+        events = list(
+            connector._backfill_pause_events(
+                self._sub("pause_requested", trial_end=1701000000),
+                "cus_1",
+                5000,
+                created_at=datetime.fromtimestamp(1700000000, tz=UTC),
+            )
+        )
+        assert [e.type for e in events] == ["subscription.activated", "subscription.paused"]
+        assert events[0].occurred_at == datetime.fromtimestamp(1701000000, tz=UTC)
+
     def test_trial_pause_is_zero_mrr_without_activation(self, connector: StripeConnector):
         events = list(
             connector._backfill_pause_events(
                 self._sub("trial_end_without_payment_method", trial_end=1701000000),
                 "cus_1",
                 5000,
-                activated_at=datetime(2023, 11, 14, tzinfo=UTC),
+                created_at=datetime(2023, 11, 14, tzinfo=UTC),
             )
         )
         assert [e.type for e in events] == ["subscription.paused"]
@@ -917,7 +930,7 @@ class TestBackfillPauseEvents:
                 self._sub(None, trial_end=1701000000),
                 "cus_1",
                 5000,
-                activated_at=datetime(2023, 11, 14, tzinfo=UTC),
+                created_at=datetime(2023, 11, 14, tzinfo=UTC),
             )
         )
         assert [e.type for e in events] == ["subscription.paused"]
@@ -1027,3 +1040,67 @@ class TestBackfillTrialEvents:
             "subscription.trial_started",
             "subscription.trial_converted",
         ]
+
+
+class TestBackfillPauseOrdering:
+    """Backfill emits a paused subscription's pause after its invoices."""
+
+    @pytest.mark.asyncio
+    async def test_pause_follows_invoices(self, connector: StripeConnector, monkeypatch):
+        import stripe
+
+        def listing(*objs: dict):
+            data = [stripe.StripeObject.construct_from(o, "sk_test") for o in objs]
+
+            class _Page:
+                def auto_paging_iter(self):
+                    return iter(data)
+
+            return lambda **_: _Page()
+
+        sub = {
+            "id": "sub_p",
+            "object": "subscription",
+            "customer": "cus_1",
+            "status": "paused",
+            "created": 1700000000,
+            "currency": "usd",
+            "start_date": 1700000000,
+            "trial_start": None,
+            "trial_end": None,
+            "items": {"data": [_sub(5000)["items"]["data"][0]]},
+            "status_details": {
+                "paused": {
+                    "type": "subscription",
+                    "subscription": {"type": "pause_requested"},
+                    "transitioned_at": 1705000000,
+                }
+            },
+        }
+        inv = {
+            "id": "in_1",
+            "object": "invoice",
+            "customer": "cus_1",
+            "status": "paid",
+            "created": 1702000000,
+            "currency": "usd",
+            "amount_paid": 5000,
+            "subtotal": 5000,
+            "total": 5000,
+            "period_start": 1700000000,
+            "period_end": 1702000000,
+            "status_transitions": {"paid_at": 1702000000},
+            "lines": {"object": "list", "data": [], "has_more": False},
+        }
+        monkeypatch.setattr(stripe.test_helpers.TestClock, "list", listing())
+        monkeypatch.setattr(stripe.Product, "list", listing())
+        monkeypatch.setattr(stripe.Price, "list", listing())
+        monkeypatch.setattr(stripe.Customer, "list", listing())
+        monkeypatch.setattr(stripe.Subscription, "list", listing(sub))
+        monkeypatch.setattr(stripe.Invoice, "list", listing(inv))
+        monkeypatch.setattr(stripe.PaymentIntent, "list", listing())
+        connector.config["api_key"] = "sk_test"
+
+        types = [e.type async for e in connector.backfill()]
+        assert types.index("subscription.activated") < types.index("invoice.paid")
+        assert types.index("invoice.paid") < types.index("subscription.paused")
