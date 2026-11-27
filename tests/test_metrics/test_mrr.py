@@ -393,6 +393,42 @@ class TestMrrHandler:
         assert count == 0
 
     @pytest.mark.asyncio
+    async def test_pause_with_base_only_usage_still_churns(self, metric, db):
+        """Usage that rounds to 0 original cents but not 0 base cents is still lost."""
+        await metric.handle_event(
+            make_evt(
+                "subscription.created",
+                {"external_id": "sub_1", "mrr_cents": 0, "currency": "USD"},
+            )
+        )
+        await db.execute(
+            text(
+                "UPDATE metric_mrr_snapshot SET usage_mrr_base_cents = 1, mrr_base_cents = 1"
+                " WHERE subscription_id = 'sub_1'"
+            )
+        )
+        await db.commit()
+
+        await metric.handle_event(
+            make_evt(
+                "subscription.paused",
+                {"external_id": "sub_1", "mrr_cents": 0, "prev_mrr_cents": 0, "currency": "USD"},
+                occurred_at=T1,
+            )
+        )
+        await db.commit()
+
+        moves = (
+            await db.execute(
+                text(
+                    "SELECT movement_type, amount_cents, amount_base_cents"
+                    " FROM metric_mrr_movement"
+                )
+            )
+        ).fetchall()
+        assert [(m[0], m[1], m[2]) for m in moves] == [("churn", 0, -1)]
+
+    @pytest.mark.asyncio
     async def test_resume_acts_as_reactivation(self, metric, db):
         await metric.handle_event(
             make_evt(

@@ -155,3 +155,12 @@ backfill also still activates trial subscriptions at creation. Both predate this
 change. Logo churn (the churn metric) ignores `subscription.paused` on the live path
 and in backfill. `definitions.md` treats a pause as churn only for MRR, so whether
 a pause is logo churn needs a human call.
+
+Second review follow-up: the MRR metric now skips a pause's movement only when the
+loss is zero in *both* original and base currency. The two are averaged separately,
+so base cents can survive rounding. **Not acted on:** backfill classifies
+`subscription.activated` as `new` or `reactivation` from whichever movements are
+already stored. Stripe lists subscriptions newest first, so a returning customer's
+later subscription is classified before their earlier one has churned. This
+predates the deferred pauses; fixing it needs chronological replay or a
+reclassification pass after backfill.

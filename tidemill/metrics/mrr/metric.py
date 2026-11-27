@@ -187,7 +187,11 @@ class MrrMetric(Metric):
                 total_lost = prev_sub_mrr + prev_usage
                 total_lost_base = prev_sub_mrr_base + prev_usage_base
                 await self._clear_snapshot(event, ext_id, currency)
-                if event.type == "subscription.paused" and total_lost == 0:
+                if (
+                    event.type == "subscription.paused"
+                    and total_lost == 0
+                    and total_lost_base == 0
+                ):
                     # A pause that loses nothing (e.g. a trial that ended
                     # without a payment method) is not churn — no movement.
                     return
