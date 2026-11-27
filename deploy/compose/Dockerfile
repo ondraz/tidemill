@@ -1,5 +1,5 @@
 # ── Stage 1: Build frontend ──────────────────────────────────────────────
-FROM node:22-slim AS frontend-build
+FROM node:24-slim AS frontend-build
 
 ARG VITE_CLERK_PUBLISHABLE_KEY
 

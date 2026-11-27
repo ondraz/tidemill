@@ -103,7 +103,7 @@ tidemill mrr
 
 The Dockerfile is a **multi-stage build**:
 
-1. **Stage 1 (Node 22):** Builds the React frontend — `npm ci && npm run build` produces static assets in `dist/`
+1. **Stage 1 (Node 24):** Builds the React frontend — `npm ci && npm run build` produces static assets in `dist/`
 2. **Stage 2 (Python 3.14):** Installs the Python backend via `uv`, copies the built frontend to `/srv/frontend`
 
 Caddy serves three things:
