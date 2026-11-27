@@ -34,10 +34,16 @@ resource "hcloud_server" "tidemill" {
     app = "tidemill"
   }
 
-  # Changing `image` forces hcloud to replace the server, which would destroy
-  # the local PostgreSQL and Redpanda volumes. Existing servers are upgraded in
-  # place (do-release-upgrade); a new default image only applies to new servers.
+  # The server holds the only copy of the PostgreSQL and Redpanda volumes, so
+  # Terraform must never replace or destroy it.
+  # - ignore_changes: changing `image` forces replacement in hcloud. Existing
+  #   servers are upgraded in place (do-release-upgrade); a new default image
+  #   only applies to new servers.
+  # - prevent_destroy: any other change that would replace the server (e.g. a
+  #   new `user_data` from a changed secret) makes plan/apply fail instead of
+  #   deleting it. To rebuild on purpose, back up the data and remove this flag.
   lifecycle {
-    ignore_changes = [image]
+    ignore_changes  = [image]
+    prevent_destroy = true
   }
 }

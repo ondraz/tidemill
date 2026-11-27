@@ -148,7 +148,7 @@ A single Hetzner CX22 (2 vCPU, 4 GB RAM, ~€4/mo) running Docker Compose. Good 
 
 | Resource | Purpose |
 |----------|---------|
-| `hcloud_server` | Ubuntu 26.04 with Docker (via cloud-init). `image` is in `ignore_changes`: changing the default never replaces an existing server — upgrade it in place with `do-release-upgrade` |
+| `hcloud_server` | Ubuntu 26.04 with Docker (via cloud-init). `prevent_destroy` is set, so any plan that would replace or destroy the server (including `terraform destroy`) fails; `image` is in `ignore_changes`, so a new default only applies to new servers — upgrade existing ones in place with `do-release-upgrade` |
 | `hcloud_ssh_key` | Your SSH key for server access |
 | `hcloud_firewall` | Allows only HTTP, HTTPS, ICMP and Tailscale (UDP 41641) inbound — SSH is Tailscale-only |
 | `hcloud_zone_rrset` | A + AAAA DNS records pointing to the server |
@@ -287,6 +287,9 @@ Open `https://grafana.<domain>` and log in as `admin`. Tempo, Loki, and Promethe
 Disable the stack by setting `TIDEMILL_OTEL_ENABLED=false` in `.env` and restarting the api + worker containers (the observability services themselves can be left running or stopped with `docker compose -f docker-compose.observability.yml stop`).
 
 ### Destroy
+
+`hcloud_server.tidemill` has `prevent_destroy = true`, so `terraform destroy` fails until you
+remove that line from `server.tf`. Back up PostgreSQL first — the server holds the only copy.
 
 ```bash
 terraform destroy   # removes server, firewall, DNS records
