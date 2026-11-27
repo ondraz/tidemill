@@ -1,5 +1,5 @@
 # ── Stage 1: Build frontend ──────────────────────────────────────────────
-FROM node:22-slim AS frontend-build
+FROM node:24-slim AS frontend-build
 
 ARG VITE_CLERK_PUBLISHABLE_KEY
 
@@ -10,7 +10,7 @@ COPY frontend/ ./
 RUN npx vite build
 
 # ── Stage 2: Python application (API only — no frontend assets) ─────────
-FROM python:3.13-slim AS api
+FROM python:3.14-slim AS api
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 

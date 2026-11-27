@@ -114,3 +114,9 @@ decide on the `definitions.md` status-heading correction.
 7. **Lint fix:** `architecture/expenses.md` linked a non-existent `connectors.md` anchor.
    Repointed to the QuickBooks section.
 
+## [2026-11-27] lint | Python version drift
+
+**Updated:** [Tidemill](entities/tidemill.md) — stack row now says Python 3.14+.
+**Findings:** The project moved its minimum Python from 3.13 to 3.14 (`pyproject.toml`
+`requires-python`, Dockerfile base image, `.python-version`). The architecture overview and
+`AGENTS.md` still said 3.11+ and were corrected at the same time. No other wiki claims touched.

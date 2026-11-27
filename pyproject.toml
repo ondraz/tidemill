@@ -3,12 +3,12 @@ name = "tidemill"
 version = "0.1.0"
 description = "Open-source subscription analytics engine"
 license = "MIT"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 
 
 dependencies = [
-    "sqlalchemy>=2.0,<3",
-    "stripe>=16.0.0",
+    "sqlalchemy[asyncio]>=2.1,<3",
+    "stripe>=16.0.0,<17",
     "chargebee>=3.0",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
@@ -71,13 +71,14 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 markers = [
     "integration: requires PostgreSQL (deselect with '-m not integration')",
 ]
 addopts = "-m 'not integration'"
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 line-length = 99
 
 [tool.ruff.lint]
@@ -109,7 +110,7 @@ convention = "google"
 "tidemill/reports/*.py" = ["TC002"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

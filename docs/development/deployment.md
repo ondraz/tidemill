@@ -103,8 +103,8 @@ tidemill mrr
 
 The Dockerfile is a **multi-stage build**:
 
-1. **Stage 1 (Node 22):** Builds the React frontend — `npm ci && npm run build` produces static assets in `dist/`
-2. **Stage 2 (Python 3.13):** Installs the Python backend via `uv`, copies the built frontend to `/srv/frontend`
+1. **Stage 1 (Node 24):** Builds the React frontend — `npm ci && npm run build` produces static assets in `dist/`
+2. **Stage 2 (Python 3.14):** Installs the Python backend via `uv`, copies the built frontend to `/srv/frontend`
 
 Caddy serves three things:
 
@@ -148,9 +148,9 @@ A single Hetzner CX22 (2 vCPU, 4 GB RAM, ~€4/mo) running Docker Compose. Good 
 
 | Resource | Purpose |
 |----------|---------|
-| `hcloud_server` | Ubuntu 24.04 with Docker (via cloud-init) |
+| `hcloud_server` | Ubuntu 26.04 with Docker (via cloud-init). `prevent_destroy` is set, so any plan that would replace or destroy the server (including `terraform destroy`) fails; `image` is in `ignore_changes`, so a new default only applies to new servers — upgrade existing ones in place with `do-release-upgrade` |
 | `hcloud_ssh_key` | Your SSH key for server access |
-| `hcloud_firewall` | Allows only SSH, HTTP, HTTPS, ICMP inbound |
+| `hcloud_firewall` | Allows only HTTP, HTTPS, ICMP and Tailscale (UDP 41641) inbound — SSH is Tailscale-only |
 | `hcloud_zone_rrset` | A + AAAA DNS records pointing to the server |
 
 ### Services (Docker Compose)
@@ -287,6 +287,9 @@ Open `https://grafana.<domain>` and log in as `admin`. Tempo, Loki, and Promethe
 Disable the stack by setting `TIDEMILL_OTEL_ENABLED=false` in `.env` and restarting the api + worker containers (the observability services themselves can be left running or stopped with `docker compose -f docker-compose.observability.yml stop`).
 
 ### Destroy
+
+`hcloud_server.tidemill` has `prevent_destroy = true`, so `terraform destroy` fails until you
+remove that line from `server.tf`. Back up PostgreSQL first — the server holds the only copy.
 
 ```bash
 terraform destroy   # removes server, firewall, DNS records

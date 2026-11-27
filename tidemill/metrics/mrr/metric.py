@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from tidemill.events import Event
 
 
-def _align_to_period_start(ts: pd.Timestamp, interval: str) -> pd.Timestamp:
+def _align_to_period_start(ts: pd.Timestamp | Any, interval: str) -> pd.Timestamp:
     """Snap a timestamp back to the start of the period it falls in.
 
     Matches PostgreSQL's DATE_TRUNC semantics — weekly periods are
@@ -55,18 +55,25 @@ def _align_to_period_start(ts: pd.Timestamp, interval: str) -> pd.Timestamp:
     """
     import pandas as pd
 
+    def _valid(value: pd.Timestamp | Any) -> pd.Timestamp:
+        # pandas types Timestamp arithmetic/construction as ``Timestamp | NaT``.
+        if not isinstance(value, pd.Timestamp):
+            raise ValueError(f"cannot align missing timestamp {value!r}")
+        return value
+
+    ts = _valid(ts)
     if interval == "day":
-        return ts.normalize()
+        return _valid(ts.normalize())
     if interval == "week":
-        return (ts - pd.Timedelta(days=ts.weekday())).normalize()
+        return _valid(_valid(ts - pd.Timedelta(days=ts.weekday())).normalize())
     if interval == "month":
-        return pd.Timestamp(ts.year, ts.month, 1)
+        return _valid(pd.Timestamp(ts.year, ts.month, 1))
     if interval == "quarter":
         q = (ts.month - 1) // 3
-        return pd.Timestamp(ts.year, q * 3 + 1, 1)
+        return _valid(pd.Timestamp(ts.year, q * 3 + 1, 1))
     if interval == "year":
-        return pd.Timestamp(ts.year, 1, 1)
-    return ts.normalize()
+        return _valid(pd.Timestamp(ts.year, 1, 1))
+    return _valid(ts.normalize())
 
 
 @register

@@ -21,7 +21,6 @@ function Root() {
   if (clerkKey) {
     // ClerkProvider reads VITE_CLERK_PUBLISHABLE_KEY from the environment.
     return (
-      // @ts-expect-error – publishableKey is read from env by the SDK at runtime
       <ClerkProvider afterSignOutUrl="/login">
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />

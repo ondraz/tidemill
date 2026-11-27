@@ -131,7 +131,7 @@ tidemill/
 
 | Component | Choice | Rationale |
 |-----------|--------|-----------|
-| Language | Python 3.11+ | Data science ecosystem, Jupyter integration |
+| Language | Python 3.14+ | Data science ecosystem, Jupyter integration |
 | Database | PostgreSQL | See [Database](database.md) |
 | Message bus | Kafka (ingestion mode only) | Durable, replayable, ordered per partition |
 | ORM | SQLAlchemy 2.0 | Async support, mature, works with Alembic |

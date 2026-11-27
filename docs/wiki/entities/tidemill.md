@@ -3,7 +3,7 @@ title: Tidemill
 description: This project — an open-source subscription analytics engine offering transparent, auditable metric computation for any billing system.
 type: entity
 tags: [project, analytics-tool, open-source]
-updated: 2026-07-23
+updated: 2026-11-27
 ---
 
 # Tidemill
@@ -30,7 +30,7 @@ black box?*
 |---|---|
 | Category | Analytics layer |
 | Licence | MIT, open source |
-| Stack | Python 3.13+, PostgreSQL, Kafka/Redpanda, FastAPI, React frontend |
+| Stack | Python 3.14+, PostgreSQL, Kafka/Redpanda, FastAPI, React frontend |
 | Revenue sources | [Stripe](stripe-billing.md), [Chargebee](chargebee.md) — implemented |
 | Expense sources | [QuickBooks Online](quickbooks-online.md) — implemented |
 | Planned sources | [Lago](lago.md), [Kill Bill](kill-bill.md) — P1, same-database mode |

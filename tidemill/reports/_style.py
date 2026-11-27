@@ -290,6 +290,8 @@ def format_period(period: Any, granularity: str = "month") -> str:
         A short human-readable label suitable for an x-axis tick.
     """
     ts = pd.Timestamp(period) if not isinstance(period, pd.Timestamp) else period
+    if not isinstance(ts, pd.Timestamp):  # NaT — missing period
+        return ""
     g = granularity.lower()
     if g == "month":
         return ts.strftime("%b %Y")

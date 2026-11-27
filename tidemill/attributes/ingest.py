@@ -86,7 +86,7 @@ def _coerce_typed(value: Any, attr_type: str) -> Any:
     if attr_type == "number":
         try:
             f = float(value)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
         # Preserve int vs float where the source value is naturally int.
         if isinstance(value, int) and not isinstance(value, bool):

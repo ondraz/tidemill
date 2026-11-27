@@ -5,7 +5,7 @@
 ## Prerequisites
 
 - **Docker** — PostgreSQL and Redpanda run in containers
-- **Node.js 22+** — frontend build tooling
+- **Node.js 24+** — frontend build tooling
 - **Stripe CLI** — webhook forwarding (`brew install stripe/stripe-cli/stripe && stripe login`)
 - **uv** — Python package manager (the project uses `uv` for dependency management)
 - **STRIPE_API_KEY** — test mode key (`sk_test_...`) from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys)
