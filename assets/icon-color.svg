@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+    <linearGradient id="g-amber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Three swept turbine blades — tide + mill -->
+  <!-- Blade 1: upper area (orange) -->
+  <path d="M30.6 24.1 C28 18, 27 10, 29.6 4.1 A28 28 0 0 1 57.4 20.2 C52 24, 42 26, 33.4 24.1 A8 8 0 0 0 30.6 24.1Z"
+        fill="url(#g-orange)"/>
+
+  <!-- Blade 2: lower-right (orange), rotated 120° -->
+  <path d="M30.6 24.1 C28 18, 27 10, 29.6 4.1 A28 28 0 0 1 57.4 20.2 C52 24, 42 26, 33.4 24.1 A8 8 0 0 0 30.6 24.1Z"
+        fill="url(#g-orange)" transform="rotate(120 32 32)"/>
+
+  <!-- Blade 3: lower-left (amber accent), rotated 240° -->
+  <path d="M30.6 24.1 C28 18, 27 10, 29.6 4.1 A28 28 0 0 1 57.4 20.2 C52 24, 42 26, 33.4 24.1 A8 8 0 0 0 30.6 24.1Z"
+        fill="url(#g-amber)" transform="rotate(240 32 32)"/>
+
+  <!-- Hub -->
+  <circle cx="32" cy="32" r="5" fill="#EA580C"/>
+</svg>

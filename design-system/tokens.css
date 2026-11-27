@@ -1,0 +1,132 @@
+/* Tidemill — Canonical Design Tokens
+   Mirrors:
+   - frontend/src/index.css        (UI theme)
+   - frontend/src/lib/colors.ts    (semantic + colorway)
+   - tidemill/reports/_style.py    (Plotly)
+   - docs/palette/                 (single source of truth)
+   ------------------------------------------------------ */
+
+:root {
+  /* ── Brand (amber / orange) ─────────────────────────── */
+  --tm-amber-500:   #F59E0B;   /* PRIMARY brand · colorway lead */
+  --tm-amber-600:   #D97706;   /* Logo accent blade gradient end */
+  --tm-orange-500:  #F97316;   /* Logo blade gradient start · wordmark */
+  --tm-orange-600:  #EA580C;   /* Hub fill · favicon · past-due */
+  --tm-orange-700:  #C2410C;   /* Logo blade gradient end */
+
+  /* ── UI theme (from frontend/src/index.css) ─────────── */
+  --color-background:           #ffffff;
+  --color-foreground:           #0a0a0a;
+  --color-muted:                #f5f5f5;     /* page bg in app */
+  --color-muted-foreground:     #737373;
+  --color-border:               #e5e5e5;
+  --color-primary:              #F59E0B;
+  --color-primary-foreground:   #ffffff;
+  --color-destructive:          #DC2626;
+  --color-accent:               #FFFBEB;
+  --color-accent-foreground:    #1C1917;
+  --color-card:                 #ffffff;
+  --color-card-foreground:      #0a0a0a;
+  --color-popover:              #ffffff;
+  --color-popover-foreground:   #0a0a0a;
+  --color-ring:                 #F59E0B;
+
+  /* ── Semantic (charts & metrics) ────────────────────── */
+  --tm-positive:        #16A34A;    /* new, active, converted, GRR */
+  --tm-expansion:       #2563EB;    /* expansion, NRR */
+  --tm-contraction:     #EAB308;    /* contraction */
+  --tm-churn:           #DC2626;    /* churn, canceled, expired, logo churn */
+  --tm-special:         #8B5CF6;    /* reactivation, ARPU */
+  --tm-brand-accent:    #F59E0B;    /* trialing, revenue churn */
+  --tm-warning:         #EA580C;    /* past due */
+  --tm-neutral:         #78716C;    /* starting MRR, pending */
+  --tm-dark:            #1C1917;    /* ending MRR */
+
+  /* ── Multi-series colorway (in order) ───────────────── */
+  --tm-series-1:  #F59E0B;
+  --tm-series-2:  #2563EB;
+  --tm-series-3:  #16A34A;
+  --tm-series-4:  #8B5CF6;
+  --tm-series-5:  #DC2626;
+  --tm-series-6:  #0891B2;
+  --tm-series-7:  #DB2777;
+  --tm-series-8:  #84CC16;
+  --tm-series-9:  #78716C;
+
+  /* ── Sequential scale (orange ramp · heatmaps) ──────── */
+  --tm-seq-0:    #FFF7ED;   /* orange-50 */
+  --tm-seq-25:   #FED7AA;   /* orange-200 */
+  --tm-seq-50:   #FB923C;   /* orange-400 */
+  --tm-seq-75:   #EA580C;   /* orange-600 */
+  --tm-seq-100:  #431407;   /* orange-950 */
+
+  /* ── Cohort retention buckets ───────────────────────── */
+  --tm-cohort-90: #DCFCE7;   /* green-100  · ≥ 90% */
+  --tm-cohort-70: #BBF7D0;   /* green-200  · ≥ 70% */
+  --tm-cohort-50: #FEF08A;   /* yellow-200 · ≥ 50% */
+  --tm-cohort-30: #FED7AA;   /* orange-200 · ≥ 30% */
+  --tm-cohort-00: #FECACA;   /* red-200    · < 30% */
+
+  /* ── Neutral tones (stone) ──────────────────────────── */
+  --tm-stone-200: #E7E5E4;   /* grid lines */
+  --tm-stone-300: #D6D3D1;   /* axis lines */
+  --tm-stone-500: #78716C;   /* secondary text */
+  --tm-stone-700: #44403C;   /* body text */
+  --tm-stone-900: #1C1917;   /* titles, headings */
+
+  /* ── Type ───────────────────────────────────────────── */
+  --tm-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+             Roboto, sans-serif;
+  --tm-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo,
+             Consolas, monospace;
+
+  --tm-fs-micro:  11px;
+  --tm-fs-xs:     12px;
+  --tm-fs-sm:     14px;
+  --tm-fs-base:   16px;
+  --tm-fs-md:     18px;
+  --tm-fs-lg:     24px;
+  --tm-fs-xl:     36px;
+  --tm-fs-2xl:    48px;
+  --tm-fs-3xl:    64px;
+
+  --tm-lh-tight:  1.1;
+  --tm-lh-snug:   1.25;
+  --tm-lh-body:   1.5;
+
+  --tm-tr-tight: -0.025em;
+  --tm-tr-snug:  -0.01em;
+  --tm-tr-wide:  0.12em;
+
+  /* ── Radius (from frontend/src/index.css) ───────────── */
+  --radius-sm: 0.25rem;   /* 4px */
+  --radius-md: 0.375rem;  /* 6px */
+  --radius-lg: 0.5rem;    /* 8px */
+
+  /* ── Spacing ────────────────────────────────────────── */
+  --tm-space-1:  4px;
+  --tm-space-2:  8px;
+  --tm-space-3:  12px;
+  --tm-space-4:  16px;
+  --tm-space-5:  24px;
+  --tm-space-6:  32px;
+  --tm-space-8:  48px;
+  --tm-space-10: 72px;
+  --tm-space-12: 112px;
+
+  --tm-container: 1200px;
+  --tm-rule:      1px solid var(--color-border);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--tm-sans);
+  font-size: var(--tm-fs-base);
+  line-height: var(--tm-lh-body);
+  color: var(--color-foreground);
+  background-color: var(--color-muted);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

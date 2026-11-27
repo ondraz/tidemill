@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tidemill — Design System</title>
+<meta name="theme-color" content="#F59E0B">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="tokens.css">
+
+<style>
+  .wrap { max-width: var(--tm-container); margin: 0 auto; padding: 0 var(--tm-space-6); }
+
+  /* ── Header ─────────────────────────────────────── */
+  header.site {
+    border-bottom: var(--tm-rule);
+    background: color-mix(in oklab, var(--color-background) 88%, transparent);
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+  header.site .row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 12px;
+    text-decoration: none; color: var(--color-foreground);
+    font-weight: 600; font-size: 15px; letter-spacing: var(--tm-tr-snug);
+  }
+  .brand img { height: 32px; width: auto; display: block; }
+  .brand .sub { color: var(--color-muted-foreground); font-weight: 400; }
+  nav.top a {
+    color: var(--color-muted-foreground); text-decoration: none;
+    font-size: var(--tm-fs-sm); margin-left: var(--tm-space-5);
+    font-weight: 500;
+  }
+  nav.top a:hover { color: var(--color-foreground); }
+
+  /* ── Section scaffolding ───────────────────────── */
+  main { background: var(--color-background); }
+  section.ds-section {
+    padding: var(--tm-space-12) 0 var(--tm-space-10);
+    border-bottom: var(--tm-rule);
+  }
+  .eyebrow {
+    font-family: var(--tm-mono);
+    font-size: var(--tm-fs-micro);
+    letter-spacing: var(--tm-tr-wide);
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+    display: inline-block;
+    margin-bottom: var(--tm-space-5);
+  }
+  .eyebrow .num { color: var(--color-primary); margin-right: 10px; font-weight: 600; }
+
+  h1.display {
+    font-family: var(--tm-sans); font-weight: 600;
+    font-size: clamp(40px, 6vw, var(--tm-fs-3xl));
+    line-height: var(--tm-lh-tight);
+    letter-spacing: var(--tm-tr-tight);
+    margin: 0 0 var(--tm-space-5);
+    text-wrap: balance;
+    color: var(--tm-stone-900);
+  }
+  h2.section-title {
+    font-family: var(--tm-sans); font-weight: 600;
+    font-size: var(--tm-fs-xl);
+    line-height: var(--tm-lh-tight);
+    letter-spacing: var(--tm-tr-tight);
+    margin: 0 0 var(--tm-space-5);
+    max-width: 22ch;
+    text-wrap: balance;
+    color: var(--tm-stone-900);
+  }
+  p.lead {
+    font-size: var(--tm-fs-md);
+    line-height: 1.45;
+    color: var(--tm-stone-700);
+    max-width: 64ch;
+    margin: 0 0 var(--tm-space-6);
+    text-wrap: pretty;
+  }
+  small.cap {
+    font-family: var(--tm-mono);
+    font-size: var(--tm-fs-micro);
+    letter-spacing: var(--tm-tr-wide);
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+  }
+  code.inline {
+    font-family: var(--tm-mono);
+    font-size: 13px;
+    background: var(--color-muted);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    color: var(--tm-stone-700);
+    border: 1px solid var(--color-border);
+  }
+
+  /* ── Hero ──────────────────────────────────────── */
+  .hero { padding: var(--tm-space-12) 0 var(--tm-space-10); }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--tm-space-10);
+    align-items: end;
+  }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero .meta {
+    display: flex; gap: var(--tm-space-5);
+    color: var(--color-muted-foreground);
+    font-family: var(--tm-mono);
+    font-size: var(--tm-fs-xs); text-transform: uppercase;
+    letter-spacing: var(--tm-tr-wide);
+    margin-bottom: var(--tm-space-6);
+    flex-wrap: wrap;
+  }
+  .hero .meta span { display: inline-flex; align-items: center; gap: 8px; }
+  .hero .meta .swatch-dot {
+    width: 10px; height: 10px; border-radius: 999px;
+    background: var(--color-primary);
+  }
+  .hero-card {
+    background: var(--color-muted);
+    border: var(--tm-rule);
+    border-radius: var(--radius-lg);
+    padding: var(--tm-space-6);
+    display: grid; gap: var(--tm-space-4);
+  }
+  .hero-card .logo-frame {
+    background: var(--color-background);
+    border: var(--tm-rule);
+    border-radius: var(--radius-md);
+    padding: var(--tm-space-8) var(--tm-space-6);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hero-card .logo-frame img { width: 220px; max-width: 80%; height: auto; }
+  .hero-card .files {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    font-family: var(--tm-mono); font-size: var(--tm-fs-xs);
+    color: var(--color-muted-foreground);
+  }
+  .hero-card .files span::before { content: "▸ "; color: var(--color-primary); }
+
+  /* ── Buttons ───────────────────────────────────── */
+  .btn-row { display: flex; flex-wrap: wrap; gap: var(--tm-space-3); align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 18px;
+    border-radius: var(--radius-md);
+    font-family: var(--tm-sans); font-size: var(--tm-fs-sm); font-weight: 500;
+    letter-spacing: var(--tm-tr-snug);
+    text-decoration: none; cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 120ms, border-color 120ms, box-shadow 120ms;
+  }
+  .btn-primary { background: var(--color-primary); color: var(--color-primary-foreground); }
+  .btn-primary:hover { background: var(--tm-amber-600); }
+  .btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 35%, transparent); }
+  .btn-secondary { background: var(--color-background); border-color: var(--color-border); color: var(--tm-stone-900); }
+  .btn-secondary:hover { border-color: var(--tm-stone-300); background: var(--color-muted); }
+  .btn-ghost { background: transparent; color: var(--tm-stone-700); }
+  .btn-ghost:hover { background: var(--color-accent); color: var(--color-accent-foreground); }
+  .btn-destructive { background: var(--color-destructive); color: #fff; }
+  .btn .arrow { font-family: var(--tm-mono); opacity: .9; }
+
+  /* ── Logo gallery ──────────────────────────────── */
+  .logo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--tm-space-4); margin-top: var(--tm-space-4); }
+  @media (max-width: 800px){ .logo-grid { grid-template-columns: 1fr 1fr; } }
+  .logo-card {
+    border: var(--tm-rule);
+    border-radius: var(--radius-md);
+    overflow: hidden; background: var(--color-background);
+  }
+  .logo-card .stage {
+    height: 140px; display: flex; align-items: center; justify-content: center;
+    border-bottom: var(--tm-rule);
+  }
+  .logo-card .stage img { max-height: 60%; max-width: 80%; }
+  .logo-card.dark .stage { background: var(--tm-stone-900); border-bottom-color: var(--tm-stone-900); }
+  .logo-card .meta { padding: 12px 14px; display: flex; justify-content: space-between; align-items: baseline; }
+  .logo-card .meta .name { font-size: var(--tm-fs-sm); font-weight: 500; color: var(--tm-stone-900); }
+  .logo-card .meta code { font-family: var(--tm-mono); font-size: 11px; color: var(--color-muted-foreground); }
+
+  .icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--tm-space-3); margin-top: var(--tm-space-4); }
+  @media (max-width: 700px){ .icon-grid { grid-template-columns: repeat(2, 1fr); } }
+  .icon-card {
+    border: var(--tm-rule); border-radius: var(--radius-md);
+    display: flex; flex-direction: column;
+  }
+  .icon-card .stage { padding: var(--tm-space-5); display: flex; align-items: center; justify-content: center; border-bottom: var(--tm-rule); }
+  .icon-card .stage img { width: 64px; height: 64px; }
+  .icon-card.dark .stage { background: var(--tm-stone-900); border-bottom-color: var(--tm-stone-900); }
+  .icon-card .meta { padding: 10px 12px; font-family: var(--tm-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: var(--tm-tr-wide); }
+
+  /* ── Palette table ─────────────────────────────── */
+  .palette-block { margin-bottom: var(--tm-space-8); }
+  .palette-block > .head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding-bottom: var(--tm-space-3);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--tm-space-4);
+  }
+  .palette-block > .head h3 { margin: 0; font-size: var(--tm-fs-lg); font-weight: 600; letter-spacing: var(--tm-tr-snug); color: var(--tm-stone-900); }
+
+  table.tk { width: 100%; border-collapse: collapse; font-size: var(--tm-fs-sm); }
+  table.tk th {
+    text-align: left; font-family: var(--tm-mono);
+    font-size: var(--tm-fs-micro); text-transform: uppercase;
+    letter-spacing: var(--tm-tr-wide); color: var(--color-muted-foreground);
+    font-weight: 500; padding: 10px 14px;
+    border-bottom: 1px solid var(--tm-stone-300);
+  }
+  table.tk td {
+    padding: 14px 14px;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+    color: var(--tm-stone-700);
+  }
+  table.tk td.chip-cell { width: 80px; padding: 12px 14px; }
+  table.tk td .chip-sq {
+    width: 56px; height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+  }
+  table.tk td.name { color: var(--tm-stone-900); font-weight: 600; font-size: var(--tm-fs-base); width: 200px; }
+  table.tk td.hex { font-family: var(--tm-mono); color: var(--tm-stone-900); width: 100px; }
+  table.tk td.tw { font-family: var(--tm-mono); color: var(--color-muted-foreground); font-size: 12px; width: 120px; }
+  table.tk td.var { font-family: var(--tm-mono); color: var(--color-muted-foreground); font-size: 12px; }
+
+  /* ── Colorway strip ────────────────────────────── */
+  .colorway {
+    display: grid; grid-template-columns: repeat(9, 1fr);
+    border: var(--tm-rule); border-radius: var(--radius-md); overflow: hidden;
+    margin-top: var(--tm-space-3);
+  }
+  .colorway .swatch-tall {
+    display: flex; flex-direction: column;
+    border-right: var(--tm-rule);
+  }
+  .colorway .swatch-tall:last-child { border-right: none; }
+  .colorway .fill { height: 88px; }
+  .colorway .label {
+    padding: 8px 10px;
+    font-family: var(--tm-mono); font-size: 11px;
+    color: var(--tm-stone-700);
+    display: flex; flex-direction: column; gap: 2px;
+    background: var(--color-background);
+    border-top: var(--tm-rule);
+  }
+  .colorway .label .n { color: var(--color-muted-foreground); font-size: 10px; }
+  .colorway .label .h { color: var(--tm-stone-900); font-weight: 500; }
+  @media (max-width: 800px) {
+    .colorway { grid-template-columns: repeat(3, 1fr); }
+    .colorway .swatch-tall:nth-child(3n) { border-right: none; }
+    .colorway .swatch-tall { border-bottom: var(--tm-rule); }
+  }
+
+  /* ── Sequential ramp ───────────────────────────── */
+  .seq-ramp {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    margin-top: var(--tm-space-3);
+    border: var(--tm-rule); border-radius: var(--radius-md); overflow: hidden;
+  }
+  .seq-ramp .step {
+    padding: var(--tm-space-5) var(--tm-space-4);
+    border-right: var(--tm-rule);
+    display: flex; flex-direction: column; gap: 6px;
+    height: 140px; justify-content: flex-end;
+  }
+  .seq-ramp .step:last-child { border-right: none; }
+  .seq-ramp .step .pos { font-family: var(--tm-mono); font-size: 11px; letter-spacing: var(--tm-tr-wide); text-transform: uppercase; }
+  .seq-ramp .step .hex { font-family: var(--tm-mono); font-size: 13px; font-weight: 500; }
+  .seq-ramp .step .tw  { font-family: var(--tm-mono); font-size: 11px; opacity: .8; }
+  /* Light steps -- dark text; dark steps -- light text */
+  .seq-ramp .step.light { color: var(--tm-stone-900); }
+  .seq-ramp .step.dark  { color: #ffffff; }
+
+  /* ── Cohort heatmap ────────────────────────────── */
+  .cohort-grid {
+    display: grid; grid-template-columns: repeat(13, 1fr);
+    border-radius: var(--radius-md); overflow: hidden;
+    border: var(--tm-rule);
+    margin-top: var(--tm-space-3);
+  }
+  .cohort-grid .cell {
+    aspect-ratio: 1.4;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--tm-mono); font-size: 11px;
+    color: var(--tm-stone-900);
+    border-right: 1px solid color-mix(in oklab, #fff 70%, transparent);
+    border-bottom: 1px solid color-mix(in oklab, #fff 70%, transparent);
+  }
+  .cohort-grid .cell.h { background: var(--color-muted); color: var(--color-muted-foreground); font-weight: 500; }
+
+  .cohort-legend { display: flex; gap: 14px; margin-top: var(--tm-space-3); flex-wrap: wrap; }
+  .cohort-legend .lg { display: inline-flex; align-items: center; gap: 8px; font-size: var(--tm-fs-sm); color: var(--tm-stone-700); }
+  .cohort-legend .lg .sw { width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--color-border); }
+
+  /* ── Type scale ────────────────────────────────── */
+  .type-row {
+    display: grid;
+    grid-template-columns: 140px 140px 1fr;
+    gap: var(--tm-space-5);
+    align-items: baseline;
+    padding: var(--tm-space-4) 0;
+    border-top: var(--tm-rule);
+  }
+  .type-row:last-child { border-bottom: var(--tm-rule); }
+  .type-row .label-col { font-family: var(--tm-mono); font-size: var(--tm-fs-xs); color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: var(--tm-tr-wide); }
+  .type-row .spec-col { font-family: var(--tm-mono); font-size: var(--tm-fs-xs); color: var(--color-muted-foreground); }
+  .type-row .sample-col { color: var(--tm-stone-900); }
+  .type-row .sample-col.mono { font-family: var(--tm-mono); }
+
+  /* ── Components ────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--tm-space-5); }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--tm-space-5); }
+  @media (max-width: 800px){ .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .card-ex {
+    background: var(--color-card);
+    border: var(--tm-rule);
+    border-radius: var(--radius-lg);
+    padding: var(--tm-space-5);
+  }
+  .card-ex h4 { margin: 0 0 8px; font-size: var(--tm-fs-base); font-weight: 600; color: var(--tm-stone-900); letter-spacing: var(--tm-tr-snug); }
+  .card-ex p { margin: 0; color: var(--tm-stone-700); font-size: var(--tm-fs-sm); }
+
+  /* Badges */
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border-radius: 999px;
+    font-family: var(--tm-sans); font-size: 12px; font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .badge .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .b-new { color: var(--tm-positive); background: color-mix(in oklab, var(--tm-positive) 12%, white); }
+  .b-exp { color: var(--tm-expansion); background: color-mix(in oklab, var(--tm-expansion) 12%, white); }
+  .b-con { color: #92400E; background: color-mix(in oklab, var(--tm-contraction) 22%, white); }
+  .b-churn { color: var(--tm-churn); background: color-mix(in oklab, var(--tm-churn) 12%, white); }
+  .b-react { color: var(--tm-special); background: color-mix(in oklab, var(--tm-special) 12%, white); }
+  .b-trial { color: #92400E; background: var(--color-accent); border-color: color-mix(in oklab, var(--color-primary) 30%, transparent); }
+  .b-past { color: var(--tm-warning); background: color-mix(in oklab, var(--tm-warning) 12%, white); }
+  .b-active { color: var(--tm-positive); background: color-mix(in oklab, var(--tm-positive) 12%, white); }
+
+  /* Stat row */
+  .stat-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border: var(--tm-rule); border-radius: var(--radius-md);
+    background: var(--color-card);
+    overflow: hidden;
+  }
+  .stat { padding: var(--tm-space-5); border-right: var(--tm-rule); display: flex; flex-direction: column; gap: 8px; }
+  .stat:last-child { border-right: none; }
+  .stat .k { font-family: var(--tm-mono); font-size: var(--tm-fs-micro); letter-spacing: var(--tm-tr-wide); text-transform: uppercase; color: var(--color-muted-foreground); }
+  .stat .v { font-family: var(--tm-sans); font-size: var(--tm-fs-xl); font-weight: 600; color: var(--tm-stone-900); letter-spacing: var(--tm-tr-tight); line-height: 1; }
+  .stat .d { font-family: var(--tm-sans); font-size: 12px; font-weight: 500; }
+  .stat .d.up { color: var(--tm-positive); }
+  .stat .d.dn { color: var(--tm-churn); }
+  @media (max-width: 800px){ .stat-row { grid-template-columns: 1fr 1fr; } .stat { border-right: none; border-bottom: var(--tm-rule); } }
+
+  /* Chart card */
+  .chart-card { border: var(--tm-rule); border-radius: var(--radius-md); overflow: hidden; background: var(--color-card); }
+  .chart-card .head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 14px 18px; border-bottom: var(--tm-rule);
+  }
+  .chart-card .head h5 { margin: 0; font-size: var(--tm-fs-base); font-weight: 600; color: var(--tm-stone-900); letter-spacing: var(--tm-tr-snug); }
+  .chart-card .head .live { font-family: var(--tm-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: var(--tm-tr-wide); }
+  .chart-card .head .live::before { content: "● "; color: var(--tm-positive); }
+
+  .chart-canvas {
+    height: 240px; padding: 24px 24px 36px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 39px, var(--tm-stone-200) 39px 40px),
+      var(--color-card);
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    align-items: end; gap: 18px;
+    position: relative;
+  }
+  .bar { position: relative; border-radius: 2px 2px 0 0; width: 100%; }
+  .bar::after {
+    content: attr(data-label);
+    position: absolute; left: 0; right: 0; bottom: -22px;
+    text-align: center; font-family: var(--tm-mono);
+    font-size: 11px; letter-spacing: 0.05em;
+    color: var(--color-muted-foreground);
+  }
+  .chart-card .foot {
+    display: flex; justify-content: space-between;
+    padding: 10px 18px; border-top: var(--tm-rule);
+    font-family: var(--tm-mono); font-size: 11px; color: var(--color-muted-foreground);
+  }
+  .chart-card .foot .endpoint b { color: var(--color-primary); font-weight: 500; }
+
+  .legend-row { display: flex; gap: 14px; flex-wrap: wrap; padding: 10px 18px; border-top: var(--tm-rule); }
+  .legend-row .lg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--tm-stone-700); }
+  .legend-row .lg .sw { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* Form bits */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--tm-stone-700); font-weight: 500; }
+  .field input, .field select {
+    height: 38px; padding: 0 12px; border-radius: var(--radius-md);
+    border: 1px solid var(--color-border); font: inherit;
+    color: var(--tm-stone-900); background: var(--color-background);
+  }
+  .field input:focus, .field select:focus { outline: none; box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 30%, transparent); border-color: var(--color-primary); }
+
+  /* Spacing scale visualization */
+  .space-row { display: flex; align-items: end; gap: 18px; flex-wrap: wrap; padding-top: var(--tm-space-4); }
+  .space-stack { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+  .space-bar { background: var(--tm-stone-900); height: 12px; border-radius: 2px; }
+  .space-stack .lbl { font-family: var(--tm-mono); font-size: 11px; color: var(--color-muted-foreground); text-transform: uppercase; letter-spacing: var(--tm-tr-wide); }
+
+  /* Footer */
+  footer.site {
+    padding: var(--tm-space-8) 0 var(--tm-space-10);
+    color: var(--color-muted-foreground);
+    font-family: var(--tm-mono);
+    font-size: var(--tm-fs-xs);
+    background: var(--color-muted);
+    border-top: var(--tm-rule);
+  }
+  footer.site .row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--tm-space-4); }
+
+  /* Anatomy / decorative containers */
+  .anatomy {
+    border: 1px dashed var(--tm-stone-300);
+    border-radius: var(--radius-md);
+    padding: var(--tm-space-5);
+    background:
+      repeating-linear-gradient(135deg, transparent 0 12px,
+        color-mix(in oklab, var(--color-border) 65%, transparent) 12px 13px),
+      var(--color-card);
+  }
+  .anatomy .inner { background: var(--color-card); padding: 22px; border-radius: var(--radius-sm); border: var(--tm-rule); }
+
+  /* Code block */
+  .code {
+    background: var(--tm-stone-900);
+    color: #E7E5E4;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    font-family: var(--tm-mono); font-size: 13px; line-height: 1.65;
+  }
+  .code .head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    background: #0c0a09;
+    color: var(--color-muted-foreground);
+  }
+  .code .head .tag { font-size: 11px; letter-spacing: var(--tm-tr-wide); text-transform: uppercase; }
+  .code .head .name { font-size: 12px; color: #d4d4d4; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; white-space: pre; }
+  .ck { color: #FCD34D; }   /* keyword */
+  .cs { color: #86EFAC; }   /* string */
+  .cf { color: #FDBA74; }   /* function */
+  .cn { color: #E7E5E4; }   /* identifier */
+  .cc { color: #78716C; }   /* comment */
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap row">
+    <a class="brand" href="#">
+      <img src="../assets/logo-color.svg" alt="Tidemill">
+      <span class="sub">Design System</span>
+    </a>
+    <nav class="top">
+      <a href="#brand-section">Brand</a>
+      <a href="#color">Color</a>
+      <a href="#type">Type</a>
+      <a href="#charts">Charts</a>
+      <a href="#components">Components</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow"><span class="num">00</span> CANONICAL SYSTEM · MAY 2026</div>
+          <h1 class="display">Tidemill Design System.</h1>
+          <p class="lead">A warm orange-based palette designed for financial SaaS dashboards. One source of truth — mirrored across the frontend, the Plotly report style, the documentation theme, and the logo set.</p>
+          <div class="meta">
+            <span><span class="swatch-dot"></span>PRIMARY · AMBER 500</span>
+            <span><span class="swatch-dot" style="background:var(--tm-stone-900)"></span>INK · STONE 900</span>
+            <span><span class="swatch-dot" style="background:var(--color-muted)"></span>SURFACE · #FFFFFF</span>
+            <span><span class="swatch-dot" style="background:var(--tm-expansion)"></span>9-SERIES COLORWAY</span>
+          </div>
+          <div class="btn-row">
+            <a class="btn btn-primary" href="#color">Browse palette <span class="arrow">→</span></a>
+            <a class="btn btn-secondary" href="tokens.css">tokens.css <span class="arrow">↗</span></a>
+          </div>
+        </div>
+
+        <aside class="hero-card">
+          <small class="cap">Logo · primary</small>
+          <div class="logo-frame"><img src="../assets/logo-color.svg" alt="Tidemill"></div>
+          <div class="files">
+            <span>logo-color.svg</span>
+            <span>logo-bw.svg</span>
+            <span>logo-white.svg</span>
+            <span>favicon.svg</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ BRAND / LOGO ============ -->
+    <section class="ds-section" id="brand-section">
+      <div class="eyebrow"><span class="num">01</span> Brand</div>
+      <h2 class="section-title">Three swept blades. One amber hub.</h2>
+      <p class="lead">The mark is a three-blade turbine — tide and mill, evoked in a single rotation. Orange-to-amber gradients on the upper and right blades, a single amber-to-amber blade for the lower-left accent, all spinning around a solid <code class="inline">#EA580C</code> hub.</p>
+
+      <small class="cap">Logo lockups</small>
+      <div class="logo-grid">
+        <div class="logo-card"><div class="stage"><img src="../assets/logo-color.svg" alt="logo color"></div><div class="meta"><span class="name">Color</span><code>logo-color.svg</code></div></div>
+        <div class="logo-card"><div class="stage"><img src="../assets/logo-bw.svg" alt="logo bw"></div><div class="meta"><span class="name">Black</span><code>logo-bw.svg</code></div></div>
+        <div class="logo-card dark"><div class="stage"><img src="../assets/logo-white.svg" alt="logo white"></div><div class="meta"><span class="name">White (on dark)</span><code>logo-white.svg</code></div></div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Icon set</small>
+        <div class="icon-grid">
+          <div class="icon-card"><div class="stage"><img src="../assets/icon-color.svg" alt="icon"></div><div class="meta">icon-color</div></div>
+          <div class="icon-card"><div class="stage"><img src="../assets/icon-bw.svg" alt="icon"></div><div class="meta">icon-bw</div></div>
+          <div class="icon-card dark"><div class="stage"><img src="../assets/icon-white.svg" alt="icon"></div><div class="meta">icon-white</div></div>
+          <div class="icon-card"><div class="stage"><img src="../assets/favicon.svg" alt="favicon" style="width:48px; height:48px;"></div><div class="meta">favicon</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-8);">
+        <small class="cap">Brand swatches</small>
+        <table class="tk" style="margin-top: var(--tm-space-3);">
+          <thead><tr><th></th><th>Name</th><th>Hex</th><th>Usage</th></tr></thead>
+          <tbody>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#F59E0B"></div></td><td class="name">Amber 500 <small style="color:var(--color-muted-foreground); font-weight:400; display:block; font-size:11px; font-family:var(--tm-mono); margin-top:2px;">PRIMARY</small></td><td class="hex">#F59E0B</td><td>Primary brand · UI primary · colorway lead</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#EA580C"></div></td><td class="name">Orange 600</td><td class="hex">#EA580C</td><td>Hub fill · favicon · past-due status</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#F97316"></div></td><td class="name">Orange 500</td><td class="hex">#F97316</td><td>Logo blade gradient start · wordmark</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#C2410C"></div></td><td class="name">Orange 700</td><td class="hex">#C2410C</td><td>Logo blade gradient end</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#D97706"></div></td><td class="name">Amber 600</td><td class="hex">#D97706</td><td>Logo accent blade gradient end</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ COLOR ============ -->
+    <section class="ds-section" id="color">
+      <div class="eyebrow"><span class="num">02</span> Color</div>
+      <h2 class="section-title">Single source of truth, four scales.</h2>
+      <p class="lead">Implemented in <code class="inline">frontend/src/lib/colors.ts</code>, <code class="inline">frontend/src/index.css</code>, and <code class="inline">tidemill/reports/_style.py</code>. Every chart, every report, every component reads from the same constants.</p>
+
+      <!-- Semantic -->
+      <div class="palette-block">
+        <div class="head"><h3>Semantic — charts &amp; metrics</h3><small class="cap">9 colors mapped to specific roles</small></div>
+        <table class="tk">
+          <thead><tr><th></th><th>Role</th><th>Hex</th><th>Mapped to</th></tr></thead>
+          <tbody>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#16A34A"></div></td><td class="name">Positive / Growth</td><td class="hex">#16A34A</td><td>new · active · converted · GRR</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#2563EB"></div></td><td class="name">Expansion</td><td class="hex">#2563EB</td><td>expansion · NRR</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#EAB308"></div></td><td class="name">Contraction</td><td class="hex">#EAB308</td><td>contraction</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#DC2626"></div></td><td class="name">Churn / Negative</td><td class="hex">#DC2626</td><td>churn · canceled · expired · logo churn</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#8B5CF6"></div></td><td class="name">Special</td><td class="hex">#8B5CF6</td><td>reactivation · ARPU</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#F59E0B"></div></td><td class="name">Brand accent</td><td class="hex">#F59E0B</td><td>trialing · revenue churn</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#EA580C"></div></td><td class="name">Warning</td><td class="hex">#EA580C</td><td>past due</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#78716C"></div></td><td class="name">Neutral</td><td class="hex">#78716C</td><td>starting MRR · pending · grey</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#1C1917"></div></td><td class="name">Dark</td><td class="hex">#1C1917</td><td>ending MRR</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Colorway -->
+      <div class="palette-block">
+        <div class="head"><h3>Multi-series colorway</h3><small class="cap">Default cycle for n-series charts, in order</small></div>
+        <div class="colorway">
+          <div class="swatch-tall"><div class="fill" style="background:#F59E0B"></div><div class="label"><span class="n">1</span><span class="h">#F59E0B</span><span>amber</span></div></div>
+          <div class="swatch-tall"><div class="fill" style="background:#2563EB"></div><div class="label"><span class="n">2</span><span class="h">#2563EB</span><span>blue</span></div></div>
+          <div class="swatch-tall"><div class="fill" style="background:#16A34A"></div><div class="label"><span class="n">3</span><span class="h">#16A34A</span><span>green</span></div></div>
+          <div class="swatch-tall"><div class="fill" style="background:#8B5CF6"></div><div class="label"><span class="n">4</span><span class="h">#8B5CF6</span><span>violet</span></div></div>
+          <div class="swatch-tall"><div class="fill" style="background:#DC2626"></div><div class="label"><span class="n">5</span><span class="h">#DC2626</span><span>red</span></div></div>
+          <div class="swatch-tall"><div class="fill" style="background:#0891B2"></div><div class="label"><span class="n">6</span><span class="h">#0891B2</span><span>cyan</span></div></div>
+          <div class="swatch-tall"><div class="fill" style="background:#DB2777"></div><div class="label"><span class="n">7</span><span class="h">#DB2777</span><span>pink</span></div></div>
+          <div class="swatch-tall"><div class="fill" style="background:#84CC16"></div><div class="label"><span class="n">8</span><span class="h">#84CC16</span><span>lime</span></div></div>
+          <div class="swatch-tall"><div class="fill" style="background:#78716C"></div><div class="label"><span class="n">9</span><span class="h">#78716C</span><span>stone</span></div></div>
+        </div>
+      </div>
+
+      <!-- Sequential ramp -->
+      <div class="palette-block">
+        <div class="head"><h3>Sequential scale — heatmaps</h3><small class="cap">Orange ramp used by Plotly <code class="inline">colorscale_sequential</code></small></div>
+        <div class="seq-ramp">
+          <div class="step light" style="background:#FFF7ED"><span class="pos">0.00</span><span class="hex">#FFF7ED</span><span class="tw">orange-50</span></div>
+          <div class="step light" style="background:#FED7AA"><span class="pos">0.25</span><span class="hex">#FED7AA</span><span class="tw">orange-200</span></div>
+          <div class="step light" style="background:#FB923C"><span class="pos">0.50</span><span class="hex">#FB923C</span><span class="tw">orange-400</span></div>
+          <div class="step dark" style="background:#EA580C"><span class="pos">0.75</span><span class="hex">#EA580C</span><span class="tw">orange-600</span></div>
+          <div class="step dark" style="background:#431407"><span class="pos">1.00</span><span class="hex">#431407</span><span class="tw">orange-950</span></div>
+        </div>
+      </div>
+
+      <!-- Cohort -->
+      <div class="palette-block">
+        <div class="head"><h3>Cohort retention buckets</h3><small class="cap">Discrete · green→red</small></div>
+        <div class="cohort-grid" id="cohort"></div>
+        <div class="cohort-legend">
+          <span class="lg"><span class="sw" style="background:#DCFCE7"></span>≥ 90% <code class="inline">#DCFCE7</code></span>
+          <span class="lg"><span class="sw" style="background:#BBF7D0"></span>≥ 70% <code class="inline">#BBF7D0</code></span>
+          <span class="lg"><span class="sw" style="background:#FEF08A"></span>≥ 50% <code class="inline">#FEF08A</code></span>
+          <span class="lg"><span class="sw" style="background:#FED7AA"></span>≥ 30% <code class="inline">#FED7AA</code></span>
+          <span class="lg"><span class="sw" style="background:#FECACA"></span>&lt; 30% <code class="inline">#FECACA</code></span>
+        </div>
+      </div>
+
+      <!-- Neutrals -->
+      <div class="palette-block">
+        <div class="head"><h3>Neutral tones — stone</h3><small class="cap">Warm grays for text, grids, borders</small></div>
+        <table class="tk">
+          <thead><tr><th></th><th>Hex</th><th>Tailwind</th><th>Usage</th></tr></thead>
+          <tbody>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#E7E5E4"></div></td><td class="hex">#E7E5E4</td><td class="tw">stone-200</td><td>Grid lines</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#D6D3D1"></div></td><td class="hex">#D6D3D1</td><td class="tw">stone-300</td><td>Axis lines</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#78716C"></div></td><td class="hex">#78716C</td><td class="tw">stone-500</td><td>Secondary text · neutral data</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#44403C"></div></td><td class="hex">#44403C</td><td class="tw">stone-700</td><td>Body text · hover labels</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#1C1917"></div></td><td class="hex">#1C1917</td><td class="tw">stone-900</td><td>Titles · headings</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- UI theme -->
+      <div class="palette-block">
+        <div class="head"><h3>UI theme — CSS custom properties</h3><small class="cap"><code class="inline">frontend/src/index.css</code></small></div>
+        <table class="tk">
+          <thead><tr><th></th><th>Property</th><th>Value</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#F59E0B"></div></td><td class="var">--color-primary</td><td class="hex">#F59E0B</td><td>Buttons · links · focus rings</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#ffffff"></div></td><td class="var">--color-primary-foreground</td><td class="hex">#FFFFFF</td><td>Text on primary</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#FFFBEB"></div></td><td class="var">--color-accent</td><td class="hex">#FFFBEB</td><td>Hover / highlight backgrounds</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#1C1917"></div></td><td class="var">--color-accent-foreground</td><td class="hex">#1C1917</td><td>Text on accent</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#DC2626"></div></td><td class="var">--color-destructive</td><td class="hex">#DC2626</td><td>Danger actions</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#F59E0B"></div></td><td class="var">--color-ring</td><td class="hex">#F59E0B</td><td>Focus outlines</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#e5e5e5"></div></td><td class="var">--color-border</td><td class="hex">#E5E5E5</td><td>Default borders</td></tr>
+            <tr><td class="chip-cell"><div class="chip-sq" style="background:#f5f5f5"></div></td><td class="var">--color-muted</td><td class="hex">#F5F5F5</td><td>Page background</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ TYPE ============ -->
+    <section class="ds-section" id="type">
+      <div class="eyebrow"><span class="num">03</span> Type</div>
+      <h2 class="section-title">Inter, set tight.</h2>
+      <p class="lead">A single typeface — <strong>Inter</strong> — for headlines, body, and UI. Numerals are tabular by default; titles use stone-900 with negative letter-spacing; secondary text settles into stone-700. Monospace appears only where developers need to read literals: code, endpoints, eyebrows, metric values.</p>
+
+      <div class="type-row">
+        <div class="label-col">Display</div>
+        <div class="spec-col">64 / 1.1 / -0.025em</div>
+        <div class="sample-col" style="font-size:60px; line-height:1.05; letter-spacing:-0.025em; font-weight:600;">Subscription metrics</div>
+      </div>
+      <div class="type-row">
+        <div class="label-col">H1</div>
+        <div class="spec-col">48 / 1.1 / -0.025em</div>
+        <div class="sample-col" style="font-size:44px; line-height:1.08; letter-spacing:-0.025em; font-weight:600;">Tidemill design system</div>
+      </div>
+      <div class="type-row">
+        <div class="label-col">H2 — Section</div>
+        <div class="spec-col">36 / 1.1 / -0.025em</div>
+        <div class="sample-col" style="font-size:34px; line-height:1.1; letter-spacing:-0.025em; font-weight:600;">Every metric, with its formula.</div>
+      </div>
+      <div class="type-row">
+        <div class="label-col">H3 — Subsection</div>
+        <div class="spec-col">24 / 1.25 / -0.01em</div>
+        <div class="sample-col" style="font-size:22px; line-height:1.25; letter-spacing:-0.01em; font-weight:600;">Webhook or direct database.</div>
+      </div>
+      <div class="type-row">
+        <div class="label-col">Lead</div>
+        <div class="spec-col">18 / 1.45</div>
+        <div class="sample-col" style="font-size:18px; line-height:1.45; color:var(--tm-stone-700);">Each metric lives in a self-contained Python module with its formula, SQL, edge cases, and API in one place.</div>
+      </div>
+      <div class="type-row">
+        <div class="label-col">Body</div>
+        <div class="spec-col">16 / 1.5</div>
+        <div class="sample-col" style="font-size:16px; line-height:1.5; color:var(--tm-stone-700);">Compiled SQL travels through a typed query algebra — never string concatenation.</div>
+      </div>
+      <div class="type-row">
+        <div class="label-col">Small</div>
+        <div class="spec-col">14 / 1.5</div>
+        <div class="sample-col" style="font-size:14px; line-height:1.5; color:var(--tm-stone-700);">PostgreSQL + Redpanda + FastAPI + a React dashboard, behind Caddy with auto-TLS.</div>
+      </div>
+      <div class="type-row">
+        <div class="label-col">Meta — mono</div>
+        <div class="spec-col">12 / 1.5</div>
+        <div class="sample-col mono" style="font-size:13px; color:var(--color-muted-foreground);">tidemill.metrics.mrr.waterfall()</div>
+      </div>
+      <div class="type-row">
+        <div class="label-col">Eyebrow — mono</div>
+        <div class="spec-col">11 / 1.4 · 0.12em</div>
+        <div class="sample-col mono" style="font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-muted-foreground);"><span style="color:var(--color-primary); font-weight:600;">02 —</span> METRICS</div>
+      </div>
+    </section>
+
+    <!-- ============ SPACING / RADIUS ============ -->
+    <section class="ds-section" id="space">
+      <div class="eyebrow"><span class="num">04</span> Space &amp; radius</div>
+      <h2 class="section-title">4-px base, three radii.</h2>
+      <p class="lead">Components step in 4-pixel increments up to 32, then jump to 48, 72, and 112 for section-level rhythm. Radii are inherited from the frontend: <code class="inline">--radius-sm</code> · <code class="inline">--radius-md</code> · <code class="inline">--radius-lg</code>.</p>
+
+      <small class="cap">Spacing scale</small>
+      <div class="space-row">
+        <div class="space-stack"><div class="space-bar" style="width:4px"></div><div class="lbl">4 · sp-1</div></div>
+        <div class="space-stack"><div class="space-bar" style="width:8px"></div><div class="lbl">8 · sp-2</div></div>
+        <div class="space-stack"><div class="space-bar" style="width:12px"></div><div class="lbl">12 · sp-3</div></div>
+        <div class="space-stack"><div class="space-bar" style="width:16px"></div><div class="lbl">16 · sp-4</div></div>
+        <div class="space-stack"><div class="space-bar" style="width:24px"></div><div class="lbl">24 · sp-5</div></div>
+        <div class="space-stack"><div class="space-bar" style="width:32px"></div><div class="lbl">32 · sp-6</div></div>
+        <div class="space-stack"><div class="space-bar" style="width:48px"></div><div class="lbl">48 · sp-8</div></div>
+        <div class="space-stack"><div class="space-bar" style="width:72px"></div><div class="lbl">72 · sp-10</div></div>
+        <div class="space-stack"><div class="space-bar" style="width:112px"></div><div class="lbl">112 · sp-12</div></div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Radius</small>
+        <div style="display:flex; gap:18px; align-items:end; margin-top:14px;">
+          <div style="display:flex; flex-direction:column; gap:6px;"><div style="width:80px; height:60px; background:var(--color-accent); border:var(--tm-rule); border-radius: var(--radius-sm);"></div><span class="lbl" style="font-family:var(--tm-mono); font-size:11px; color:var(--color-muted-foreground); letter-spacing: var(--tm-tr-wide); text-transform:uppercase;">4 · sm · 0.25rem</span></div>
+          <div style="display:flex; flex-direction:column; gap:6px;"><div style="width:80px; height:60px; background:var(--color-accent); border:var(--tm-rule); border-radius: var(--radius-md);"></div><span class="lbl" style="font-family:var(--tm-mono); font-size:11px; color:var(--color-muted-foreground); letter-spacing: var(--tm-tr-wide); text-transform:uppercase;">6 · md · 0.375rem</span></div>
+          <div style="display:flex; flex-direction:column; gap:6px;"><div style="width:80px; height:60px; background:var(--color-accent); border:var(--tm-rule); border-radius: var(--radius-lg);"></div><span class="lbl" style="font-family:var(--tm-mono); font-size:11px; color:var(--color-muted-foreground); letter-spacing: var(--tm-tr-wide); text-transform:uppercase;">8 · lg · 0.5rem</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CHARTS ============ -->
+    <section class="ds-section" id="charts">
+      <div class="eyebrow"><span class="num">05</span> Chart patterns</div>
+      <h2 class="section-title">Semantic colors carry the story.</h2>
+      <p class="lead">Charts always reach for the semantic palette first — green for growth, red for churn, blue for expansion, amber for the brand series. The multi-series colorway is only used when a chart has no inherent meaning to its categories.</p>
+
+      <small class="cap">MRR waterfall · semantic mapping</small>
+      <div class="chart-card" style="margin-top: var(--tm-space-3);">
+        <div class="head">
+          <h5>MRR Waterfall · Nov 2025 → Apr 2026</h5>
+          <span class="live">LIVE DEMO DATA</span>
+        </div>
+        <div class="chart-canvas">
+          <div class="bar" style="height: 55%; background: var(--tm-neutral);"   data-label="START"></div>
+          <div class="bar" style="height: 72%; background: var(--tm-positive);"  data-label="NEW"></div>
+          <div class="bar" style="height: 80%; background: var(--tm-expansion);" data-label="EXPAND"></div>
+          <div class="bar" style="height: 62%; background: var(--tm-special);"   data-label="REACT"></div>
+          <div class="bar" style="height: 48%; background: var(--tm-contraction);" data-label="CONTRACT"></div>
+          <div class="bar" style="height: 38%; background: var(--tm-churn);"     data-label="CHURN"></div>
+        </div>
+        <div class="legend-row">
+          <span class="lg"><span class="sw" style="background:#78716C"></span>Starting</span>
+          <span class="lg"><span class="sw" style="background:#16A34A"></span>New</span>
+          <span class="lg"><span class="sw" style="background:#2563EB"></span>Expansion</span>
+          <span class="lg"><span class="sw" style="background:#8B5CF6"></span>Reactivation</span>
+          <span class="lg"><span class="sw" style="background:#EAB308"></span>Contraction</span>
+          <span class="lg"><span class="sw" style="background:#DC2626"></span>Churn</span>
+        </div>
+        <div class="foot">
+          <span>tidemill.metrics.mrr.waterfall()</span>
+          <span class="endpoint"><b>GET</b> /api/metrics/mrr/waterfall</span>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Cohort retention · heatmap</small>
+        <div class="cohort-grid" id="cohort-full" style="margin-top:12px;"></div>
+      </div>
+    </section>
+
+    <!-- ============ COMPONENTS ============ -->
+    <section class="ds-section" id="components">
+      <div class="eyebrow"><span class="num">06</span> Components</div>
+      <h2 class="section-title">A small kit, composed from tokens.</h2>
+      <p class="lead">Every component below is rendered from the canonical CSS variables. Adjust a token in <code class="inline">tokens.css</code> and the whole page updates.</p>
+
+      <small class="cap">Buttons</small>
+      <div class="btn-row" style="margin-top: var(--tm-space-3);">
+        <a class="btn btn-primary" href="#">Try the live app <span class="arrow">→</span></a>
+        <a class="btn btn-secondary" href="#">Read the source <span class="arrow">↗</span></a>
+        <a class="btn btn-ghost" href="#">Documentation</a>
+        <a class="btn btn-destructive" href="#">Cancel subscription</a>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Status badges · semantic</small>
+        <div class="badge-row" style="margin-top: var(--tm-space-3);">
+          <span class="badge b-active"><span class="dot"></span>Active</span>
+          <span class="badge b-trial"><span class="dot"></span>Trialing</span>
+          <span class="badge b-past"><span class="dot"></span>Past due</span>
+          <span class="badge b-churn"><span class="dot"></span>Canceled</span>
+          <span class="badge b-react"><span class="dot"></span>Reactivated</span>
+          <span class="badge b-new"><span class="dot"></span>New</span>
+          <span class="badge b-exp"><span class="dot"></span>Expansion</span>
+          <span class="badge b-con"><span class="dot"></span>Contraction</span>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Stat row</small>
+        <div class="stat-row" style="margin-top: var(--tm-space-3);">
+          <div class="stat"><span class="k">MRR · APR 2026</span><span class="v">$147.6k</span><span class="d up">▲ 4.2% MoM</span></div>
+          <div class="stat"><span class="k">Net Revenue Retention</span><span class="v">108%</span><span class="d up">▲ 1.1 pp</span></div>
+          <div class="stat"><span class="k">Logo Churn</span><span class="v">2.1%</span><span class="d dn">▼ 0.4 pp</span></div>
+          <div class="stat"><span class="k">Subscribers</span><span class="v">3,284</span><span class="d up">▲ 142</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Form controls</small>
+        <div class="grid-3" style="margin-top: var(--tm-space-3); max-width: 800px;">
+          <div class="field"><label>Workspace</label><input type="text" value="acme-saas" /></div>
+          <div class="field"><label>Currency</label>
+            <select><option>USD — US Dollar</option><option>EUR — Euro</option><option>GBP — British Pound</option></select>
+          </div>
+          <div class="field"><label>API token</label><input type="text" placeholder="sk_live_…" /></div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Cards</small>
+        <div class="grid-3" style="margin-top: var(--tm-space-3);">
+          <div class="card-ex">
+            <h4>Transparent by construction</h4>
+            <p>Every metric is a Python class. Read the formula, read the SQL.</p>
+          </div>
+          <div class="card-ex">
+            <h4>Pluggable connectors</h4>
+            <p>Stripe webhooks. QuickBooks. Same-database mode. Add one in &lt; 200 LOC.</p>
+          </div>
+          <div class="card-ex">
+            <h4>Yours to run</h4>
+            <p>Docker Compose on a €4/mo Hetzner box, or a k3s HA cluster.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Code block</small>
+        <div class="code" style="margin-top: var(--tm-space-3);">
+          <div class="head"><span class="tag">Python</span><span class="name">tidemill/metrics/mrr/metric.py</span></div>
+<pre><span class="cc"># Active recurring revenue at time t.</span>
+<span class="ck">@register</span>
+<span class="ck">class</span> <span class="cf">MRR</span>(<span class="cn">Metric</span>):
+    <span class="ck">async def</span> <span class="cf">query</span>(<span class="cn">self</span>, spec: <span class="cn">QuerySpec</span>) -&gt; <span class="cn">Select</span>:
+        c = <span class="cn">self</span>.cube
+        <span class="ck">return</span> spec.fragment(
+            select=[c.sub.mrr_base_cents.sum().label(<span class="cs">"mrr"</span>)],
+            where=[c.sub.is_active_at(spec.at)],
+        )</pre>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--tm-space-6);">
+        <small class="cap">Section header anatomy</small>
+        <div class="anatomy" style="margin-top: var(--tm-space-3);">
+          <div class="inner">
+            <div class="eyebrow"><span class="num">02</span> METRICS</div>
+            <h2 class="section-title" style="margin: 0 0 14px;">Every metric, with its formula.</h2>
+            <p style="margin:0; color: var(--tm-stone-700); max-width: 64ch;">Six metric families ship today. Each one is a separate module with its own tables, event handlers, and API routes — adding a new metric requires zero changes to existing code.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap row">
+    <span>© 2026 Tidemill · Design System v0.2 — derived from frontend/src + docs/palette/</span>
+    <span>amber 500 · stone scale · inter · single source of truth</span>
+  </div>
+</footer>
+
+<script>
+  // ── Generate cohort retention heatmap (small + full) ─────────
+  function cohortColor(rate){
+    if (rate >= 0.9) return '#DCFCE7';
+    if (rate >= 0.7) return '#BBF7D0';
+    if (rate >= 0.5) return '#FEF08A';
+    if (rate >= 0.3) return '#FED7AA';
+    return '#FECACA';
+  }
+
+  function renderCohort(containerId, rows, cols, opts) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.style.gridTemplateColumns = `120px repeat(${cols}, 1fr)`;
+    // Header row
+    el.innerHTML = '';
+    const blank = document.createElement('div');
+    blank.className = 'cell h';
+    blank.textContent = 'COHORT';
+    el.appendChild(blank);
+    for (let m = 0; m < cols; m++) {
+      const h = document.createElement('div');
+      h.className = 'cell h';
+      h.textContent = 'M' + m;
+      el.appendChild(h);
+    }
+    // Body
+    for (let r = 0; r < rows; r++) {
+      const lbl = document.createElement('div');
+      lbl.className = 'cell h';
+      lbl.style.justifyContent = 'flex-start';
+      lbl.style.paddingLeft = '12px';
+      const months = ['Nov ’25','Dec ’25','Jan ’26','Feb ’26','Mar ’26','Apr ’26'];
+      lbl.textContent = months[r % months.length];
+      el.appendChild(lbl);
+      for (let c = 0; c < cols; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (c > (rows - 1 - r)) {
+          cell.style.background = '#fafafa';
+          cell.style.color = 'transparent';
+          cell.textContent = '·';
+        } else {
+          // Decay synthetic retention curve
+          let base = 1.0;
+          const decay = 0.78 + (r * 0.01);
+          const rate = c === 0 ? 1.0 : Math.max(0.18, base * Math.pow(decay, c) - r * 0.005);
+          cell.style.background = cohortColor(rate);
+          cell.textContent = Math.round(rate * 100) + '%';
+        }
+        el.appendChild(cell);
+      }
+    }
+  }
+
+  renderCohort('cohort', 6, 12);
+  renderCohort('cohort-full', 6, 12);
+</script>
+
+</body>
+</html>
