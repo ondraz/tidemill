@@ -436,7 +436,7 @@ def _caller_label(depth: int = 3) -> str:
         cls_name = type(self_obj).__name__ if self_obj else ""
         method = frame.f_code.co_name
         return f"{cls_name}.{method}" if cls_name else method
-    except (AttributeError, ValueError):
+    except AttributeError, ValueError:
         return ""
 
 

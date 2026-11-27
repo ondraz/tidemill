@@ -507,7 +507,7 @@ class ChargebeeConnector(WebhookConnector):
             return False
         try:
             decoded = base64.b64decode(signature.split(" ", 1)[1]).decode("utf-8")
-        except (binascii.Error, UnicodeDecodeError):
+        except binascii.Error, UnicodeDecodeError:
             return False
         user, _, password = decoded.partition(":")
         return hmac.compare_digest(user, expected_user) and hmac.compare_digest(

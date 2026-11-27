@@ -10,7 +10,7 @@ COPY frontend/ ./
 RUN npx vite build
 
 # ── Stage 2: Python application (API only — no frontend assets) ─────────
-FROM python:3.13-slim AS api
+FROM python:3.14-slim AS api
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 

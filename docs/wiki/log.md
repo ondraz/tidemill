@@ -67,3 +67,10 @@ entity and concept pages, and designated the research documents as the synthesis
 **Next:** capture raw sources for the highest-traffic citations (competitor pricing pages
 go stale fastest — every pricing claim in the wiki is dated *as of March 2026*), and
 decide on the `definitions.md` status-heading correction.
+
+## [2026-11-27] lint | Python version drift
+
+**Updated:** [Tidemill](entities/tidemill.md) — stack row now says Python 3.14+.
+**Findings:** The project moved its minimum Python from 3.13 to 3.14 (`pyproject.toml`
+`requires-python`, Dockerfile base image, `.python-version`). The architecture overview and
+`AGENTS.md` still said 3.11+ and were corrected at the same time. No other wiki claims touched.

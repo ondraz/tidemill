@@ -219,7 +219,7 @@ async def sync_fx_rates(
         for start, syms in buckets.items():
             try:
                 ts = await _fetch_timeseries(client, base, syms, start, until)
-            except (httpx.HTTPError, ValueError):
+            except httpx.HTTPError, ValueError:
                 logger.exception(
                     "fx_sync: Frankfurter fetch failed (base=%s, symbols=%s, %s..%s)",
                     base,

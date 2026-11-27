@@ -292,7 +292,7 @@ class StripeConnector(WebhookConnector):
         if not secret:
             return True
         try:
-            stripe.Webhook.construct_event(payload, signature, secret)  # type: ignore[no-untyped-call]
+            stripe.Webhook.construct_event(payload, signature, secret)
             return True
         except stripe.SignatureVerificationError:
             return False

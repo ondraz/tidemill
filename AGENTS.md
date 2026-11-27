@@ -8,7 +8,7 @@ Open-source subscription analytics engine — transparent, auditable metric comp
 
 **Current state:** Core application implemented — connectors (Stripe revenue, QuickBooks Online expense), metrics (MRR, Churn, Retention, LTV, Trials, Expenses), event pipeline, query algebra, FastAPI, and deployment infrastructure. Lago/Kill Bill connectors are P1.
 
-**Stack:** Python 3.11+ (tidemill package) + PostgreSQL + Kafka/Redpanda + FastAPI + CLI.
+**Stack:** Python 3.14+ (tidemill package) + PostgreSQL + Kafka/Redpanda + FastAPI + CLI.
 
 ## Repository Structure
 
