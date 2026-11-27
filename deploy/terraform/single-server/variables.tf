@@ -31,7 +31,7 @@ variable "location" {
 variable "image" {
   description = "OS image"
   type        = string
-  default     = "ubuntu-24.04"
+  default     = "ubuntu-26.04"
 }
 
 variable "ssh_public_key_path" {
