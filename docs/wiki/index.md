@@ -2,7 +2,7 @@
 title: Catalog
 description: Every page in the wiki with a one-line summary, grouped by category.
 type: meta
-updated: 2026-07-23
+updated: 2026-10-25
 ---
 
 # Catalog

@@ -3,7 +3,7 @@ title: Usage-Based Pricing
 description: Charging for consumption rather than access — the dominant emerging pricing pattern and the single biggest source of analytics complexity.
 type: concept
 tags: [pricing, market-trend, revenue]
-updated: 2026-07-23
+updated: 2026-10-25
 ---
 
 # Usage-Based Pricing
@@ -42,11 +42,11 @@ The upstream engine determines what analytics can even see:
 
 | Engine | Usage metering | Consequence for analytics |
 |---|---|---|
-| [Stripe Billing](../entities/stripe-billing.md) | Pre-aggregated only | Raw meter events unavailable; must work from invoice line items |
+| [Stripe Billing](../entities/stripe-billing.md) | Meter events in, aggregated summaries out *(as of October 2026)* | Raw meter events not readable; must work from invoice line items |
 | [Lago](../entities/lago.md) | Event-based, ~15k events/sec | Granular usage events available directly from the database |
 | [Kill Bill](../entities/kill-bill.md) | Plugin-based | Depends entirely on the deployed plugin |
 
-Stripe's pre-aggregation constraint is precisely why Tidemill derives usage MRR from
+Stripe returning only aggregates (contradiction with the earlier "pre-aggregated only" claim noted on [Stripe Billing](../entities/stripe-billing.md)) is precisely why Tidemill derives usage MRR from
 finalized invoice line items rather than a metering stream.
 
 ## How Tidemill handles it

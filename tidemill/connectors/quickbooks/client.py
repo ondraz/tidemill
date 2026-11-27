@@ -33,6 +33,11 @@ _SANDBOX_BASE = "https://sandbox-quickbooks.api.intuit.com/v3/company"
 # Page size for the QBO Query API. 1000 is the maximum.
 _QBO_PAGE_SIZE = 1000
 
+# Accounting API minor version. Intuit retired minor versions 1-74 on
+# 2025-08-01: any lower value is ignored and served as 75, so pinning 75
+# makes the request say what the response actually is.
+_QBO_MINOR_VERSION = "75"
+
 
 class QuickBooksAPIError(RuntimeError):
     """Raised when a QBO REST call returns a non-2xx response."""
@@ -194,7 +199,7 @@ class QuickBooksClient:
         """GET /v3/company/{realmId}/{entity}/{id} — fetch a single entity."""
         url = f"{self._base_url}/{realm_id}/{entity_name.lower()}/{entity_id}"
         try:
-            body = await self._request("GET", url, params={"minorversion": "65"})
+            body = await self._request("GET", url, params={"minorversion": _QBO_MINOR_VERSION})
         except QuickBooksAPIError as exc:
             logger.warning("QBO fetch failed for %s/%s: %s", entity_name, entity_id, exc)
             return None
@@ -218,7 +223,7 @@ class QuickBooksClient:
                 f" STARTPOSITION {start} MAXRESULTS {_QBO_PAGE_SIZE}"
             )
             body = await self._request(
-                "GET", url, params={"query": qbo_query, "minorversion": "65"}
+                "GET", url, params={"query": qbo_query, "minorversion": _QBO_MINOR_VERSION}
             )
             response = body.get("QueryResponse") or {}
             objects = response.get(entity_name) or []

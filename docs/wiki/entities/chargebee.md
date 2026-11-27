@@ -3,7 +3,7 @@ title: Chargebee
 description: Proprietary subscription billing platform; Tidemill's second implemented webhook revenue connector and the proof that ingestion mode generalises.
 type: entity
 tags: [billing-engine, data-source, closed-source, implemented]
-updated: 2026-07-23
+updated: 2026-10-25
 ---
 
 # Chargebee
@@ -32,6 +32,19 @@ machines.
 | Data access | API + webhooks |
 | Tidemill integration | `WebhookConnector`, registered as `chargebee` |
 | Status | **Implemented** and enabled in production |
+
+## Recent API changes
+
+From the [chargebee-python changelog](../sources/2026-10-25-chargebee-python-changelog.md)
+*(February–September 2026)*. Everything that touches subscriptions and invoices was
+additive, so the webhook connector needed no change.
+
+| Change | Analytics significance |
+|---|---|
+| `Subscription.decommissioned` (Feb 2026) and a matching list/export filter (Jul 2026) | Could mark subscriptions to exclude from metrics. Semantics not yet documented in the wiki, and the connector does not read it |
+| `exchange_rates` on `Invoice` / `CreditNote` (Jul 2026) | Chargebee's own FX at invoice time, an alternative to Tidemill's daily-rate [FX conversion](../../architecture/database.md). Not used |
+| Omnichannel (app-store) subscriptions expanded (Jun–Sep 2026) | A separate resource and event family (`omnichannel_subscription_*`). Not ingested, so app-store revenue billed through Chargebee is invisible to Tidemill |
+| Credits ledger: `GrantBlock`, `LedgerAccountBalance` (Jul–Aug 2026) | Prepaid-credit models. Relevant to [usage-based pricing](../concepts/usage-based-pricing.md), not ingested |
 
 ## Relevance to Tidemill
 
@@ -74,3 +87,4 @@ subscription cube, so metrics can be grouped or filtered by connector. See
 
 - [Canonical vocabulary](../../architecture/canonical-vocabulary.md) — enum mappings
 - [Connectors](../../architecture/connectors.md) — connector patterns
+- [chargebee-python changelog, v3.18 → v3.29](../sources/2026-10-25-chargebee-python-changelog.md) *(captured October 2026)*
