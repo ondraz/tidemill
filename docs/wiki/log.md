@@ -131,3 +131,18 @@ backfill emits no pause event for subscriptions already `paused`, and a trial th
 expires into `paused` and later activates records `expired_at` but not
 `converted_at`.
 
+## [2026-11-27] lint | Fix: backfill ignored subscriptions already `paused`
+
+**Updated:** [Stripe Billing](entities/stripe-billing.md)
+**Also changed (code + specs):** `tidemill/connectors/stripe/connector.py`,
+`architecture/connectors.md`
+
+**Findings:** Resolves the backfill gap in finding 5 of the 2026-10-25 ingest.
+Backfill emitted only `subscription.created` for a subscription Stripe reports as
+`paused`. Its MRR therefore stayed in both the state row and the MRR snapshot, and
+its trial never got an outcome. Backfill now reconstructs the pause the way the
+webhook path records it. A trial-end pause becomes an expired trial plus a zero-MRR
+pause. Any other pause is replayed as an activation followed by a pause, so the
+period it churned in is visible. Still open: a trial that expires into `paused` and
+later activates records `expired_at` but not `converted_at`.
+

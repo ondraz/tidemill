@@ -5,6 +5,8 @@ All tests are pure-Python, no database or network required.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 
 from tidemill.connectors.stripe import StripeConnector
@@ -859,6 +861,70 @@ class TestMisc:
         assert events[0].source_id == SRC
 
 
+class TestBackfillPauseEvents:
+    """Reconstruction of a pause for subscriptions already ``paused``."""
+
+    @staticmethod
+    def _sub(reason: str | None, trial_end: int | None = None) -> dict:
+        sub: dict = {
+            "id": "sub_p",
+            "status": "paused",
+            "currency": "usd",
+            "trial_start": 1700000000 if trial_end else None,
+            "trial_end": trial_end,
+        }
+        if reason is not None:
+            sub["status_details"] = {
+                "paused": {
+                    "type": "subscription",
+                    "subscription": {"type": reason},
+                    "transitioned_at": 1705000000,
+                }
+            }
+        return sub
+
+    def test_paid_pause_replays_activation_then_churn(self, connector: StripeConnector):
+        activated = datetime(2023, 11, 14, tzinfo=UTC)
+        events = list(
+            connector._backfill_pause_events(
+                self._sub("pause_requested"), "cus_1", 5000, activated_at=activated
+            )
+        )
+        assert [e.type for e in events] == ["subscription.activated", "subscription.paused"]
+        assert events[0].occurred_at == activated
+        assert events[0].payload["mrr_cents"] == 5000
+        assert events[1].occurred_at == datetime.fromtimestamp(1705000000, tz=UTC)
+        assert events[1].payload["prev_mrr_cents"] == 5000
+        assert events[1].payload["pause_reason"] == "pause_requested"
+
+    def test_trial_pause_is_zero_mrr_without_activation(self, connector: StripeConnector):
+        events = list(
+            connector._backfill_pause_events(
+                self._sub("trial_end_without_payment_method", trial_end=1701000000),
+                "cus_1",
+                5000,
+                activated_at=datetime(2023, 11, 14, tzinfo=UTC),
+            )
+        )
+        assert [e.type for e in events] == ["subscription.paused"]
+        assert events[0].payload["mrr_cents"] == 0
+        assert events[0].payload["prev_mrr_cents"] == 0
+
+    def test_pre_endive_trial_pause_dated_at_trial_end(self, connector: StripeConnector):
+        """No ``status_details``: a subscription with a trial paused at trial end."""
+        events = list(
+            connector._backfill_pause_events(
+                self._sub(None, trial_end=1701000000),
+                "cus_1",
+                5000,
+                activated_at=datetime(2023, 11, 14, tzinfo=UTC),
+            )
+        )
+        assert [e.type for e in events] == ["subscription.paused"]
+        assert events[0].occurred_at == datetime.fromtimestamp(1701000000, tz=UTC)
+        assert events[0].payload["prev_mrr_cents"] == 0
+
+
 class TestBackfillTrialEvents:
     """Trial lifecycle reconstruction from a subscription snapshot."""
 
@@ -911,6 +977,26 @@ class TestBackfillTrialEvents:
         assert [e.type for e in events] == [
             "subscription.trial_started",
             "subscription.trial_expired",
+        ]
+
+    def test_paused_at_trial_end_emits_expired(self, connector: StripeConnector):
+        sub = self._sub("paused", trial_start=1700000000, trial_end=1701000000)
+        sub["status_details"] = {
+            "paused": {"subscription": {"type": "trial_end_without_payment_method"}}
+        }
+        events = list(connector._backfill_trial_events(sub, "cus_1", mrr=1000))
+        assert [e.type for e in events] == [
+            "subscription.trial_started",
+            "subscription.trial_expired",
+        ]
+
+    def test_paused_after_paid_service_emits_converted(self, connector: StripeConnector):
+        sub = self._sub("paused", trial_start=1700000000, trial_end=1701000000)
+        sub["status_details"] = {"paused": {"subscription": {"type": "pause_requested"}}}
+        events = list(connector._backfill_trial_events(sub, "cus_1", mrr=1000))
+        assert [e.type for e in events] == [
+            "subscription.trial_started",
+            "subscription.trial_converted",
         ]
 
     def test_canceled_at_trial_end_emits_converted(self, connector: StripeConnector):

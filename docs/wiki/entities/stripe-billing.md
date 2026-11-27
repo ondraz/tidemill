@@ -96,7 +96,8 @@ a first activation. Now the connector reads `status_details.paused` and emits
 `subscription.resumed` for a pause that followed paid service. The MRR metric books that as
 a reactivation, as [definitions](../../definitions.md#mrr-movements) requires. Entering a pause straight
 from a trial is not churn either: it is recorded as an expired trial with no MRR
-movement *(fixed November 2026)*. See
+movement *(fixed November 2026)*. Backfill applies the same rules to subscriptions
+that are already `paused` when Tidemill first connects. See
 [Churn](../concepts/churn.md) for why pauses count as churn at all.
 
 Stripe Test Clocks drive the seed data used for local development and metric verification

@@ -124,6 +124,27 @@ def _pause_reason(obj: dict[str, Any]) -> str | None:
     return str(reason) if reason else None
 
 
+def _is_trial_pause(sub: dict[str, Any]) -> bool:
+    """Whether a ``paused`` subscription paused at trial end, never having paid.
+
+    Uses ``status_details`` when present. Without it (pre-Endive payloads),
+    ``paused`` only arose from a trial ending without a payment method, so a
+    subscription that had a trial is taken to have paused at its end.
+    """
+    reason = _pause_reason(sub)
+    if reason is not None:
+        return reason in _NEVER_PAID_PAUSE_REASONS
+    return sub.get("trial_end") is not None
+
+
+def _paused_at(sub: dict[str, Any]) -> int | None:
+    """Unix timestamp of the transition to ``paused``, if Stripe reports one."""
+    details = sub.get("status_details") or {}
+    paused = details.get("paused") if isinstance(details, dict) else None
+    ts = paused.get("transitioned_at") if isinstance(paused, dict) else None
+    return int(ts) if ts else None
+
+
 def _line_price_id(li: dict[str, Any]) -> str | None:
     """Extract the price ID from a Stripe invoice line.
 
@@ -1358,6 +1379,11 @@ class StripeConnector(WebhookConnector):
                             "currency": sub_dict.get("currency"),
                         },
                     )
+                elif sub.status == "paused":
+                    for pause_event in self._backfill_pause_events(
+                        sub_dict, customer_id, mrr, activated_at=occurred
+                    ):
+                        yield pause_event
                 elif sub.status in ("canceled", "incomplete_expired", "unpaid"):
                     yield self._make_event(
                         "subscription.churned",
@@ -1455,6 +1481,57 @@ class StripeConnector(WebhookConnector):
 
     # ── helpers ───────────────────────────────────────────────────────────
 
+    def _backfill_pause_events(
+        self,
+        sub: dict[str, Any],
+        customer_id: str,
+        mrr: int,
+        *,
+        activated_at: datetime,
+    ) -> Iterator[Event]:
+        """Reconstruct the pause of a subscription that is ``paused`` today.
+
+        Mirrors the webhook path. A trial that paused for a missing payment
+        method never earned MRR, so it gets a zero-MRR ``subscription.paused``
+        and no activation. Any other pause followed paid service, so it is
+        replayed as ``subscription.activated`` then ``subscription.paused``,
+        which books new MRR and then the churn the pause caused.
+
+        The pause is dated by ``status_details.paused.transitioned_at``
+        (Endive and later). Without it, a trial pause falls back to
+        ``trial_end`` and any other pause to the activation time.
+        """
+        sub_id = str(sub.get("id", ""))
+        currency = sub.get("currency")
+        trial_pause = _is_trial_pause(sub)
+        paused_ts = _paused_at(sub) or (sub.get("trial_end") if trial_pause else None)
+        paused_at = (
+            datetime.fromtimestamp(paused_ts, tz=UTC) if paused_ts is not None else activated_at
+        )
+
+        if not trial_pause:
+            yield self._make_event(
+                "subscription.activated",
+                customer_id=customer_id,
+                external_id=sub_id,
+                occurred_at=activated_at,
+                payload={"external_id": sub_id, "mrr_cents": mrr, "currency": currency},
+            )
+        lost = 0 if trial_pause else mrr
+        yield self._make_event(
+            "subscription.paused",
+            customer_id=customer_id,
+            external_id=sub_id,
+            occurred_at=paused_at,
+            payload={
+                "external_id": sub_id,
+                "mrr_cents": lost,
+                "prev_mrr_cents": lost,
+                "currency": currency,
+                "pause_reason": _pause_reason(sub),
+            },
+        )
+
     def _backfill_trial_events(
         self,
         sub: dict[str, Any],
@@ -1468,7 +1545,8 @@ class StripeConnector(WebhookConnector):
         event (``trial_converted`` or ``trial_expired``) is chosen from the
         current status and, for ``canceled``/``unpaid``, whether ``ended_at``
         preceded ``trial_end`` (canceled during trial vs. converted then
-        churned later).
+        churned later). For ``paused``, a trial-end pause is an expiry and any
+        later pause implies the trial converted first.
         """
         trial_start = sub.get("trial_start")
         if trial_start is None:
@@ -1493,6 +1571,24 @@ class StripeConnector(WebhookConnector):
         ended_at = sub.get("ended_at")
 
         if status == "active" and trial_end_dt:
+            yield self._make_event(
+                "subscription.trial_converted",
+                customer_id=customer_id,
+                external_id=sub_id,
+                occurred_at=trial_end_dt,
+                payload={"external_id": sub_id, "mrr_cents": mrr},
+            )
+        elif status == "paused" and trial_end_dt and _is_trial_pause(sub):
+            # Paused at trial end for a missing payment method.
+            yield self._make_event(
+                "subscription.trial_expired",
+                customer_id=customer_id,
+                external_id=sub_id,
+                occurred_at=trial_end_dt,
+                payload={"external_id": sub_id},
+            )
+        elif status == "paused" and trial_end_dt:
+            # Paused after paid service, so the trial converted first.
             yield self._make_event(
                 "subscription.trial_converted",
                 customer_id=customer_id,
